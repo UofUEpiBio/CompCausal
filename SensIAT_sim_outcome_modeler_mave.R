@@ -11,6 +11,7 @@ fit_SensIAT_single_index_norm1coef_model <-
 function(X, Y, ids, 
          kernel = "K2_Biweight",
          mave.method = "meanMAVE",
+         use_mave,
          id = ..id..,
          bw.selection = c('ise', 'mse'),
          bw.method = c('optim', 'grid', 'optimize'),
@@ -32,10 +33,13 @@ function(X, Y, ids,
         stop("Unknown kernel type. Please use either 'K2_Biweight', 'dnorm', or 'K4_Biweight'.")
     }
 
-    assertthat::assert_that(requireNamespace("MAVE", quietly = TRUE))
-    mave_fit <- MAVE::mave.compute(X, Y, max.dim = 1, method = mave.method)
-    beta_hat <- mave_fit$dir[[1]][,1,drop=TRUE]
-
+    if(use_mave){
+      assertthat::assert_that(requireNamespace("MAVE", quietly = TRUE))
+      mave_fit <- MAVE::mave.compute(X, Y, max.dim = 1, method = mave.method)
+      beta_hat <- mave_fit$dir[[1]][,1,drop=TRUE]
+    }else{
+      beta_hat <- cumuSIR(X = X, Y = Y)
+    }
 
     bw_old <- 1
     delta_beta = NA_real_
