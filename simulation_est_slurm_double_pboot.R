@@ -1,3 +1,18 @@
+indx <- as.numeric(commandArgs(trailingOnly=TRUE))
+
+scenarios <- expand.grid(sim.size_list=500, index=1:50, imputed=1, 
+                         kernel="dnorm", method="optim", 
+                         single_index_method="norm1coef")
+scenarios <- scenarios[order(scenarios$sim.size_list),]
+
+
+sim.size <- scenarios$sim.size_list[indx]
+index <- scenarios$index[indx]
+imputed <- scenarios$imputed[indx]
+kernel <- as.character(scenarios$kernel[indx])
+method <- as.character(scenarios$method[indx])
+single_index_method <- as.character(scenarios$single_index_method[indx])
+
 ###################
 ## load packages ##
 ###################
@@ -8,15 +23,25 @@ library(parallel)
 library(foreach)
 library(doParallel)
 
-source(paste0(getwd(), "HelperFunction.R"))
-source(paste0(getwd(), "singleindexmodelfunctions.R"))
-source(paste0(getwd(), "est_s_t_y.R"))
-source(paste0(getwd(), "SIDR_Ravinew.R"))
-source(paste0(getwd(), "SIDRnew.R"))
-source(paste0(getwd(), "SensIAT_sim_outcome_modeler_mave.R"))
+source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/HelperFunction.R")
+source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/singleindexmodelfunctions.R")
+source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/est_s_t_y.R")
+source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/SIDR_Ravinew.R")
+source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/SIDRnew.R")
+source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/SensIAT_sim_outcome_modeler_mave.R")
 
-nboot_B <- 10
-nboot_C <- 10
+ntasks <- Sys.getenv("SLURM_NTASKS")
+if (ntasks == '') {
+  ntasks <- 4
+} else {
+  ntasks <- strtoi(ntasks) }
+cat("This script use ", ntasks, " cores\n")
+
+package_list <- c("splines", "tidyverse", "gridExtra")
+
+nboot_B <- 500
+nboot_C <- 100
+grid <- expand.grid(b = 1:nboot_B, c = 1:nboot_C)
 
 gamma_length <- length(seq(-5, 5, by=1))
 
@@ -25,7 +50,16 @@ gamma_length <- length(seq(-5, 5, by=1))
 ################
 
 ## parametric bootstrap
-load(paste0("/uufs/chpc.utah.edu/common/home/u6070035/CCS/simData/imputed", imputed, "/n", sim.size, "/sim", j, ".rds"))
+
+cl <- makeCluster(ntasks)
+registerDoParallel(cl)
+
+for (j in (40*(index-1)+1):(40*index)){
+  
+  set.seed(1000090+j)
+  seed_B <- sample(1:10000000, size=nboot_B)
+  
+  load(paste0("/uufs/chpc.utah.edu/common/home/u6070035/CCS/simData/imputed", imputed, "/n", sim.size, "/sim", j, ".rds"))
   X_sim = data.frame(dplyr::select(data, c(age, pain_bq, expectationb, ChronicPainb)))
   
 Boot.Est <- foreach(i=1:nrow(grid), .combine=rbind, .packages=package_list, .errorhandling = "pass") %dopar% {
@@ -52,6 +86,7 @@ Boot.Est <- foreach(i=1:nrow(grid), .combine=rbind, .packages=package_list, .err
   ## return result
   c(topical_vals, oral_vals, temp_topical, temp_oral)
   
+}
 
 load(paste0("/uufs/chpc.utah.edu/common/home/u6070035/CCS/simResult/imputed", imputed, "/n", sim.size, "/", kernel, "_", single_index_method, "_fold5/sim", j, ".RData"))
 Q_b_topical <- sapply(1:nboot_B, function(x){
