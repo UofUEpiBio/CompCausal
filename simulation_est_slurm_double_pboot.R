@@ -48,6 +48,8 @@ for(i in 1:nboot_B){
     
   }
   
+  print(i)
+  
 }
   
 load(paste0("/uufs/chpc.utah.edu/common/home/u6070035/CCS/simResult/imputed", imputed, "/n", sim.size, "/", kernel, "_", single_index_method, "_fold5/sim", j, ".RData"))
