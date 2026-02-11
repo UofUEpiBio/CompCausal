@@ -4,6 +4,7 @@
 library(tidyverse)
 library(splines)
 library(gridExtra)
+library(profvis)
 
 source(paste0(getwd(), "/HelperFunction.R"))
 source(paste0(getwd(), "/singleindexmodelfunctions.R"))
@@ -12,7 +13,7 @@ source(paste0(getwd(), "/SIDR_Ravinew.R"))
 source(paste0(getwd(), "/SIDRnew.R"))
 source(paste0(getwd(), "/SensIAT_sim_outcome_modeler_mave.R"))
 
-nboot_B <- 10
+nboot_B <- 2
 nboot_C <- 5
 grid <- expand.grid(b = 1:nboot_B, c = 1:nboot_C)
 
@@ -21,6 +22,8 @@ gamma_length <- length(seq(-5, 5, by=1))
 ################
 ## simulation ##
 ################
+
+pv <- profvis({
 
 ## empty containers
 Boot.Est <- matrix(NA, nrow=nrow(grid), ncol=264)
@@ -39,7 +42,7 @@ for(i in 1:nboot_B){
   
   for(j in 1:nboot_C){
     
-    data.new2 <- pboot(data=data.new, X_sim=X.new, sim.size=sim.size, seed=NULL)
+    data.new2 <- pboot(data=data.new, X_sim=X.new, sim.size=500, seed=NULL)
     X.new2 <- data.frame(dplyr::select(data.new2, c(age, pain_bq, expectationb, ChronicPainb)))
     ## inner estimator
     temp_topical <- fit_one(data=data.new2, X=X.new2, trt_val=1)
@@ -51,6 +54,10 @@ for(i in 1:nboot_B){
   print(i)
   
 }
+
+})
+
+htmlwidgets::saveWidget(pv, "profvis.html")
   
 load(paste0("/uufs/chpc.utah.edu/common/home/u6070035/CCS/simResult/imputed", imputed, "/n", sim.size, "/", kernel, "_", single_index_method, "_fold5/sim", j, ".RData"))
 Q_b_topical <- sapply(1:nboot_B, function(x){
