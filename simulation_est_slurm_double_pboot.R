@@ -1,18 +1,3 @@
-indx <- as.numeric(commandArgs(trailingOnly=TRUE))
-
-scenarios <- expand.grid(sim.size_list=500, index=1:50, imputed=1, 
-                         kernel="dnorm", method="optim", 
-                         single_index_method="norm1coef")
-scenarios <- scenarios[order(scenarios$sim.size_list),]
-
-
-sim.size <- scenarios$sim.size_list[indx]
-index <- scenarios$index[indx]
-imputed <- scenarios$imputed[indx]
-kernel <- as.character(scenarios$kernel[indx])
-method <- as.character(scenarios$method[indx])
-single_index_method <- as.character(scenarios$single_index_method[indx])
-
 ###################
 ## load packages ##
 ###################
@@ -23,21 +8,12 @@ library(parallel)
 library(foreach)
 library(doParallel)
 
-source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/HelperFunction.R")
-source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/singleindexmodelfunctions.R")
-source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/est_s_t_y.R")
-source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/SIDR_Ravinew.R")
-source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/SIDRnew.R")
-source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/SensIAT_sim_outcome_modeler_mave.R")
-
-ntasks <- Sys.getenv("SLURM_NTASKS")
-if (ntasks == '') {
-  ntasks <- 4
-} else {
-  ntasks <- strtoi(ntasks) }
-cat("This script use ", ntasks, " cores\n")
-
-package_list <- c("splines", "tidyverse", "gridExtra")
+source(paste0(getwd(), "/HelperFunction.R"))
+source(paste0(getwd(), "/singleindexmodelfunctions.R"))
+source(paste0(getwd(), "/est_s_t_y.R"))
+source(paste0(getwd(), "/SIDR_Ravinew.R"))
+source(paste0(getwd(), "/SIDRnew.R"))
+source(paste0(getwd(), "/SensIAT_sim_outcome_modeler_mave.R"))
 
 nboot_B <- 500
 nboot_C <- 100
