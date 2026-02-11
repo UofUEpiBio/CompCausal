@@ -27,6 +27,7 @@ cumuSIR <- function(X, Y, eps = 1e-7){
   return(Bhat)
 }
 
+
 # find the optimal bandwidth, default set for kernel is 
 SIDRnew_h2 <- function(X, Y,
                        Y.CP = NULL,
