@@ -34,19 +34,34 @@ X_sim = data.frame(dplyr::select(data, c(age, pain_bq, expectationb, ChronicPain
 
 for(i in 1:nboot_B){
   
-  data.new <- pboot(data=data, X_sim=X_sim, sim.size=500, seed=NULL)
+  boot_b_temp <- pboot(data=data, X_sim=X_sim, sim.size=500, seed=NULL)
+  data.new <- boot_b_temp$data.new
   X.new <- data.frame(dplyr::select(data.new, c(age, pain_bq, expectationb, ChronicPainb)))
-  topical_vals <- fit_one(data=data.new, X=X.new, trt_val=1)
-  oral_vals    <- fit_one(data=data.new, X=X.new, trt_val=0)
+  topical_vals <- fit_one(data=data.new, X=X.new, trt_val=1, coef_g.fit=boot_b_temp$coef_g.fit, 
+                          coef_t_R0.fit=boot_b_temp$coef_t_R0.fit, coef_t_R1.fit=boot_b_temp$coef_t_R1.fit, 
+                          coef_M_R0.fit=boot_b_temp$coef_M_R0.fit, coef_M_R1.fit=boot_b_temp$coef_M_R1.fit)
+  oral_vals    <- fit_one(data=data.new, X=X.new, trt_val=0, coef_g.fit=boot_b_temp$coef_g.fit, 
+                          coef_t_R0.fit=boot_b_temp$coef_t_R0.fit, coef_t_R1.fit=boot_b_temp$coef_t_R1.fit, 
+                          coef_M_R0.fit=boot_b_temp$coef_M_R0.fit, coef_M_R1.fit=boot_b_temp$coef_M_R1.fit)
   Boot.Est[which(grid$b==i&grid$c==1), ] <- c(topical_vals, oral_vals)
+  
+  boot_b_fit <- pboot_model(data=data.new, X_sim=X.new)
   
   for(j in 1:nboot_C){
     
-    data.new2 <- pboot(data=data.new, X_sim=X.new, sim.size=500, seed=NULL)
+    data.new2 <- pboot_sim(data=data.new, X_sim=X.new, sim.size=500, seed=NULL, 
+                             fit_t_R0_h=boot_b_fit$fit_t_R0_h, fit_t_R1_h=boot_b_fit$fit_t_R1_h, 
+                             fit_t0_R0_h=boot_b_fit$fit_t0_R0_h, fit_t0_R1_h=boot_b_fit$fit_t0_R1_h, 
+                             g.fit=boot_b_fit$g.fit, t_R0.fit=boot_b_fit$t_R0.fit, M_R0.fit=boot_b_fit$M_R0.fit, 
+                             M_R1.fit=boot_b_fit$M_R1.fit)
     X.new2 <- data.frame(dplyr::select(data.new2, c(age, pain_bq, expectationb, ChronicPainb)))
     ## inner estimator
-    temp_topical <- fit_one(data=data.new2, X=X.new2, trt_val=1)
-    temp_oral <- fit_one(data=data.new2, X=X.new2, trt_val=0)
+    temp_topical <- fit_one(data=data.new2, X=X.new2, trt_val=1, coef_g.fit=coef(boot_b_fit$g.fit), 
+                            coef_t_R0.fit=coef(boot_b_fit$t_R0.fit), coef_t_R1.fit=coef(boot_b_fit$t_R1.fit),
+                            coef_M_R0.fit=coef(boot_b_fit$M_R0.fit), coef_M_R1.fit=coef(boot_b_fit$M_R1.fit))
+    temp_oral <- fit_one(data=data.new2, X=X.new2, trt_val=0, coef_g.fit=coef(boot_b_fit$g.fit), 
+                         coef_t_R0.fit=coef(boot_b_fit$t_R0.fit), coef_t_R1.fit=coef(boot_b_fit$t_R1.fit),
+                         coef_M_R0.fit=coef(boot_b_fit$M_R0.fit), coef_M_R1.fit=coef(boot_b_fit$M_R1.fit))
     Boot.Est[which(grid$b==i&grid$c==j), 133:264] <- c(temp_topical, temp_oral)
     
   }
