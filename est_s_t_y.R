@@ -1,7 +1,8 @@
 
 est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output, 
                     simple_trunc, quant, kernel, method, single_index_method, 
-                    use_mave=TRUE, coef_g.fit=NULL, coef_t_R0.fit=NULL, coef_M_R0.fit=NULL, coef_M_R1.fit=NULL){
+                    use_mave=TRUE, coef_g.fit=NULL, coef_t_R0.fit=NULL, coef_t_R1.fit=NULL, 
+                    coef_M_R0.fit=NULL, coef_M_R1.fit=NULL){
   
   n <- length(t)
   Y[is.na(Y)] <- 0
