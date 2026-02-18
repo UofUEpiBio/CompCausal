@@ -1,6 +1,6 @@
 gam.variables <- function(data){
   sapply(1:ncol(data), function(i){
-    if (is.numeric(data[,i]) | is.integer(data[, i])){ paste("s", "(",names(data)[i], ")", sep="")}
+    if (is.numeric(data[,i]) | is.integer(data[, i])){ paste("s", "(",names(data)[i], ", k=5)", sep="")}
     else{names(data[i]) }
   })
 }
