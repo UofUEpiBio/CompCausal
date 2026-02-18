@@ -35,13 +35,15 @@ registerDoParallel(cl)
 
 for (j in (40*(index-1)+1):(40*index)){
   
+load(paste0("/uufs/chpc.utah.edu/common/home/u6070035/CCS/simData/imputed", imputed, "/n", sim.size, "/sim", j, ".rds"))
+X_sim = data.frame(dplyr::select(data, c(age, pain_bq, expectationb, ChronicPainb)))
+  
+load(paste0("/uufs/chpc.utah.edu/common/home/u6070035/CCS/simResult/imputed", imputed, "/n", sim.size, "/", kernel, "_", single_index_method, "_fold5/sim", j, ".RData"))
+  
 Boot.Est <- foreach(i=1:nboot_B, .combine=rbind, .packages=package_list, .errorhandling = "pass") %dopar% {
     
   gamma_length <- length(seq(-5, 5, by=1))
   nboot_C <- 100
-  
-  load(paste0("/uufs/chpc.utah.edu/common/home/u6070035/CCS/simData/imputed", imputed, "/n", sim.size, "/sim", j, ".rds"))
-  X_sim = data.frame(dplyr::select(data, c(age, pain_bq, expectationb, ChronicPainb)))
   
   ## simulate outer bootstrap sample
   boot_b_temp <- pboot(data=data, X_sim=X_sim, sim.size=sim.size, seed=NULL)
@@ -55,9 +57,12 @@ Boot.Est <- foreach(i=1:nboot_B, .combine=rbind, .packages=package_list, .errorh
                           coef_t_R0.fit=boot_b_temp$coef_t_R0.fit, coef_t_R1.fit=boot_b_temp$coef_t_R1.fit, 
                           coef_M_R0.fit=boot_b_temp$coef_M_R0.fit, coef_M_R1.fit=boot_b_temp$coef_M_R1.fit)
   boot_b_fit <- pboot_model(data=data.new, X_sim=X.new)
-  
-  load(paste0("/uufs/chpc.utah.edu/common/home/u6070035/CCS/simResult/imputed", imputed, "/n", sim.size, "/", kernel, "_", single_index_method, "_fold5/sim", j, ".RData"))
-  
+  coef_g.fit <- coef(boot_b_fit$g.fit)
+  coef_t_R0.fit <- coef(boot_b_fit$t_R0.fit)
+  coef_t_R1.fit <- coef(boot_b_fit$t_R1.fit)
+  coef_M_R0.fit <- coef(boot_b_fit$M_R0.fit)
+  coef_M_R1.fit <- coef(boot_b_fit$M_R1.fit)
+
   t_b_topical <- (topical_vals[1:11]-topical_WOMAC_12m$est_trunc)/sqrt(topical_vals[34:44])
   t_b_R1_topical <- (topical_vals[12:22]-topical_WOMAC_12m$est_trunc_R1)/sqrt(topical_vals[45:55])
   t_b_R0_topical <- (topical_vals[23:33]-topical_WOMAC_12m$est_trunc_R0)/sqrt(topical_vals[56:66])
@@ -93,12 +98,12 @@ Boot.Est <- foreach(i=1:nboot_B, .combine=rbind, .packages=package_list, .errorh
                            M_R1.fit=boot_b_fit$M_R1.fit)
     X.new2 <- data.frame(dplyr::select(data.new2, c(age, pain_bq, expectationb, ChronicPainb)))
     ## inner estimator
-    temp_topical <- fit_one(data=data.new2, X=X.new2, trt_val=1, coef_g.fit=coef(boot_b_fit$g.fit), 
-                            coef_t_R0.fit=coef(boot_b_fit$t_R0.fit), coef_t_R1.fit=coef(boot_b_fit$t_R1.fit),
-                            coef_M_R0.fit=coef(boot_b_fit$M_R0.fit), coef_M_R1.fit=coef(boot_b_fit$M_R1.fit))
-    temp_oral <- fit_one(data=data.new2, X=X.new2, trt_val=0, coef_g.fit=coef(boot_b_fit$g.fit), 
-                         coef_t_R0.fit=coef(boot_b_fit$t_R0.fit), coef_t_R1.fit=coef(boot_b_fit$t_R1.fit),
-                         coef_M_R0.fit=coef(boot_b_fit$M_R0.fit), coef_M_R1.fit=coef(boot_b_fit$M_R1.fit))
+    temp_topical <- fit_one(data=data.new2, X=X.new2, trt_val=1, coef_g.fit=coef_g.fit, 
+                            coef_t_R0.fit=coef_t_R0.fit, coef_t_R1.fit=coef_t_R1.fit,
+                            coef_M_R0.fit=coef_M_R0.fit, coef_M_R1.fit=coef_M_R1.fit)
+    temp_oral <- fit_one(data=data.new2, X=X.new2, trt_val=0, coef_g.fit=coef_g.fit, 
+                         coef_t_R0.fit=coef_t_R0.fit, coef_t_R1.fit=coef_t_R1.fit,
+                         coef_M_R0.fit=coef_M_R0.fit, coef_M_R1.fit=coef_M_R1.fit)
     
     Q_b_topical[j, ] <- as.numeric(temp_topical[1:11]<=topical_WOMAC_12m$est_trunc)
     Q_b_R1_topical[j, ] <- as.numeric(temp_topical[12:22]<=topical_WOMAC_12m$est_trunc_R1)
