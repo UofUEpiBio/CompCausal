@@ -46,6 +46,11 @@ for(i in 1:nboot_B){
   Boot.Est[which(grid$b==i&grid$c==1), ] <- c(topical_vals, oral_vals)
   
   boot_b_fit <- pboot_model(data=data.new, X_sim=X.new)
+  coef_g.fit <- coef(boot_b_fit$g.fit)
+  coef_t_R0.fit <- coef(boot_b_fit$t_R0.fit)
+  coef_t_R1.fit <- coef(boot_b_fit$t_R1.fit)
+  coef_M_R0.fit <- coef(boot_b_fit$M_R0.fit)
+  coef_M_R1.fit <- coef(boot_b_fit$M_R1.fit)
   
   for(j in 1:nboot_C){
     
@@ -56,12 +61,12 @@ for(i in 1:nboot_B){
                              M_R1.fit=boot_b_fit$M_R1.fit)
     X.new2 <- data.frame(dplyr::select(data.new2, c(age, pain_bq, expectationb, ChronicPainb)))
     ## inner estimator
-    temp_topical <- fit_one(data=data.new2, X=X.new2, trt_val=1, coef_g.fit=coef(boot_b_fit$g.fit), 
-                            coef_t_R0.fit=coef(boot_b_fit$t_R0.fit), coef_t_R1.fit=coef(boot_b_fit$t_R1.fit),
-                            coef_M_R0.fit=coef(boot_b_fit$M_R0.fit), coef_M_R1.fit=coef(boot_b_fit$M_R1.fit))
-    temp_oral <- fit_one(data=data.new2, X=X.new2, trt_val=0, coef_g.fit=coef(boot_b_fit$g.fit), 
-                         coef_t_R0.fit=coef(boot_b_fit$t_R0.fit), coef_t_R1.fit=coef(boot_b_fit$t_R1.fit),
-                         coef_M_R0.fit=coef(boot_b_fit$M_R0.fit), coef_M_R1.fit=coef(boot_b_fit$M_R1.fit))
+    temp_topical <- fit_one(data=data.new2, X=X.new2, trt_val=1, coef_g.fit=coef_g.fit, 
+                            coef_t_R0.fit=coef_t_R0.fit, coef_t_R1.fit=coef_t_R1.fit,
+                            coef_M_R0.fit=coef_M_R0.fit, coef_M_R1.fit=coef_M_R1.fit)
+    temp_oral <- fit_one(data=data.new2, X=X.new2, trt_val=0, coef_g.fit=coef_g.fit, 
+                         coef_t_R0.fit=coef_t_R0.fit, coef_t_R1.fit=coef_t_R1.fit,
+                         coef_M_R0.fit=coef_M_R0.fit, coef_M_R1.fit=coef_M_R1.fit)
     Boot.Est[which(grid$b==i&grid$c==j), 133:264] <- c(temp_topical, temp_oral)
     
   }
@@ -72,7 +77,7 @@ for(i in 1:nboot_B){
 
 })
 
-htmlwidgets::saveWidget(pv, "profvis.html")
+htmlwidgets::saveWidget(pv, "profvis_initial_coef.html")
   
 load(paste0("/uufs/chpc.utah.edu/common/home/u6070035/CCS/simResult/imputed", imputed, "/n", sim.size, "/", kernel, "_", single_index_method, "_fold5/sim", j, ".RData"))
 Q_b_topical <- sapply(1:nboot_B, function(x){
