@@ -1,7 +1,8 @@
 
 est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output, 
                     simple_trunc, quant, kernel, method, single_index_method, 
-                    use_mave=TRUE){
+                    use_mave=TRUE, coef_g.fit=NULL, coef_t_R0.fit=NULL, coef_t_R1.fit=NULL, 
+                    coef_M_R0.fit=NULL, coef_M_R1.fit=NULL){
   
   n <- length(t)
   Y[is.na(Y)] <- 0
@@ -97,9 +98,9 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
     X_out_fold <- X[out_fold_id_list, ]
     X_with_T_out_fold <- X_with_T[out_fold_id_list, ]
     
-    trt.ind_out_fold_R0 <- trt.ind_out_fold[which(R_out_fold==0)]
+    t_out_fold_R0 <- t_out_fold[which(R_out_fold==0)]
     X_out_fold_R0 <- X_out_fold[which(R_out_fold==0), ]
-    trt.ind_out_fold_R1 <- trt.ind_out_fold[which(R_out_fold==1)]
+    t_out_fold_R1 <- t_out_fold[which(R_out_fold==1)]
     X_out_fold_R1 <- X_out_fold[which(R_out_fold==1), ]
     
     M_out_fold_R0 <- M_out_fold[which(R_out_fold==0)]
@@ -124,17 +125,25 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
     X_with_T_in_fold_R1 <- X_with_T_in_fold[which(R_in_fold==1), ]
     
     ## fit models
-    t_R0.fit <- mgcv::gam(as.formula(paste("trt.ind_out_fold_R0 ~", gam.var)), data=X_out_fold_R0, family=binomial) ## treatment model
-    t_R1.fit <- mgcv::gam(as.formula(paste("trt.ind_out_fold_R1 ~", gam.var)), data=X_out_fold_R1, family=binomial) ## treatment model
-    
-    M_R0.fit <- mgcv::gam(as.formula(paste("M_out_fold_R0 ~", gam.var.M)), data=X_with_T_out_fold_R0, family=binomial) ## missing data model
-    M_R1.fit <- mgcv::gam(as.formula(paste("M_out_fold_R1 ~", gam.var.M)), data=X_with_T_out_fold_R1, family=binomial) ## missing data model
+    t_R0.fit <- mgcv::gam(as.formula(paste("t_out_fold_R0 ~", gam.var)), data=X_out_fold_R0, 
+                          family=binomial, start=coef_t_R0.fit) ## treatment model
+    t_R1.fit <- mgcv::gam(as.formula(paste("t_out_fold_R1 ~", gam.var)), data=X_out_fold_R1, 
+                          family=binomial, start=coef_t_R1.fit) ## treatment model
+    M_R0.fit <- mgcv::gam(as.formula(paste("M_out_fold_R0 ~", gam.var.M)), data=X_with_T_out_fold_R0, 
+                          family=binomial, start=coef_M_R0.fit) ## missing data model
+    M_R1.fit <- mgcv::gam(as.formula(paste("M_out_fold_R1 ~", gam.var.M)), data=X_with_T_out_fold_R1, 
+                          family=binomial, start=coef_M_R1.fit) ## missing data model
     
     prop.R1 <- mean(R_in_fold)
     
     ## get predictions for pi
-    pi_R0 <- predict(t_R0.fit, newdata=X_in_fold_t_R0, type="response") 
-    pi_R1 <- predict(t_R1.fit, newdata=X_in_fold_R1, type="response")
+    if(trt==1){
+      pi_R0 <- predict(t_R0.fit, newdata=X_in_fold_t_R0, type="response") 
+      pi_R1 <- predict(t_R1.fit, newdata=X_in_fold_R1, type="response")  
+    }else{
+      pi_R0 <- 1-predict(t_R0.fit, newdata=X_in_fold_t_R0, type="response") 
+      pi_R1 <- 1-predict(t_R1.fit, newdata=X_in_fold_R1, type="response")  
+    }
     pi_R0_l <- c(pi_R0_l, pi_R0)
     pi_R1_l <- c(pi_R1_l, pi_R1)
     fold_index_pi_R0_l <- c(fold_index_pi_R0_l, rep(k, length(pi_R0)))
