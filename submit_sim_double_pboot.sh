@@ -22,7 +22,7 @@ echo "Starting SLURM job array task ${SLURM_ARRAY_TASK_ID}"
 echo "Hostname: $(hostname)"
 echo "Date: $(date)"
 
-# Run the R script
-Rscript simulation_est_slurm_double_pboot.R ${SLURM_ARRAY_TASK_ID}
+# Run the R script using vanilla mode to ensure a clean environment
+Rscript --vanilla simulation_est_slurm_double_pboot.R ${SLURM_ARRAY_TASK_ID}
 
 echo "Job ${SLURM_ARRAY_TASK_ID} completed at $(date)"

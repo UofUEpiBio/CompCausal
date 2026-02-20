@@ -8,18 +8,17 @@ library(parallel)
 library(foreach)
 library(doParallel)
 
-source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/HelperFunction.R")
-source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/singleindexmodelfunctions.R")
-source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/est_s_t_y.R")
-source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/SIDR_Ravinew.R")
-source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/SIDRnew.R")
-source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/SensIAT_sim_outcome_modeler_mave.R")
+source("CCS/code/HelperFunction.R")
+source("CCS/code/singleindexmodelfunctions.R")
+source("CCS/code/est_s_t_y.R")
+source("CCS/code/SIDR_Ravinew.R")
+source("CCS/code/SIDRnew.R")
+source("CCS/code/SensIAT_sim_outcome_modeler_mave.R")
 
-ntasks <- Sys.getenv("SLURM_NTASKS")
-if (ntasks == '') {
-  ntasks <- 4
-} else {
-  ntasks <- strtoi(ntasks) }
+# Get how many tasks are allocated for this job
+ntasks <- Sys.getenv("SLURM_NTASKS", 4L) |>
+  strtoi()
+
 cat("This script use ", ntasks, " cores\n")
 
 package_list <- c("splines", "tidyverse", "gridExtra")
@@ -33,12 +32,22 @@ nboot_B <- 500
 cl <- makeCluster(ntasks)
 registerDoParallel(cl)
 
+# To distribute the indices, it is better to use the parallel
+# function `splitIndices`
+indices <- parallel::splitIndices(
+  nboot_B,
+  Sys.getenv("SLURM_ARRAY_TASK_COUNT", 1L)
+  )
+
 for (j in (40*(index-1)+1):(40*index)){
   
-load(paste0("/uufs/chpc.utah.edu/common/home/u6070035/CCS/simData/imputed", imputed, "/n", sim.size, "/sim", j, ".rds"))
-X_sim = data.frame(dplyr::select(data, c(age, pain_bq, expectationb, ChronicPainb)))
+load(paste0("CCS/simData/imputed", imputed, "/n", sim.size, "/sim", j, ".rds"))
+
+X_sim = data.frame(
+  dplyr::select(data, c(age, pain_bq, expectationb, ChronicPainb))
+  )
   
-load(paste0("/uufs/chpc.utah.edu/common/home/u6070035/CCS/simResult/imputed", imputed, "/n", sim.size, "/", kernel, "_", single_index_method, "_fold5/sim", j, ".RData"))
+load(paste0("CCS/simResult/imputed", imputed, "/n", sim.size, "/", kernel, "_", single_index_method, "_fold5/sim", j, ".RData"))
   
 Boot.Est <- foreach(i=1:nboot_B, .combine=rbind, .packages=package_list, .errorhandling = "pass") %dopar% {
     
@@ -230,7 +239,7 @@ save(est_topical_boot, est_R1_topical_boot, est_R0_topical_boot,
      abs_Q_t_b_oral, abs_Q_t_b_R1_oral, abs_Q_t_b_R0_oral, 
      t_b_sd_topical, t_b_R1_sd_topical, t_b_R0_sd_topical, 
      t_b_sd_oral, t_b_R1_sd_oral, t_b_R0_sd_oral,
-     file=paste0("/uufs/chpc.utah.edu/common/home/u6070035/CCS/simResult/imputed", imputed, "/double_pboot_n", sim.size, "/", kernel, "_", single_index_method, "/sim", j, ".RData"))
+     file=paste0("CCS/simResult/imputed", imputed, "/double_pboot_n", sim.size, "/", kernel, "_", single_index_method, "/sim", j, ".RData"))
 print(j)
 
 }
