@@ -88,8 +88,10 @@ Boot.Est <- foreach(i=1:nboot_B, .combine=rbind, .packages=package_list, .errorh
   est_oral <- matrix(NA, nrow=nboot_C, ncol=gamma_length)
   est_R1_oral <- matrix(NA, nrow=nboot_C, ncol=gamma_length)
   est_R0_oral <- matrix(NA, nrow=nboot_C, ncol=gamma_length)
+  num_NA_topical <- 0
+  num_NA_oral <- 0
   
-  for(j in 1:nboot_C){
+  for(z in 1:nboot_C){
     
     data.new2 <- pboot_sim(data=data.new, X_sim=X.new, sim.size=sim.size, seed=NULL, 
                            fit_t_R0_h=boot_b_fit$fit_t_R0_h, fit_t_R1_h=boot_b_fit$fit_t_R1_h, 
@@ -105,26 +107,29 @@ Boot.Est <- foreach(i=1:nboot_B, .combine=rbind, .packages=package_list, .errorh
                          coef_t_R0.fit=coef_t_R0.fit, coef_t_R1.fit=coef_t_R1.fit,
                          coef_M_R0.fit=coef_M_R0.fit, coef_M_R1.fit=coef_M_R1.fit)
     
-    Q_b_topical[j, ] <- as.numeric(temp_topical[1:11]<=topical_WOMAC_12m$est_trunc)
-    Q_b_R1_topical[j, ] <- as.numeric(temp_topical[12:22]<=topical_WOMAC_12m$est_trunc_R1)
-    Q_b_R0_topical[j, ] <- as.numeric(temp_topical[23:33]<=topical_WOMAC_12m$est_trunc_R0)
-    Q_b_oral[j, ] <- as.numeric(temp_oral[1:11]<=oral_WOMAC_12m$est_trunc)
-    Q_b_R1_oral[j, ] <- as.numeric(temp_oral[12:22]<=oral_WOMAC_12m$est_trunc_R1)
-    Q_b_R0_oral[j, ] <- as.numeric(temp_oral[23:33]<=oral_WOMAC_12m$est_trunc_R0)
+    Q_b_topical[z, ] <- as.numeric(temp_topical[1:11]<=topical_WOMAC_12m$est_trunc)
+    Q_b_R1_topical[z, ] <- as.numeric(temp_topical[12:22]<=topical_WOMAC_12m$est_trunc_R1)
+    Q_b_R0_topical[z, ] <- as.numeric(temp_topical[23:33]<=topical_WOMAC_12m$est_trunc_R0)
+    Q_b_oral[z, ] <- as.numeric(temp_oral[1:11]<=oral_WOMAC_12m$est_trunc)
+    Q_b_R1_oral[z, ] <- as.numeric(temp_oral[12:22]<=oral_WOMAC_12m$est_trunc_R1)
+    Q_b_R0_oral[z, ] <- as.numeric(temp_oral[23:33]<=oral_WOMAC_12m$est_trunc_R0)
     
-    t_bc_topical[j, ] <- (temp_topical[1:11]-topical_vals[1:11])/sqrt(temp_topical[34:44])
-    t_bc_R1_topical[j, ] <- (temp_topical[12:22]-topical_vals[12:22])/sqrt(temp_topical[45:55])
-    t_bc_R0_topical[j, ] <- (temp_topical[23:33]-topical_vals[23:33])/sqrt(temp_topical[56:66])
-    t_bc_oral[j, ] <- (temp_oral[1:11]-oral_vals[1:11])/sqrt(temp_topical[34:44])
-    t_bc_R1_oral[j, ] <- (temp_oral[12:22]-oral_vals[12:22])/sqrt(temp_oral[45:55])
-    t_bc_R0_oral[j, ] <- (temp_oral[23:33]-oral_vals[23:33])/sqrt(temp_oral[56:66])
+    t_bc_topical[z, ] <- (temp_topical[1:11]-topical_vals[1:11])/sqrt(temp_topical[34:44])
+    t_bc_R1_topical[z, ] <- (temp_topical[12:22]-topical_vals[12:22])/sqrt(temp_topical[45:55])
+    t_bc_R0_topical[z, ] <- (temp_topical[23:33]-topical_vals[23:33])/sqrt(temp_topical[56:66])
+    t_bc_oral[z, ] <- (temp_oral[1:11]-oral_vals[1:11])/sqrt(temp_oral[34:44])
+    t_bc_R1_oral[z, ] <- (temp_oral[12:22]-oral_vals[12:22])/sqrt(temp_oral[45:55])
+    t_bc_R0_oral[z, ] <- (temp_oral[23:33]-oral_vals[23:33])/sqrt(temp_oral[56:66])
     
-    est_topical[j, ] <- temp_topical[1:11]
-    est_R1_topical[j, ] <- temp_topical[12:22]
-    est_R0_topical[j, ] <- temp_topical[23:33]
-    est_oral[j, ] <- temp_oral[1:11]
-    est_R1_oral[j, ] <- temp_oral[12:22]
-    est_R0_oral[j, ] <- temp_oral[23:33]
+    est_topical[z, ] <- temp_topical[1:11]
+    est_R1_topical[z, ] <- temp_topical[12:22]
+    est_R0_topical[z, ] <- temp_topical[23:33]
+    est_oral[z, ] <- temp_oral[1:11]
+    est_R1_oral[z, ] <- temp_oral[12:22]
+    est_R0_oral[z, ] <- temp_oral[23:33]
+    
+    num_NA_topical <- num_NA_topical+as.numeric(any(is.na(temp_topical[1:33])))
+    num_NA_oral <- num_NA_oral+as.numeric(any(is.na(temp_oral[1:33])))
     
   }
   
@@ -169,7 +174,8 @@ return(c(topical_vals, oral_vals, r_Q_b_topical, r_Q_b_R1_topical, r_Q_b_R0_topi
          r_Q_b_oral, r_Q_b_R1_oral, r_Q_b_R0_oral, Q_t_b_topical, Q_t_b_R1_topical, Q_t_b_R0_topical, 
          Q_t_b_oral, Q_t_b_R1_oral, Q_t_b_R0_oral, abs_Q_t_b_topical, abs_Q_t_b_R1_topical, abs_Q_t_b_R0_topical, 
          abs_Q_t_b_oral, abs_Q_t_b_R1_oral, abs_Q_t_b_R0_oral, t_b_sd_topical, t_b_R1_sd_topical, t_b_R0_sd_topical, 
-         t_b_sd_oral, t_b_R1_sd_oral, t_b_R0_sd_oral))
+         t_b_sd_oral, t_b_R1_sd_oral, t_b_R0_sd_oral, num_NA_topical, num_NA_oral,
+         t_b_topical, t_b_R1_topical, t_b_R0_topical, t_b_oral, t_b_R1_oral, t_b_R0_oral))
 
 }
 
@@ -215,6 +221,16 @@ t_b_sd_oral <- Boot.Est[, 364:374]
 t_b_R1_sd_oral <- Boot.Est[, 375:385]
 t_b_R0_sd_oral <- Boot.Est[, 386:396]
 
+num_NA_topical <- Boot.Est[, 397]
+num_NA_oral <- Boot.Est[, 398]
+
+t_b_topical <- Boot.Est[, 399:409]
+t_b_R1_topical <- Boot.Est[, 410:420]
+t_b_R0_topical <- Boot.Est[, 421:431]
+t_b_oral <- Boot.Est[, 432:442]
+t_b_R1_oral <- Boot.Est[, 443:453]
+t_b_R0_oral <- Boot.Est[, 454:464]
+
 ## bootstrap result
 save(est_topical_boot, est_R1_topical_boot, est_R0_topical_boot, 
      est_oral_boot, est_R1_oral_boot, est_R0_oral_boot, 
@@ -229,7 +245,7 @@ save(est_topical_boot, est_R1_topical_boot, est_R0_topical_boot,
      abs_Q_t_b_topical, abs_Q_t_b_R1_topical, abs_Q_t_b_R0_topical, 
      abs_Q_t_b_oral, abs_Q_t_b_R1_oral, abs_Q_t_b_R0_oral, 
      t_b_sd_topical, t_b_R1_sd_topical, t_b_R0_sd_topical, 
-     t_b_sd_oral, t_b_R1_sd_oral, t_b_R0_sd_oral,
+     t_b_sd_oral, t_b_R1_sd_oral, t_b_R0_sd_oral, num_NA_topical, num_NA_oral, 
      file=paste0("/uufs/chpc.utah.edu/common/home/u6070035/CCS/simResult/imputed", imputed, "/double_pboot_n", sim.size, "/", kernel, "_", single_index_method, "/sim", j, ".RData"))
 print(j)
 
