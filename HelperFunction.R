@@ -1,6 +1,6 @@
 gam.variables <- function(data){
   sapply(1:ncol(data), function(i){
-    if (is.numeric(data[,i]) | is.integer(data[, i])){ paste("s", "(",names(data)[i], ")", sep="")}
+    if (is.numeric(data[,i]) | is.integer(data[, i])){ paste("s", "(",names(data)[i], ", k=5)", sep="")}
     else{names(data[i]) }
   })
 }
@@ -221,6 +221,8 @@ pboot <- function(data, X_sim, sim.size, seed){
   
   X_R0 <- X_sim[which(data$R==0), ]
   t_R0 <- data$t[which(data$R==0)]
+  X_R1 <- X_sim[which(data$R==1), ]
+  t_R1 <- data$t[which(data$R==1)]
   
   X_with_t_R0 <- X_with_t[which(data$R==0), ]
   X_with_t_R1 <- X_with_t[which(data$R==1), ]
@@ -229,6 +231,7 @@ pboot <- function(data, X_sim, sim.size, seed){
   
   g.fit <- mgcv::gam(as.formula(paste("data$R ~", gam.var)), data=X_sim, family=binomial) 
   t_R0.fit <- mgcv::gam(as.formula(paste("t_R0 ~", gam.var)), data=X_R0, family=binomial) ## treatment model
+  t_R1.fit <- mgcv::gam(as.formula(paste("t_R1 ~", gam.var)), data=X_R1, family=binomial) ## treatment model
   M_R0.fit <- mgcv::gam(as.formula(paste("M_R0 ~", gam.var.M)), data=X_with_t_R0, family=binomial) ## missing data model
   M_R1.fit <- mgcv::gam(as.formula(paste("M_R1 ~", gam.var.M)), data=X_with_t_R1, family=binomial) ## missing data model
   
@@ -379,29 +382,259 @@ pboot <- function(data, X_sim, sim.size, seed){
   data.new <- data.frame(cbind(Y.new, M.new, R.new, T.new, X.new))
   colnames(data.new) <- c("Y", "M", "R", "t", colnames(X.new))  
   
+  coef_g.fit <- coef(g.fit)
+  coef_t_R0.fit <- coef(t_R0.fit)
+  coef_t_R1.fit <- coef(t_R1.fit)
+  coef_M_R0.fit <- coef(M_R0.fit)
+  coef_M_R1.fit <- coef(M_R1.fit)
+  
+  return(list(data.new=data.new, coef_g.fit=coef_g.fit, coef_t_R0.fit=coef_t_R0.fit, 
+              coef_t_R1.fit=coef_t_R1.fit, coef_M_R0.fit=coef_M_R0.fit, coef_M_R1.fit=coef_M_R1.fit))
+  
+}
+
+## 1st step of parametric bootstrap: model fitting using original data
+pboot_model <- function(data, X_sim){
+  
+  ## fit models
+  X_with_t <- cbind(as.factor(data$t), X_sim)
+  colnames(X_with_t)[1] <- "treatment"
+  gam.var <- paste(gam.variables(X_sim), collapse = "+") ## gam variables for treatment assignment model
+  gam.var.M <- paste(gam.variables(X_with_t), collapse = "+") ## gam variables for missing data model
+  index.var.Y <- paste(single.index.variables(X_sim), collapse = "+")
+  X_adjust <- model.matrix(as.formula(paste("~", index.var.Y)), data = X_sim)[,-1]
+  X_adjust_scale <- scale(X_adjust)
+  
+  X_adjust_scale_t_R0 <- X_adjust_scale[which(data$t==1 & data$R==0), ]
+  X_adjust_scale_t_R1 <- X_adjust_scale[which(data$t==1 & data$R==1), ]
+  X_adjust_scale_t0_R0 <- X_adjust_scale[which(data$t==0 & data$R==0), ]
+  X_adjust_scale_t0_R1 <- X_adjust_scale[which(data$t==0 & data$R==1), ]
+  M_t_R0 <- data$M[which(data$t==1 & data$R==0)]
+  M_t_R1 <- data$M[which(data$t==1 & data$R==1)]
+  M_t0_R0 <- data$M[which(data$t==0 & data$R==0)]
+  M_t0_R1 <- data$M[which(data$t==0 & data$R==1)]
+  Y_t_R0 <- data$Y[which(data$t==1 & data$R==0)]
+  Y_t_R1 <- data$Y[which(data$t==1 & data$R==1)]
+  Y_t0_R0 <- data$Y[which(data$t==0 & data$R==0)]
+  Y_t0_R1 <- data$Y[which(data$t==0 & data$R==1)]
+  
+  X_R0 <- X_sim[which(data$R==0), ]
+  t_R0 <- data$t[which(data$R==0)]
+  X_R1 <- X_sim[which(data$R==1), ]
+  t_R1 <- data$t[which(data$R==1)]
+  
+  X_with_t_R0 <- X_with_t[which(data$R==0), ]
+  X_with_t_R1 <- X_with_t[which(data$R==1), ]
+  M_R0 <- data$M[which(data$R==0)]
+  M_R1 <- data$M[which(data$R==1)]
+  
+  g.fit <- mgcv::gam(as.formula(paste("data$R ~", gam.var)), data=X_sim, family=binomial) 
+  t_R0.fit <- mgcv::gam(as.formula(paste("t_R0 ~", gam.var)), data=X_R0, family=binomial) ## treatment model
+  t_R1.fit <- mgcv::gam(as.formula(paste("t_R1 ~", gam.var)), data=X_R1, family=binomial) ## treatment model
+  M_R0.fit <- mgcv::gam(as.formula(paste("M_R0 ~", gam.var.M)), data=X_with_t_R0, family=binomial) ## missing data model
+  M_R1.fit <- mgcv::gam(as.formula(paste("M_R1 ~", gam.var.M)), data=X_with_t_R1, family=binomial) ## missing data model
+  
+  fit_t_R1_h  <- try(fit_SensIAT_single_index_norm1coef_model(X = X_adjust_scale_t_R1[which(M_t_R1==1), ],
+                                                              Y = Y_t_R1[which(M_t_R1==1)],
+                                                              ids=1:length(Y_t_R1[which(M_t_R1==1)]), 
+                                                              kernel="dnorm", bw.selection="ise", bw.method="optim", 
+                                                              use_mave=TRUE), silent = TRUE)
+  if (inherits(fit_t_R1_h, "try-error")) {
+    fit_t_R1_h  <- try(fit_SensIAT_single_index_norm1coef_model(X = X_adjust_scale_t_R1[which(M_t_R1==1), ],
+                                                                Y = Y_t_R1[which(M_t_R1==1)],
+                                                                ids=1:length(Y_t_R1[which(M_t_R1==1)]), 
+                                                                kernel="dnorm", bw.selection="ise", bw.method="optim", 
+                                                                use_mave=FALSE), silent = TRUE)
+  }
+  
+  fit_t_R0_h  <- try(fit_SensIAT_single_index_norm1coef_model(X = X_adjust_scale_t_R0[which(M_t_R0==1), ],
+                                                              Y = Y_t_R0[which(M_t_R0==1)],
+                                                              ids=1:length(Y_t_R0[which(M_t_R0==1)]), 
+                                                              kernel="dnorm", bw.selection="ise", bw.method="optim", 
+                                                              use_mave=TRUE), silent = TRUE)
+  if (inherits(fit_t_R0_h, "try-error")) {
+    fit_t_R0_h  <- try(fit_SensIAT_single_index_norm1coef_model(X = X_adjust_scale_t_R0[which(M_t_R0==1), ],
+                                                                Y = Y_t_R0[which(M_t_R0==1)],
+                                                                ids=1:length(Y_t_R0[which(M_t_R0==1)]), 
+                                                                kernel="dnorm", bw.selection="ise", bw.method="optim", 
+                                                                use_mave=FALSE), silent = TRUE)
+  }
+  
+  fit_t0_R1_h  <- try(fit_SensIAT_single_index_norm1coef_model(X = X_adjust_scale_t0_R1[which(M_t0_R1==1), ],
+                                                               Y = Y_t0_R1[which(M_t0_R1==1)],
+                                                               ids=1:length(Y_t0_R1[which(M_t0_R1==1)]), 
+                                                               kernel="dnorm", bw.selection="ise", bw.method="optim", 
+                                                               use_mave=TRUE), silent = TRUE)
+  if (inherits(fit_t0_R1_h, "try-error")) {
+    fit_t0_R1_h  <- try(fit_SensIAT_single_index_norm1coef_model(X = X_adjust_scale_t0_R1[which(M_t0_R1==1), ],
+                                                                 Y = Y_t0_R1[which(M_t0_R1==1)],
+                                                                 ids=1:length(Y_t0_R1[which(M_t0_R1==1)]), 
+                                                                 kernel="dnorm", bw.selection="ise", bw.method="optim", 
+                                                                 use_mave=FALSE), silent = TRUE)
+  }
+  
+  fit_t0_R0_h  <- try(fit_SensIAT_single_index_norm1coef_model(X = X_adjust_scale_t0_R0[which(M_t0_R0==1), ],
+                                                               Y = Y_t0_R0[which(M_t0_R0==1)],
+                                                               ids=1:length(Y_t0_R0[which(M_t0_R0==1)]), 
+                                                               kernel="dnorm", bw.selection="ise", bw.method="optim", 
+                                                               use_mave=TRUE), silent = TRUE)
+  if (inherits(fit_t0_R0_h, "try-error")) {
+    fit_t0_R0_h  <- try(fit_SensIAT_single_index_norm1coef_model(X = X_adjust_scale_t0_R0[which(M_t0_R0==1), ],
+                                                                 Y = Y_t0_R0[which(M_t0_R0==1)],
+                                                                 ids=1:length(Y_t0_R0[which(M_t0_R0==1)]), 
+                                                                 kernel="dnorm", bw.selection="ise", bw.method="optim", 
+                                                                 use_mave=FALSE), silent = TRUE)
+  }
+  
+  return(list(fit_t_R0_h=fit_t_R0_h, fit_t_R1_h=fit_t_R1_h, fit_t0_R0_h=fit_t0_R0_h, 
+              fit_t0_R1_h=fit_t0_R1_h, g.fit=g.fit, t_R0.fit=t_R0.fit, t_R1.fit=t_R1.fit, 
+              M_R0.fit=M_R0.fit, M_R1.fit=M_R1.fit))
+  
+}
+
+## 2nd step of parametric bootstrap: simulate new data
+pboot_sim <- function(data, X_sim, sim.size, seed, 
+                      fit_t_R0_h, fit_t_R1_h, fit_t0_R0_h, 
+                      fit_t0_R1_h, g.fit, t_R0.fit, M_R0.fit, M_R1.fit){
+  
+  ## fit models
+  index.var.Y <- paste(single.index.variables(X_sim), collapse = "+")
+  X_adjust <- model.matrix(as.formula(paste("~", index.var.Y)), data = X_sim)[,-1]
+  X_adjust_scale <- scale(X_adjust)
+  
+  X_adjust_scale_t_R0 <- X_adjust_scale[which(data$t==1 & data$R==0), ]
+  X_adjust_scale_t_R1 <- X_adjust_scale[which(data$t==1 & data$R==1), ]
+  X_adjust_scale_t0_R0 <- X_adjust_scale[which(data$t==0 & data$R==0), ]
+  X_adjust_scale_t0_R1 <- X_adjust_scale[which(data$t==0 & data$R==1), ]
+  M_t_R0 <- data$M[which(data$t==1 & data$R==0)]
+  M_t_R1 <- data$M[which(data$t==1 & data$R==1)]
+  M_t0_R0 <- data$M[which(data$t==0 & data$R==0)]
+  M_t0_R1 <- data$M[which(data$t==0 & data$R==1)]
+  Y_t_R0 <- data$Y[which(data$t==1 & data$R==0)]
+  Y_t_R1 <- data$Y[which(data$t==1 & data$R==1)]
+  Y_t0_R0 <- data$Y[which(data$t==0 & data$R==0)]
+  Y_t0_R1 <- data$Y[which(data$t==0 & data$R==1)]
+
+  X_t_R0_beta_t_R0 <- as.vector(X_adjust_scale_t_R0[which(M_t_R0==1), ] %*% fit_t_R0_h$coef)
+  X_t_R1_beta_t_R1 <- as.vector(X_adjust_scale_t_R1[which(M_t_R1==1), ] %*% fit_t_R1_h$coef)
+  X_t0_R0_beta_t0_R0 <- as.vector(X_adjust_scale_t0_R0[which(M_t0_R0==1), ] %*% fit_t0_R0_h$coef)
+  X_t0_R1_beta_t0_R1 <- as.vector(X_adjust_scale_t0_R1[which(M_t0_R1==1), ] %*% fit_t0_R1_h$coef)
+  y_t_R0 = sort(unique(Y_t_R0[which(M_t_R0==1)]))    
+  ny_t_R0 = length(y_t_R0) 
+  y_t_R1 = sort(unique(Y_t_R1[which(M_t_R1==1)]))    
+  ny_t_R1 = length(y_t_R1) 
+  y_t0_R0 = sort(unique(Y_t0_R0[which(M_t0_R0==1)]))    
+  ny_t0_R0 = length(y_t0_R0) 
+  y_t0_R1 = sort(unique(Y_t0_R1[which(M_t0_R1==1)]))    
+  ny_t0_R1 = length(y_t0_R1) 
+  
+  ## simulate data
+  if(!is.null(seed)){set.seed(seed)}
+  boot.indices <- sample(1:sim.size, size=sim.size, replace = T)
+  X.new <- X_sim[boot.indices,]
+  X_adjust_scale.new <- X_adjust_scale[boot.indices, ]
+  ## new R
+  prob.R <- predict(g.fit, newdata=X.new, type="response") 
+  R.new <- rbinom(n=sim.size, size=1, prob=prob.R)
+  ## new T
+  T.new_R1 <- rbinom(n=sim.size,size=1,prob=0.5)
+  prob.T_R0 <- predict(t_R0.fit, newdata=X.new, type="response")
+  T.new_R0 <- rbinom(n=sim.size,size=1,prob=prob.T_R0)
+  T.new <- T.new_R1*R.new+T.new_R0*(1-R.new)
+  
+  ## new Y
+  X.new_beta_t_R0 <- as.vector(X_adjust_scale.new %*% fit_t_R0_h$coef)
+  X.new_beta_t_R1 <- as.vector(X_adjust_scale.new %*% fit_t_R1_h$coef)
+  X.new_beta_t0_R0 <- as.vector(X_adjust_scale.new %*% fit_t0_R0_h$coef)
+  X.new_beta_t0_R1 <- as.vector(X_adjust_scale.new %*% fit_t0_R1_h$coef)
+  
+  F_X_t_R0 <- NW_new(Xb=X_t_R0_beta_t_R0, Y=Y_t_R0[which(M_t_R0==1)], 
+                     xb=X.new_beta_t_R0, y=y_t_R0, h=fit_t_R0_h$bandwidth, 
+                     kernel = "dnorm")
+  F_X_t_R1 <- NW_new(Xb=X_t_R1_beta_t_R1, Y=Y_t_R1[which(M_t_R1==1)], 
+                     xb=X.new_beta_t_R1, y=y_t_R1, h=fit_t_R1_h$bandwidth, 
+                     kernel = "dnorm")
+  F_X_t0_R0 <- NW_new(Xb=X_t0_R0_beta_t0_R0, Y=Y_t0_R0[which(M_t0_R0==1)], 
+                      xb=X.new_beta_t0_R0, y=y_t0_R0, h=fit_t0_R0_h$bandwidth, 
+                      kernel = "dnorm")
+  F_X_t0_R1 <- NW_new(Xb=X_t0_R1_beta_t0_R1, Y=Y_t0_R1[which(M_t0_R1==1)], 
+                      xb=X.new_beta_t0_R1, y=y_t0_R1, h=fit_t0_R1_h$bandwidth, 
+                      kernel = "dnorm")
+  
+  i1 = which(apply(F_X_t_R0==0,1,prod)==1)
+  i1.closest <- apply(abs(outer(X.new_beta_t_R0[i1], X.new_beta_t_R0[-i1], FUN = "-")), 1, which.min)
+  F_X_t_R0[i1, ] <- F_X_t_R0[-i1, ][i1.closest, ]
+  
+  i1 = which(apply(F_X_t_R1==0,1,prod)==1)
+  i1.closest <- apply(abs(outer(X.new_beta_t_R1[i1], X.new_beta_t_R1[-i1], FUN = "-")), 1, which.min)
+  F_X_t_R1[i1, ] <- F_X_t_R1[-i1, ][i1.closest, ]
+  
+  i1 = which(apply(F_X_t0_R0==0,1,prod)==1)
+  i1.closest <- apply(abs(outer(X.new_beta_t0_R0[i1], X.new_beta_t0_R0[-i1], FUN = "-")), 1, which.min)
+  F_X_t0_R0[i1, ] <- F_X_t0_R0[-i1, ][i1.closest, ]
+  
+  i1 = which(apply(F_X_t0_R1==0,1,prod)==1)
+  i1.closest <- apply(abs(outer(X.new_beta_t0_R1[i1], X.new_beta_t0_R1[-i1], FUN = "-")), 1, which.min)
+  F_X_t0_R1[i1, ] <- F_X_t0_R1[-i1, ][i1.closest, ]
+  
+  Y.new_t_R0 <- apply(F_X_t_R0, 1, function(x){
+    ecdf <- runif(1,0,1)
+    y_t_R0[min(which(ecdf<=x))]
+  })
+  Y.new_t_R1 <- apply(F_X_t_R1, 1, function(x){
+    ecdf <- runif(1,0,1)
+    y_t_R1[min(which(ecdf<=x))]
+  })
+  Y.new_t0_R0 <- apply(F_X_t0_R0, 1, function(x){
+    ecdf <- runif(1,0,1)
+    y_t0_R0[min(which(ecdf<=x))]
+  })
+  Y.new_t0_R1 <- apply(F_X_t0_R1, 1, function(x){
+    ecdf <- runif(1,0,1)
+    y_t0_R1[min(which(ecdf<=x))]
+  })
+  Y.new <- Y.new_t_R0*T.new*(1-R.new)+Y.new_t_R1*T.new*R.new+
+    Y.new_t0_R0*(1-T.new)*(1-R.new)+Y.new_t0_R1*(1-T.new)*R.new
+  
+  ## new M
+  X_with_t.new <- cbind(T.new, X.new)
+  colnames(X_with_t.new)[1] <- "treatment"
+  prob.M_R0 <- predict(M_R0.fit, newdata=X_with_t.new, type="response")
+  prob.M_R1 <- predict(M_R1.fit, newdata=X_with_t.new, type="response")
+  M.new_R0 <- rbinom(n=sim.size,size=1,prob=prob.M_R0)
+  M.new_R1 <- rbinom(n=sim.size,size=1,prob=prob.M_R1)
+  M.new <- M.new_R0*(1-R.new)+M.new_R1*R.new
+  
+  Y.new[M.new==0] <- NA
+  
+  data.new <- data.frame(cbind(Y.new, M.new, R.new, T.new, X.new))
+  colnames(data.new) <- c("Y", "M", "R", "t", colnames(X.new))  
+  
   return(data.new)
   
 }
 
+
 ## run algorithm
-fit_one <- function(data, X, trt_val) {
+fit_one <- function(data, X, trt_val, coef_g.fit=NULL, coef_t_R0.fit=NULL, 
+                    coef_t_R1.fit=NULL, coef_M_R0.fit=NULL, coef_M_R1.fit=NULL) {
   # try mave first
-  out <- try(est_psi(Y=data$Y, M=data$M, R=data$R, 
-                     X=X,
+  out <- try(est_psi(Y=data$Y, M=data$M, R=data$R, X=X,
                      t=data$t, trt=trt_val, gamma=seq(-5, 5, by=1), fold=5,
                      IF_output=FALSE, simple_trunc=FALSE, quant=NULL, kernel="dnorm",
                      method="optim", single_index_method="norm1coef",
-                     use_mave=TRUE, seed=NULL),
+                     use_mave=TRUE, seed=NULL, coef_g.fit=coef_g.fit, coef_t_R0.fit=coef_t_R0.fit, 
+                     coef_t_R1.fit=coef_t_R1.fit, coef_M_R0.fit=coef_M_R0.fit, coef_M_R1.fit=coef_M_R1.fit),
              silent = TRUE)
   
   if (inherits(out, "try-error")) {
     # fallback cumSIR
-    out <- try(est_psi(Y=data$Y, M=data$M, R=data$R, 
-                       X=X,
+    out <- try(est_psi(Y=data$Y, M=data$M, R=data$R, X=X,
                        t=data$t, trt=trt_val, gamma=seq(-5, 5, by=1), fold=5,
                        IF_output=FALSE, simple_trunc=FALSE, quant=NULL, kernel="dnorm",
                        method="optim", single_index_method="norm1coef",
-                       use_mave=FALSE, seed=NULL),
+                       use_mave=FALSE, seed=NULL, coef_g.fit=coef_g.fit, coef_t_R0.fit=coef_t_R0.fit, 
+                       coef_t_R1.fit=coef_t_R1.fit, coef_M_R0.fit=coef_M_R0.fit, coef_M_R1.fit=coef_M_R1.fit),
                silent = TRUE)
   }
   

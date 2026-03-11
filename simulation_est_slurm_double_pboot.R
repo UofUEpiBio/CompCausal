@@ -1,46 +1,20 @@
-indx <- as.numeric(commandArgs(trailingOnly=TRUE))
-
-scenarios <- expand.grid(sim.size_list=500, index=1:50, imputed=1, 
-                         kernel="dnorm", method="optim", 
-                         single_index_method="norm1coef")
-scenarios <- scenarios[order(scenarios$sim.size_list),]
-
-
-sim.size <- scenarios$sim.size_list[indx]
-index <- scenarios$index[indx]
-imputed <- scenarios$imputed[indx]
-kernel <- as.character(scenarios$kernel[indx])
-method <- as.character(scenarios$method[indx])
-single_index_method <- as.character(scenarios$single_index_method[indx])
-
 ###################
 ## load packages ##
 ###################
 library(tidyverse)
 library(splines)
 library(gridExtra)
-library(parallel)
-library(foreach)
-library(doParallel)
+library(profvis)
 
-source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/HelperFunction.R")
-source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/singleindexmodelfunctions.R")
-source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/est_s_t_y.R")
-source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/SIDR_Ravinew.R")
-source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/SIDRnew.R")
-source("/uufs/chpc.utah.edu/common/home/u6070035/CCS/code/SensIAT_sim_outcome_modeler_mave.R")
+source(paste0(getwd(), "/HelperFunction.R"))
+source(paste0(getwd(), "/singleindexmodelfunctions.R"))
+source(paste0(getwd(), "/est_s_t_y.R"))
+source(paste0(getwd(), "/SIDR_Ravinew.R"))
+source(paste0(getwd(), "/SIDRnew.R"))
+source(paste0(getwd(), "/SensIAT_sim_outcome_modeler_mave.R"))
 
-ntasks <- Sys.getenv("SLURM_NTASKS")
-if (ntasks == '') {
-  ntasks <- 4
-} else {
-  ntasks <- strtoi(ntasks) }
-cat("This script use ", ntasks, " cores\n")
-
-package_list <- c("splines", "tidyverse", "gridExtra")
-
-nboot_B <- 500
-nboot_C <- 100
+nboot_B <- 2
+nboot_C <- 5
 grid <- expand.grid(b = 1:nboot_B, c = 1:nboot_C)
 
 gamma_length <- length(seq(-5, 5, by=1))
@@ -49,45 +23,62 @@ gamma_length <- length(seq(-5, 5, by=1))
 ## simulation ##
 ################
 
+pv <- profvis({
+
+## empty containers
+Boot.Est <- matrix(NA, nrow=nrow(grid), ncol=264)
+
 ## parametric bootstrap
+load("/Users/shiyaoxu/Documents/2025_2026/research/comprehensive_cohort/simData/imputed1/n500/sim1.rds")
+X_sim = data.frame(dplyr::select(data, c(age, pain_bq, expectationb, ChronicPainb)))
 
-cl <- makeCluster(ntasks)
-registerDoParallel(cl)
-
-for (j in (40*(index-1)+1):(40*index)){
+for(i in 1:nboot_B){
   
-  set.seed(1000090+j)
-  seed_B <- sample(1:10000000, size=nboot_B)
-  
-  load(paste0("/uufs/chpc.utah.edu/common/home/u6070035/CCS/simData/imputed", imputed, "/n", sim.size, "/sim", j, ".rds"))
-  X_sim = data.frame(dplyr::select(data, c(age, pain_bq, expectationb, ChronicPainb)))
-  
-Boot.Est <- foreach(i=1:nrow(grid), .combine=rbind, .packages=package_list, .errorhandling = "pass") %dopar% {
-  
-  ## simulate outer bootstrap sample
-  data.new <- pboot(data=data, X_sim=X_sim, sim.size=sim.size, seed=seed_B[grid$b[i]])
+  boot_b_temp <- pboot(data=data, X_sim=X_sim, sim.size=500, seed=NULL)
+  data.new <- boot_b_temp$data.new
   X.new <- data.frame(dplyr::select(data.new, c(age, pain_bq, expectationb, ChronicPainb)))
-  if(grid$c[i]==1){
-    ## outer estimator
-    topical_vals <- fit_one(data=data.new, X=X.new, trt_val=1)
-    oral_vals    <- fit_one(data=data.new, X=X.new, trt_val=0)
-  }else{
-    topical_vals <- rep(NA_real_, 6*gamma_length)
-    oral_vals <- rep(NA_real_, 6*gamma_length)
-  }
-
-  ## simulate inner bootstrap sample
-  data.new2 <- pboot(data=data.new, X_sim=X.new, sim.size=sim.size, seed=NULL)
-  X.new2 <- data.frame(dplyr::select(data.new2, c(age, pain_bq, expectationb, ChronicPainb)))
-  ## inner estimator
-  temp_topical <- fit_one(data=data.new2, X=X.new2, trt_val=1)
-  temp_oral <- fit_one(data=data.new2, X=X.new2, trt_val=0)
+  topical_vals <- fit_one(data=data.new, X=X.new, trt_val=1, coef_g.fit=boot_b_temp$coef_g.fit, 
+                          coef_t_R0.fit=boot_b_temp$coef_t_R0.fit, coef_t_R1.fit=boot_b_temp$coef_t_R1.fit, 
+                          coef_M_R0.fit=boot_b_temp$coef_M_R0.fit, coef_M_R1.fit=boot_b_temp$coef_M_R1.fit)
+  oral_vals    <- fit_one(data=data.new, X=X.new, trt_val=0, coef_g.fit=boot_b_temp$coef_g.fit, 
+                          coef_t_R0.fit=boot_b_temp$coef_t_R0.fit, coef_t_R1.fit=boot_b_temp$coef_t_R1.fit, 
+                          coef_M_R0.fit=boot_b_temp$coef_M_R0.fit, coef_M_R1.fit=boot_b_temp$coef_M_R1.fit)
+  Boot.Est[which(grid$b==i&grid$c==1), ] <- c(topical_vals, oral_vals)
   
-  ## return result
-  c(topical_vals, oral_vals, temp_topical, temp_oral)
+  boot_b_fit <- pboot_model(data=data.new, X_sim=X.new)
+  coef_g.fit <- coef(boot_b_fit$g.fit)
+  coef_t_R0.fit <- coef(boot_b_fit$t_R0.fit)
+  coef_t_R1.fit <- coef(boot_b_fit$t_R1.fit)
+  coef_M_R0.fit <- coef(boot_b_fit$M_R0.fit)
+  coef_M_R1.fit <- coef(boot_b_fit$M_R1.fit)
+  
+  for(j in 1:nboot_C){
+    
+    data.new2 <- pboot_sim(data=data.new, X_sim=X.new, sim.size=500, seed=NULL, 
+                             fit_t_R0_h=boot_b_fit$fit_t_R0_h, fit_t_R1_h=boot_b_fit$fit_t_R1_h, 
+                             fit_t0_R0_h=boot_b_fit$fit_t0_R0_h, fit_t0_R1_h=boot_b_fit$fit_t0_R1_h, 
+                             g.fit=boot_b_fit$g.fit, t_R0.fit=boot_b_fit$t_R0.fit, M_R0.fit=boot_b_fit$M_R0.fit, 
+                             M_R1.fit=boot_b_fit$M_R1.fit)
+    X.new2 <- data.frame(dplyr::select(data.new2, c(age, pain_bq, expectationb, ChronicPainb)))
+    ## inner estimator
+    temp_topical <- fit_one(data=data.new2, X=X.new2, trt_val=1, coef_g.fit=coef_g.fit, 
+                            coef_t_R0.fit=coef_t_R0.fit, coef_t_R1.fit=coef_t_R1.fit,
+                            coef_M_R0.fit=coef_M_R0.fit, coef_M_R1.fit=coef_M_R1.fit)
+    temp_oral <- fit_one(data=data.new2, X=X.new2, trt_val=0, coef_g.fit=coef_g.fit, 
+                         coef_t_R0.fit=coef_t_R0.fit, coef_t_R1.fit=coef_t_R1.fit,
+                         coef_M_R0.fit=coef_M_R0.fit, coef_M_R1.fit=coef_M_R1.fit)
+    Boot.Est[which(grid$b==i&grid$c==j), 133:264] <- c(temp_topical, temp_oral)
+    
+  }
+  
+  print(i)
   
 }
 
+})
+
+htmlwidgets::saveWidget(pv, "profvis_initial_coef.html")
+  
 load(paste0("/uufs/chpc.utah.edu/common/home/u6070035/CCS/simResult/imputed", imputed, "/n", sim.size, "/", kernel, "_", single_index_method, "_fold5/sim", j, ".RData"))
 Q_b_topical <- sapply(1:nboot_B, function(x){
   loc <- which(grid$b==x)
@@ -326,27 +317,6 @@ var_R0_oral_boot <- sapply(1:nboot_B, function(x){
   Boot.Est[loc_b, 122:132]
 })
 
-## bootstrap result
-save(est_topical_boot, est_R1_topical_boot, est_R0_topical_boot, 
-     est_oral_boot, est_R1_oral_boot, est_R0_oral_boot, 
-     var_topical_boot, var_R1_topical_boot, var_R0_topical_boot, 
-     var_oral_boot, var_R1_oral_boot, var_R0_oral_boot, 
-     Q_b_topical, Q_b_R1_topical, Q_b_R0_topical, 
-     Q_b_oral, Q_b_R1_oral, Q_b_R0_oral, 
-     t_b_topical, t_b_R1_topical, t_b_R0_topical, 
-     t_b_oral, t_b_R1_oral, t_b_R0_oral, 
-     Q_t_b_topical, Q_t_b_R1_topical, Q_t_b_R0_topical, 
-     Q_t_b_oral, Q_t_b_R1_oral, Q_t_b_R0_oral, 
-     abs_Q_t_b_topical, abs_Q_t_b_R1_topical, abs_Q_t_b_R0_topical, 
-     abs_Q_t_b_oral, abs_Q_t_b_R1_oral, abs_Q_t_b_R0_oral, 
-     t_b_sd_topical, t_b_R1_sd_topical, t_b_R0_sd_topical, 
-     t_b_sd_oral, t_b_R1_sd_oral, t_b_R0_sd_oral,
-     file=paste0("/uufs/chpc.utah.edu/common/home/u6070035/CCS/simResult/imputed", imputed, "/double_pboot_n", sim.size, "/", kernel, "_", single_index_method, "/sim", j, ".RData"))
-  print(j)
-  
-}
-
-stopCluster(cl)
 
 
 
