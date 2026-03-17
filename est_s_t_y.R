@@ -38,7 +38,66 @@ est_s_t_y_create_containers <- function(gamma, fold) {
 }
 
 
-
+#' One-step, split sample estimator for E[Y(t)], E[Y(t)|R=1], E[Y(t)|R=0], 
+#'   and E[Y(t)-Y0], E[Y(t)-Y0|R=1], E[Y(t)-Y0|R=0]
+#'   
+#' Estimates study-specific and overall outcome means (and difference from baseline)
+#' using cross-fitting with single index models and
+#' nuisance models for treatment and outcome missingness (`mgcv::gam`). The function
+#' also computes influence-function-based variances, confidence intervals, and
+#' optional truncated influence-function diagnostics.
+#'
+#' @param Y Numeric outcome vector. Missing values are internally replaced with
+#'   `0` prior to model fitting.
+#' @param M Binary indicator for observed outcome (`1` = observed, `0` =
+#'   missing).
+#' @param R Binary group indicator used to stratify nuisance and outcome models.
+#' @param X Data frame or matrix of baseline covariates.
+#' @param t Treatment assignment vector.
+#' @param trt Treatment level for which the target estimand is computed.
+#' @param gamma Numeric vector of sensitivity parameters.
+#' @param fold Number of cross-fitting folds.
+#' @param seed Optional integer random seed for fold assignment. Use `NULL` to
+#'   leave RNG state unchanged.
+#' @param IF_output Logical; if `TRUE`, include influence-function vectors in
+#'   the returned list.
+#' @param simple_trunc Logical; if `TRUE`, apply quantile truncation to inverse
+#'   probability weights. If `FALSE`, apply IF truncation diagnostics.
+#' @param quant Numeric in `(0, 1)` used as the upper quantile for simple weight
+#'   truncation when `simple_trunc = TRUE`.
+#' @param coef_g.fit Optional starting values for a treatment model; currently
+#'   retained for interface compatibility.
+#' @param coef_t_R0.fit Optional starting coefficients for treatment model fit
+#'   in `t=trt` and `R = 0`stratum.
+#' @param coef_t_R1.fit Optional starting coefficients for treatment model fit
+#'   in `t=trt` and `R = 1` stratum.
+#' @param coef_M_R0.fit Optional starting coefficients for missingness model fit
+#'   in `R = 0` stratum.
+#' @param coef_M_R1.fit Optional starting coefficients for missingness model fit
+#'   in `R = 1` stratum.
+#'
+#' @return A named list of estimates and uncertainty summaries for each value in
+#'   `gamma`. Core elements include point estimates (`est`, `est_R1`, `est_R0`), variance
+#'   estimates (`var`, `var_R1`, `var_R0`), and confidence interval bounds (`lowerCI*`, `upperCI*`). 
+#'   Additional components depend on `simple_trunc` and `IF_output`:
+#'   \itemize{
+#'   \item `simple_trunc = TRUE`: returns quantile-weight-truncated summaries only.
+#'   \item `simple_trunc = FALSE`: additionally returns truncated summaries and
+#'   truncated IF objects when requested.
+#'   \item `IF_output = TRUE`: includes influence-function lists (`IF*`) and,
+#'   when relevant, truncated IF lists (`IF_trunc*`).
+#'   }
+#'
+#' @details
+#' The procedure uses sample-splitting/cross-fitting to reduce overfitting bias
+#' in nuisance estimation. Outcome regressions are fit with single index models
+#' and then integrated over estimated conditional distributions to obtain
+#' conditional means and sensitivity-adjusted moments.
+#'
+#' @examples
+#' # out <- est_psi(Y, M, R, X, t, trt = 1, gamma = c(0, 0.5),
+#' #                fold = 5, seed = 1, IF_output = FALSE,
+#' #                simple_trunc = TRUE, quant = 0.99)
 est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output, 
                     simple_trunc, quant, kernel, method, single_index_method, 
                     use_mave=TRUE){
