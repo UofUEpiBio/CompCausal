@@ -40,7 +40,7 @@ est_s_t_y_create_containers <- function(gamma, fold) {
 #' Data adaptive influence function truncation
 #' 
 #' This helper function perform influence function truncation by (Wang et al., 2021)
-#' 
+#' @noRd
 IF_trunc_func <- function(IF){
   
   if (eq(max(abs(IF)),z=IF)>0) {
