@@ -37,6 +37,21 @@ est_s_t_y_create_containers <- function(gamma, fold) {
   )
 }
 
+#' Data adaptive influence function truncation
+#' 
+#' This helper function perform influence function truncation by (Wang et al., 2021)
+#' 
+IF_trunc_func <- function(IF){
+  
+  if (eq(max(abs(IF)),z=IF)>0) {
+    trunc <- max(abs(IF))
+  } else {
+    trunc <- uniroot(eq, z=IF, interval=c(0.01, max(abs(IF))))$root
+  }
+  IF_trunc <- pmin(abs(IF),trunc) *  sign(IF)
+  return(IF_trunc)
+  
+}
 
 #' One-step, split sample estimator for E[Y(t)], E[Y(t)|R=1], E[Y(t)|R=0], 
 #'   and E[Y(t)-Y0], E[Y(t)-Y0|R=1], E[Y(t)-Y0|R=0]
@@ -527,36 +542,16 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
     
     if(!simple_trunc){
       
-      if (eq(max(abs(if_R1_temp)),z=if_R1_temp)>0) {
-        trunc <- max(abs(if_R1_temp))
-      } else {
-        trunc <- uniroot(eq, z=if_R1_temp, interval=c(0.01, max(abs(if_R1_temp))))$root
-      }
-      if_R1_temp_trunc <- pmin(abs(if_R1_temp),trunc) *  sign(if_R1_temp)
+      if_R1_temp_trunc <- IF_trunc_func(if_R1_temp)
       containers_trunc$IF_R1[[g]] <- c(containers_trunc$IF_R1[[g]], if_R1_temp_trunc)
       
-      if (eq(max(abs(if_R1_temp_diff)),z=if_R1_temp_diff)>0) {
-        trunc <- max(abs(if_R1_temp_diff))
-      } else {
-        trunc <- uniroot(eq, z=if_R1_temp_diff, interval=c(0.01, max(abs(if_R1_temp_diff))))$root
-      }
-      if_R1_temp_trunc_diff <- pmin(abs(if_R1_temp_diff),trunc) * sign(if_R1_temp_diff)
+      if_R1_temp_trunc_diff <- IF_trunc_func(if_R1_temp_diff)
       containers_trunc$IF_R1_diff[[g]] <- c(containers_trunc$IF_R1_diff[[g]], if_R1_temp_trunc_diff)
       
-      if (eq(max(abs(if_R0_temp)),z=if_R0_temp)>0) {
-        trunc <- max(abs(if_R0_temp))
-      } else {
-        trunc <- uniroot(eq, z=if_R0_temp, interval=c(0.01, max(abs(if_R0_temp))))$root
-      }
-      if_R0_temp_trunc <- pmin(abs(if_R0_temp),trunc) * sign(if_R0_temp)
+      if_R0_temp_trunc <- IF_trunc_func(if_R0_temp)
       containers_trunc$IF_R0[[g]] <- c(containers_trunc$IF_R0[[g]], if_R0_temp_trunc)
       
-      if (eq(max(abs(if_R0_temp_diff)),z=if_R0_temp_diff)>0) {
-        trunc <- max(abs(if_R0_temp_diff))
-      } else {
-        trunc <- uniroot(eq, z=if_R0_temp_diff, interval=c(0.01, max(abs(if_R0_temp_diff))))$root
-      }
-      if_R0_temp_trunc_diff <- pmin(abs(if_R0_temp_diff),trunc) * sign(if_R0_temp_diff)
+      if_R0_temp_trunc_diff <- IF_trunc_func(if_R0_temp_diff)
       containers_trunc$IF_R0_diff[[g]] <- c(containers_trunc$IF_R0_diff[[g]], if_R0_temp_trunc_diff)
       
       if_temp_trunc <- if_R1_temp_trunc*prop.R1+if_R0_temp_trunc*(1-prop.R1)
