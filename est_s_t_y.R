@@ -425,10 +425,10 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
     prop.R1 <- mean(R_in_fold)
     
     ## containers$vector_R1 and containers$vector_R0
-    containers$vector_R1 <- c(containers$vector_R1, c(rep(0, length(M_in_fold_t_R0)+length(M_in_fold_t0_R0)),
-                                                      rep(1/prop.R1, length(M_in_fold_R1))))
-    containers$vector_R0 <- c(containers$vector_R0, c(rep(1/(1-prop.R1), length(M_in_fold_t_R0)+length(M_in_fold_t0_R0)), 
-                                                      rep(0, length(M_in_fold_R1))))
+    ind_R1_temp <- c(rep(0, length(M_in_fold_t_R0)+length(M_in_fold_t0_R0)), rep(1/prop.R1, length(M_in_fold_R1)))
+    ind_R0_temp <- c(rep(1/(1-prop.R1), length(M_in_fold_t_R0)+length(M_in_fold_t0_R0)),  rep(0, length(M_in_fold_R1)))
+    containers$vector_R1 <- c(containers$vector_R1, ind_R1_temp)
+    containers$vector_R0 <- c(containers$vector_R0, ind_R0_temp)
     
     ## Compute influence function for each gamma_t
     for (g in 1:length(gamma)){
@@ -488,20 +488,10 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
       if_R0_temp_diff <- if_R0_temp-pain_bq_R0_temp
     }
     
-    vector_mean_R0_temp <- c(rep(1/(1-prop.R1), length(M_in_fold_t_R0)+length(M_in_fold_t0_R0)), 
-                             rep(0, length(M_in_fold_R1)))*mean(if_R0_temp)
-    vector_mean_R0_temp_diff <- c(rep(1/(1-prop.R1), length(M_in_fold_t_R0)+length(M_in_fold_t0_R0)), 
-                                  rep(0, length(M_in_fold_R1)))*mean(if_R0_temp_diff)
-    
     if_R1_temp <- c(rep(0, length(M_in_fold_t_R0)+length(M_in_fold_t0_R0)), 
                     M_in_fold_R1*eta_T_R1_weight/prop.R1*(trt.ind_in_fold_R1*pi_R1_weight*(Y_in_fold_R1-mu_Y_t_R1_X_R1)+mu_Y_t_R1_X_R1))+
       c(rep(0, length(M_in_fold_t_R0)+length(M_in_fold_t0_R0)), (1-M_in_fold_R1*eta_T_R1_weight)*mu_Y_t_R1_X_R1/prop.R1)
     if_R1_temp_diff <- if_R1_temp-pain_bq_R1_temp
-    
-    vector_mean_R1_temp <- c(rep(0, length(M_in_fold_t_R0)+length(M_in_fold_t0_R0)),
-                             rep(1/prop.R1, length(M_in_fold_R1)))*mean(if_R1_temp)
-    vector_mean_R1_temp_diff <- c(rep(0, length(M_in_fold_t_R0)+length(M_in_fold_t0_R0)),
-                                  rep(1/prop.R1, length(M_in_fold_R1)))*mean(if_R1_temp_diff)
     
     containers$IF[[g]] <- c(containers$IF[[g]], if_temp)
     containers$IF_R1[[g]] <- c(containers$IF_R1[[g]], if_R1_temp)
@@ -514,14 +504,14 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
     containers$est_R1_temp[k, g] <- mean(if_R1_temp)
     containers$est_R0_temp[k, g] <- mean(if_R0_temp)
     containers$var_temp[k, g] <- sum((if_temp - mean(if_temp))^2)/(nk_in_fold-1)
-    containers$var_R1_temp[k, g] <- sum((if_R1_temp - vector_mean_R1_temp)^2)/(nk_in_fold-1)
-    containers$var_R0_temp[k, g] <- sum((if_R0_temp - vector_mean_R0_temp)^2)/(nk_in_fold-1)
+    containers$var_R1_temp[k, g] <- sum((if_R1_temp - ind_R1_temp*mean(if_R1_temp))^2)/(nk_in_fold-1)
+    containers$var_R0_temp[k, g] <- sum((if_R0_temp - ind_R0_temp*mean(if_R0_temp))^2)/(nk_in_fold-1)
     containers$est_temp_diff[k, g] <- mean(if_temp_diff)
     containers$est_R1_temp_diff[k, g] <- mean(if_R1_temp_diff)
     containers$est_R0_temp_diff[k, g] <- mean(if_R0_temp_diff)
     containers$var_temp_diff[k, g] <- sum((if_temp_diff - mean(if_temp_diff))^2)/(nk_in_fold-1)
-    containers$var_R1_temp_diff[k, g] <- sum((if_R1_temp_diff - vector_mean_R1_temp_diff)^2)/(nk_in_fold-1)
-    containers$var_R0_temp_diff[k, g] <- sum((if_R0_temp_diff - vector_mean_R0_temp_diff)^2)/(nk_in_fold-1)
+    containers$var_R1_temp_diff[k, g] <- sum((if_R1_temp_diff - ind_R1_temp*mean(if_R1_temp_diff))^2)/(nk_in_fold-1)
+    containers$var_R0_temp_diff[k, g] <- sum((if_R0_temp_diff - ind_R0_temp*mean(if_R0_temp_diff))^2)/(nk_in_fold-1)
     
     if(!simple_trunc){
       
@@ -541,30 +531,20 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
       containers_trunc$IF[[g]] <- c(containers_trunc$IF[[g]], if_temp_trunc)
       if_temp_trunc_diff <- if_R1_temp_trunc_diff*prop.R1+if_R0_temp_trunc_diff*(1-prop.R1)
       containers_trunc$IF_diff[[g]] <- c(containers_trunc$IF_diff[[g]], if_temp_trunc_diff)
-      
-      vector_mean_R0_temp <- c(rep(1/(1-prop.R1), length(M_in_fold_t_R0)+length(M_in_fold_t0_R0)), 
-                               rep(0, length(M_in_fold_R1)))*mean(if_R0_temp_trunc)
-      vector_mean_R0_temp_diff <- c(rep(1/(1-prop.R1), length(M_in_fold_t_R0)+length(M_in_fold_t0_R0)), 
-                                    rep(0, length(M_in_fold_R1)))*mean(if_R0_temp_trunc_diff)
-      
-      vector_mean_R1_temp <- c(rep(0, length(M_in_fold_t_R0)+length(M_in_fold_t0_R0)),
-                               rep(1/prop.R1, length(M_in_fold_R1)))*mean(if_R1_temp_trunc)
-      vector_mean_R1_temp_diff <- c(rep(0, length(M_in_fold_t_R0)+length(M_in_fold_t0_R0)),
-                                    rep(1/prop.R1, length(M_in_fold_R1)))*mean(if_R1_temp_trunc_diff)
 
       containers_trunc$est_temp[k, g] <- mean(if_temp_trunc)
       containers_trunc$est_R1_temp[k, g] <- mean(if_R1_temp_trunc)
       containers_trunc$est_R0_temp[k, g] <- mean(if_R0_temp_trunc)
       containers_trunc$var_temp[k, g] <- sum((if_temp_trunc - mean(if_temp_trunc))^2)/(nk_in_fold-1)
-      containers_trunc$var_R1_temp[k, g] <- sum((if_R1_temp_trunc - vector_mean_R1_temp)^2)/(nk_in_fold-1)
-      containers_trunc$var_R0_temp[k, g] <- sum((if_R0_temp_trunc - vector_mean_R0_temp)^2)/(nk_in_fold-1)
+      containers_trunc$var_R1_temp[k, g] <- sum((if_R1_temp_trunc - ind_R1_temp*mean(if_R1_temp_trunc))^2)/(nk_in_fold-1)
+      containers_trunc$var_R0_temp[k, g] <- sum((if_R0_temp_trunc - ind_R0_temp*mean(if_R0_temp_trunc))^2)/(nk_in_fold-1)
       
       containers_trunc$est_temp_diff[k, g] <- mean(if_temp_trunc_diff)
       containers_trunc$est_R1_temp_diff[k, g] <- mean(if_R1_temp_trunc_diff)
       containers_trunc$est_R0_temp_diff[k, g] <- mean(if_R0_temp_trunc_diff)
       containers_trunc$var_temp_diff[k, g] <- sum((if_temp_trunc_diff - mean(if_temp_trunc_diff))^2)/(nk_in_fold-1)
-      containers_trunc$var_R1_temp_diff[k, g] <- sum((if_R1_temp_trunc_diff - vector_mean_R1_temp_diff)^2)/(nk_in_fold-1)
-      containers_trunc$var_R0_temp_diff[k, g] <- sum((if_R0_temp_trunc_diff - vector_mean_R0_temp_diff)^2)/(nk_in_fold-1)
+      containers_trunc$var_R1_temp_diff[k, g] <- sum((if_R1_temp_trunc_diff - ind_R1_temp*mean(if_R1_temp_trunc_diff))^2)/(nk_in_fold-1)
+      containers_trunc$var_R0_temp_diff[k, g] <- sum((if_R0_temp_trunc_diff - ind_R0_temp*mean(if_R0_temp_trunc_diff))^2)/(nk_in_fold-1)
       
     }
     }
