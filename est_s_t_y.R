@@ -111,13 +111,14 @@ SIM <- function(X, Y, kernel, method, single_index_method, use_mave){
 #'   truncation when `simple_trunc = TRUE`.
 #' @param kernel Characters; Kernel used for SIMs. `K2_Biweight` for Epanechnikov kernel, 
 #'   `dnorm` for Gaussian kernel. 
-#' @param method Characters; Optimization method used for SIMs. Choices are: `optim`, `nlminb`, `nmk`. 
 #' @param single_index_method Characters; Three implementations for SIMs: `fixed_bandwidth` 
 #'    for setting bandwidth to 1, `fixed_coef` for setting the first coefficient to 1, and `norm1coef`
 #'    for setting the norm of coefficients to 1. 
+#' @param method Characters; Optimization method used for SIMs. Choices are: `optim`, `nlminb`, `nmk`. 
+#'    Note that method is set to `optim` if single_index_method=`norm1coef`. 
 #' @param use_mave Logical; if `TRUE`, use Minimum Average Variance Estimation (MAVE) method for initial
-#'    coefficients value for SIMs. If `FALSE`, use sliced inverse regression. 
-#' @param s_t_y A function of Y in the exponential tilting model. 
+#'    coefficients value for SIMs. If `FALSE`, use sliced inverse regression. Default is `TRUE`. 
+#' @param s_t_y A function of Y in the exponential tilting model. If NULL, s_t_y is set to pnorm((y-60)/25). 
 #' @param coef_g.fit Optional starting values for a treatment model; currently
 #'   retained for interface compatibility.
 #' @param coef_t_R0.fit Optional starting coefficients for treatment model fit
@@ -150,9 +151,10 @@ SIM <- function(X, Y, kernel, method, single_index_method, use_mave){
 #' @examples
 #' # out <- est_psi(Y, M, R, X, t, trt = 1, gamma = c(0, 0.5),
 #' #                fold = 5, seed = 1, IF_output = FALSE,
-#' #                simple_trunc = TRUE, quant = 0.99)
+#' #                simple_trunc = TRUE, quant = 0.99, kernel="dnorm", 
+#' #                method="optim", )
 est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output, 
-                    simple_trunc, quant, kernel, method, single_index_method, 
+                    simple_trunc, quant, kernel, single_index_method, method="optim", 
                     use_mave=TRUE, s_t_y=NULL, coef_g.fit=NULL, coef_t_R0.fit=NULL, 
                     coef_t_R1.fit=NULL, coef_M_R0.fit=NULL, coef_M_R1.fit=NULL){
   
