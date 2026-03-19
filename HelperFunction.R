@@ -16,7 +16,7 @@ eq <- function(theta,z) {
   mean( pmin( (z)^2, theta^2 )/ theta^2) - log(length(z))/length(z)
 }
 
-## Induced estimates
+## Induced estimates with single index model
 counterfactual <- function(Y, Y0, M, R, X, t, trt, gamma, est){
   
   result <- vector(length=length(gamma))
@@ -42,22 +42,16 @@ counterfactual <- function(Y, Y0, M, R, X, t, trt, gamma, est){
   
   ## fit outcome model
   requireNamespace('MAVE', quietly = TRUE)
-  SDR_t_R0 <- coef(MAVE::mave.compute(X_adjust_scale_t_R0[which(M_t_R0==1), ], Y_t_R0[which(M_t_R0==1)], max.dim = 1), 1)
-  # SDR_t_R0 <- cumuSIR(X=X_adjust_scale_t_R0[which(M_t_R0==1), ], Y=Y_t_R0[which(M_t_R0==1)])
-  fit_t_R0_h <- SIDRnew_fixed_bandwidth(X = X_adjust_scale_t_R0[which(M_t_R0==1), ],
-                                        Y = Y_t_R0[which(M_t_R0==1)],
-                                        initial = SDR_t_R0,
-                                        kernel = "K2_Biweight",
-                                        method = "optim",
-                                        ids = 1:length(Y_t_R0[which(M_t_R0==1)]))
-  SDR_t_R1 <- coef(MAVE::mave.compute(X_adjust_scale_t_R1[which(M_t_R1==1), ], Y_t_R1[which(M_t_R1==1)], max.dim = 1), 1)
-  # SDR_t_R1 <- cumuSIR(X=X_adjust_scale_t_R1[which(M_t_R1==1), ], Y=Y_t_R1[which(M_t_R1==1)])
-  fit_t_R1_h <- SIDRnew_fixed_bandwidth(X = X_adjust_scale_t_R1[which(M_t_R1==1), ],
-                                        Y = Y_t_R1[which(M_t_R1==1)],
-                                        initial = SDR_t_R1,
-                                        kernel = "K2_Biweight",
-                                        method = "optim",
-                                        ids = 1:length(Y_t_R1[which(M_t_R1==1)]))
+  fit_t_R0_h <- fit_SensIAT_single_index_norm1coef_model(X = X_adjust_scale_t_R0[which(M_t_R0==1), ],
+                                                         Y = Y_t_R0[which(M_t_R0==1)],
+                                                         ids = 1:length(Y_t_R0[which(M_t_R0==1)]), 
+                                                         kernel="dnorm", bw.selection="ise", bw.method="optim", use_mave=TRUE)
+  
+  fit_t_R1_h <- fit_SensIAT_single_index_norm1coef_model(X = X_adjust_scale_t_R1[which(M_t_R1==1), ],
+                                                         Y = Y_t_R1[which(M_t_R1==1)],
+                                                         ids = 1:length(Y_t_R1[which(M_t_R1==1)]), 
+                                                         kernel="dnorm", bw.selection="ise", bw.method="optim", use_mave=TRUE)
+  
   
   X_t_R0_beta_t_R0 <- as.vector(X_adjust_scale_t_R0[which(M_t_R0==1), ] %*% fit_t_R0_h$coef)
   X_beta_t_R0 <- as.vector(X_adjust_scale %*% fit_t_R0_h$coef)
@@ -68,12 +62,12 @@ counterfactual <- function(Y, Y0, M, R, X, t, trt, gamma, est){
   ny_t_R0 = length(y_t_R0) 
   F_X_t_R0 <- NW_new(Xb=X_t_R0_beta_t_R0, Y=Y_t_R0[which(M_t_R0==1)], 
                      xb=X_beta_t_R0, y=y_t_R0, h=fit_t_R0_h$bandwidth, 
-                     kernel = "K2_Biweight")
+                     kernel = "dnorm")
   y_t_R1 = sort(unique(Y_t_R1[which(M_t_R1==1)]))    
   ny_t_R1 = length(y_t_R1) 
   F_X_t_R1 <- NW_new(Xb=X_t_R1_beta_t_R1, Y=Y_t_R1[which(M_t_R1==1)], 
                      xb=X_beta_t_R1, y=y_t_R1, h=fit_t_R1_h$bandwidth, 
-                     kernel = "K2_Biweight")
+                     kernel = "dnorm")
   
   i1 = which(apply(F_X_t_R0==0,1,prod)==1)
   i1.closest <- apply(abs(outer(X_beta_t_R0[i1], X_beta_t_R0[-i1], FUN = "-")), 1, which.min)
@@ -83,13 +77,13 @@ counterfactual <- function(Y, Y0, M, R, X, t, trt, gamma, est){
   i1.closest <- apply(abs(outer(X_beta_t_R1[i1], X_beta_t_R1[-i1], FUN = "-")), 1, which.min)
   F_X_t_R1[i1, ] <- F_X_t_R1[-i1, ][i1.closest, ]
   
-  dF_X_t_R0 <- F_X_t_R0-c(0, F_X_t_R0[,-ny_t_R0])
-  dF_X_t_R1 <- F_X_t_R1-c(0, F_X_t_R1[,-ny_t_R1])
+  dF_X_t_R0 <- F_X_t_R0[, -1, drop = FALSE]-F_X_t_R0[,-ny_t_R0, drop = FALSE]
+  dF_X_t_R1 <- F_X_t_R1[, -1, drop = FALSE]-F_X_t_R1[,-ny_t_R1, drop = FALSE]
   
   ## conditional expectation of Y given R=0, T=t and X
-  mu_X_t_R0 <- c(dF_X_t_R0 %*% (y_t_R0+c(0, y_t_R0[-ny_t_R0]))/2)
+  mu_X_t_R0 <- c(dF_X_t_R0 %*% (y_t_R0[-1]+y_t_R0[-ny_t_R0])/2)
   ## conditional expectation of Y given R=1, T=t and X
-  mu_X_t_R1 <- c(dF_X_t_R1 %*% (y_t_R1+c(0, y_t_R1[-ny_t_R1]))/2)
+  mu_X_t_R1 <- c(dF_X_t_R1 %*% (y_t_R1[-1]+y_t_R1[-ny_t_R1])/2)
   
   ## fit g model
   g.fit <- mgcv::gam(as.formula(paste("R ~", gam.var)), data=cbind(R, X), family=binomial) 
@@ -101,7 +95,7 @@ counterfactual <- function(Y, Y0, M, R, X, t, trt, gamma, est){
   t_R1.fit <- mgcv::gam(as.formula(paste("trt.ind_R1 ~", gam.var)), data=X_R1, family=binomial) ## treatment model
   pi_R0 <- predict(t_R0.fit, newdata=X, type="response") 
   pi_R1 <- predict(t_R1.fit, newdata=X, type="response")
-
+  
   ## empirical mean
   prop_t <- sum(trt.ind)/n
   mean_Y0_t0 <- mean(Y0[which(t!=trt)])
@@ -114,7 +108,7 @@ counterfactual <- function(Y, Y0, M, R, X, t, trt, gamma, est){
 }
 
 
-## truth: single index or beta regression
+## truth: beta regression
 truth <- function(Y, Y0, M, R, t, X, trt, gamma){
   
   truth_t <- c()
@@ -142,21 +136,21 @@ truth <- function(Y, Y0, M, R, t, X, trt, gamma){
   trt.ind_R1 <- trt.ind[which(R==1)]
   
   ## fit outcome model
-    # rescale outcome to (0,1)
-    eps <- 1e-6
-    Y01 <- Y/100
-    # nudge any 0/1 slightly inside (only needed if any exact 0 or 100)
-    Y01[Y01 <= 0] <- eps
-    Y01[Y01 >= 1] <- 1 - eps
-    
-    Y_t_R0.fit <- betareg(as.formula(paste("Y01 ~", paste(index.var.Y, collapse = "+"))), data=cbind(Y01, X)[which(t==trt & R==0 & M==1), ])
-    Y_t_R1.fit <- betareg(as.formula(paste("Y01 ~", paste(index.var.Y, collapse = "+"))), data=cbind(Y01, X)[which(t==trt & R==1 & M==1), ])
-    
-    phi_t_R0 <- Y_t_R0.fit$coefficients$precision
-    phi_t_R1 <- Y_t_R1.fit$coefficients$precision
-    
-    mu_X_t_R0 <- 100*predict(Y_t_R0.fit, newdata=X, type="response")
-    mu_X_t_R1 <- 100*predict(Y_t_R1.fit, newdata=X, type="response")
+  # rescale outcome to (0,1)
+  eps <- 1e-6
+  Y01 <- Y/100
+  # nudge any 0/1 slightly inside (only needed if any exact 0 or 100)
+  Y01[Y01 <= 0] <- eps
+  Y01[Y01 >= 1] <- 1 - eps
+  
+  Y_t_R0.fit <- betareg(as.formula(paste("Y01 ~", paste(index.var.Y, collapse = "+"))), data=cbind(Y01, X)[which(t==trt & R==0 & M==1), ])
+  Y_t_R1.fit <- betareg(as.formula(paste("Y01 ~", paste(index.var.Y, collapse = "+"))), data=cbind(Y01, X)[which(t==trt & R==1 & M==1), ])
+  
+  phi_t_R0 <- Y_t_R0.fit$coefficients$precision
+  phi_t_R1 <- Y_t_R1.fit$coefficients$precision
+  
+  mu_X_t_R0 <- 100*predict(Y_t_R0.fit, newdata=X, type="response")
+  mu_X_t_R1 <- 100*predict(Y_t_R1.fit, newdata=X, type="response")
   
   ## fit g model
   g.fit <- mgcv::gam(as.formula(paste("R ~", gam.var)), data=cbind(R, X), family=binomial) 
@@ -166,23 +160,23 @@ truth <- function(Y, Y0, M, R, t, X, trt, gamma){
   ## fit treatment assignment model
   t_R0.fit <- mgcv::gam(as.formula(paste("trt.ind_R0 ~", gam.var)), data=X_R0, family=binomial) ## treatment model
   pi_R0 <- predict(t_R0.fit, newdata=X, type="response") 
-
+  
   for(g in 1:length(gamma)){
-      
-      mu_Yexp_X_t_R0 <- mapply(function(a,b) {
-        integrate(function(y) 100*y * exp(gamma[g]*pnorm((100*y-60)/25)) * dbeta(y, shape1 = a, shape2 = b), lower = 0, upper = 1)$value
-      }, mu_X_t_R0/100*phi_t_R0, (1-mu_X_t_R0/100)*phi_t_R0)
-      
-      mu_exp_X_t_R0 <- mapply(function(a,b) {
-        integrate(function(y) exp(gamma[g]*pnorm((100*y-60)/25)) * dbeta(y, shape1 = a, shape2 = b), lower = 0, upper = 1)$value
-      }, mu_X_t_R0/100*phi_t_R0, (1-mu_X_t_R0/100)*phi_t_R0)
-      
-
-      truth_t <- c(truth_t, mean(g1*mu_X_t_R1+g0*(mu_X_t_R0*pi_R0+mu_Yexp_X_t_R0/mu_exp_X_t_R0*(1-pi_R0))))
-      truth_t_R0 <- c(truth_t_R0, mean(g0*(mu_X_t_R0*pi_R0+mu_Yexp_X_t_R0/mu_exp_X_t_R0*(1-pi_R0)))/mean(g0))
-      truth_t_diff <- c(truth_t_diff, mean(g1*mu_X_t_R1+g0*(mu_X_t_R0*pi_R0+mu_Yexp_X_t_R0/mu_exp_X_t_R0*(1-pi_R0)))-mean(Y0))
-      truth_t_R0_diff <- c(truth_t_R0_diff, mean(g0*(mu_X_t_R0*pi_R0+mu_Yexp_X_t_R0/mu_exp_X_t_R0*(1-pi_R0)))/mean(g0)-mean(Y0[which(R==0)]))
-      
+    
+    mu_Yexp_X_t_R0 <- mapply(function(a,b) {
+      integrate(function(y) 100*y * exp(gamma[g]*pnorm((100*y-60)/25)) * dbeta(y, shape1 = a, shape2 = b), lower = 0, upper = 1)$value
+    }, mu_X_t_R0/100*phi_t_R0, (1-mu_X_t_R0/100)*phi_t_R0)
+    
+    mu_exp_X_t_R0 <- mapply(function(a,b) {
+      integrate(function(y) exp(gamma[g]*pnorm((100*y-60)/25)) * dbeta(y, shape1 = a, shape2 = b), lower = 0, upper = 1)$value
+    }, mu_X_t_R0/100*phi_t_R0, (1-mu_X_t_R0/100)*phi_t_R0)
+    
+    
+    truth_t <- c(truth_t, mean(g1*mu_X_t_R1+g0*(mu_X_t_R0*pi_R0+mu_Yexp_X_t_R0/mu_exp_X_t_R0*(1-pi_R0))))
+    truth_t_R0 <- c(truth_t_R0, mean(g0*(mu_X_t_R0*pi_R0+mu_Yexp_X_t_R0/mu_exp_X_t_R0*(1-pi_R0)))/mean(g0))
+    truth_t_diff <- c(truth_t_diff, mean(g1*mu_X_t_R1+g0*(mu_X_t_R0*pi_R0+mu_Yexp_X_t_R0/mu_exp_X_t_R0*(1-pi_R0)))-mean(Y0))
+    truth_t_R0_diff <- c(truth_t_R0_diff, mean(g0*(mu_X_t_R0*pi_R0+mu_Yexp_X_t_R0/mu_exp_X_t_R0*(1-pi_R0)))/mean(g0)-mean(Y0[which(R==0)]))
+    
   }
   
   truth_t_R1 <- mean(mu_X_t_R1*g1)/mean(g1)
