@@ -152,7 +152,7 @@ SIM <- function(X, Y, kernel, method, single_index_method, use_mave){
 #' # out <- est_psi(Y, M, R, X, t, trt = 1, gamma = c(0, 0.5),
 #' #                fold = 5, seed = 1, IF_output = FALSE,
 #' #                simple_trunc = TRUE, quant = 0.99, kernel="dnorm", 
-#' #                method="optim", )
+#' #                single_index_method="norm1coef", method="optim")
 est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output, 
                     simple_trunc, quant, kernel, single_index_method, method="optim", 
                     use_mave=TRUE, s_t_y=NULL, coef_g.fit=NULL, coef_t_R0.fit=NULL, 
