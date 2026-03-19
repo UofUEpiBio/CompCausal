@@ -53,6 +53,35 @@ IF_trunc_func <- function(IF){
   
 }
 
+#' Single index models
+#' 
+#' @noRd
+SIM <- function(X, Y, kernel, method, single_index_method, use_mave){
+  if(single_index_method=="fixed_bandwidth"){
+    if(use_mave){
+      requireNamespace('MAVE', quietly = TRUE)
+      SDR <- coef(MAVE::mave.compute(X, Y, max.dim = 1), 1)
+    }else{
+      SDR <- cumuSIR(X=X, Y=Y)
+    }
+    fit_h <- SIDRnew_fixed_bandwidth(X=X, Y=Y, initial = SDR, kernel = kernel, method=method, ids = 1:length(Y))
+    
+  }else if(single_index_method=="fixed_coef"){
+    if(use_mave){
+      requireNamespace('MAVE', quietly = TRUE)
+      SDR <- coef(MAVE::mave.compute(X, Y, max.dim = 1), 1)
+    }else{
+      SDR <- cumuSIR(X=X, Y=Y)
+    }
+    fit_h <- SIDR_Ravinew(X=X, Y=Y, initial=c(1,as.vector(SDR[-1]/SDR[1])), kernel=kernel, method=method, index_ID=1:length(Y))
+  }else if(single_index_method=="norm1coef"){
+    fit_h  <- fit_SensIAT_single_index_norm1coef_model(X=X, Y=Y,  ids=1:length(Y), kernel=kernel, bw.selection="ise", 
+                                                       bw.method="optim", use_mave=use_mave)
+  }
+  return(fit_h)
+}
+
+
 #' One-step, split sample estimator for E[Y(t)], E[Y(t)|R=1], E[Y(t)|R=0], 
 #'   and E[Y(t)-Y0], E[Y(t)-Y0|R=1], E[Y(t)-Y0|R=0]
 #'   
@@ -340,78 +369,10 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
     pain_bq_R0_temp <- pain_bq_reordered_R0[which(fold_index_pain==k)]
     
     ## fit models
-    if(single_index_method=="fixed_bandwidth"){
-      if(use_mave){
-        requireNamespace('MAVE', quietly = TRUE)
-        SDR_t_R0 <- coef(MAVE::mave.compute(X_out_fold_t_R0_adjust_scale[which(M_out_fold_t_R0==1), ],
-                                            Y_out_fold_t_R0[which(M_out_fold_t_R0==1)], max.dim = 1), 1)
-      }else{
-        SDR_t_R0 <- cumuSIR(X = X_out_fold_t_R0_adjust_scale[which(M_out_fold_t_R0==1), ],
-                            Y = Y_out_fold_t_R0[which(M_out_fold_t_R0==1)])
-      }
-      fit_t_R0_h <- SIDRnew_fixed_bandwidth(X = X_out_fold_t_R0_adjust_scale[which(M_out_fold_t_R0==1), ],
-                                            Y = Y_out_fold_t_R0[which(M_out_fold_t_R0==1)],
-                                            initial = SDR_t_R0,
-                                            kernel = kernel,
-                                            method = method,
-                                            ids = 1:length(Y_out_fold_t_R0[which(M_out_fold_t_R0==1)]))
-
-    }else if(single_index_method=="fixed_coef"){
-    if(use_mave){
-      requireNamespace('MAVE', quietly = TRUE)
-      SDR_t_R0 <- coef(MAVE::mave.compute(X_out_fold_t_R0_adjust_scale[which(M_out_fold_t_R0==1), ],
-                                          Y_out_fold_t_R0[which(M_out_fold_t_R0==1)], max.dim = 1), 1)
-    }else{
-      SDR_t_R0 <- cumuSIR(X = X_out_fold_t_R0_adjust_scale[which(M_out_fold_t_R0==1), ],
-                          Y = Y_out_fold_t_R0[which(M_out_fold_t_R0==1)])
-    }
-    fit_t_R0_h <- SIDR_Ravinew(X = X_out_fold_t_R0_adjust_scale[which(M_out_fold_t_R0==1), ],
-                               Y = Y_out_fold_t_R0[which(M_out_fold_t_R0==1)],
-                               initial=c(1,as.vector(SDR_t_R0[-1]/SDR_t_R0[1])), 
-                               kernel = kernel,
-                               method = method, 
-                               index_ID=1:length(Y_out_fold_t_R0[which(M_out_fold_t_R0==1)]))
-    }else if(single_index_method=="norm1coef"){
-    fit_t_R0_h  <- fit_SensIAT_single_index_norm1coef_model(X = X_out_fold_t_R0_adjust_scale[which(M_out_fold_t_R0==1), ],
-                                                            Y = Y_out_fold_t_R0[which(M_out_fold_t_R0==1)], 
-                                                            ids=1:length(Y_out_fold_t_R0[which(M_out_fold_t_R0==1)]), 
-                                                            kernel=kernel, bw.selection="ise", bw.method="optim", use_mave=use_mave)
-    }
-    
-    if(single_index_method=="fixed_bandwidth"){
-    if(use_mave){
-    SDR_t_R1 <- coef(MAVE::mave.compute(X_out_fold_t_R1_adjust_scale[which(M_out_fold_t_R1==1), ],
-                                        Y_out_fold_t_R1[which(M_out_fold_t_R1==1)], max.dim = 1), 1)
-    }else{
-    SDR_t_R1 <- cumuSIR(X = X_out_fold_t_R1_adjust_scale[which(M_out_fold_t_R1==1), ],
-                        Y = Y_out_fold_t_R1[which(M_out_fold_t_R1==1)])
-    }
-    fit_t_R1_h <- SIDRnew_fixed_bandwidth(X = X_out_fold_t_R1_adjust_scale[which(M_out_fold_t_R1==1), ],
-                                          Y = Y_out_fold_t_R1[which(M_out_fold_t_R1==1)],
-                                          initial = SDR_t_R1,
-                                          kernel = kernel,
-                                          method = method,
-                                          ids = 1:length(Y_out_fold_t_R1[which(M_out_fold_t_R1==1)]))
-    }else if(single_index_method=="fixed_coef"){
-      if(use_mave){
-        SDR_t_R1 <- coef(MAVE::mave.compute(X_out_fold_t_R1_adjust_scale[which(M_out_fold_t_R1==1), ],
-                                            Y_out_fold_t_R1[which(M_out_fold_t_R1==1)], max.dim = 1), 1)
-      }else{
-        SDR_t_R1 <- cumuSIR(X = X_out_fold_t_R1_adjust_scale[which(M_out_fold_t_R1==1), ],
-                            Y = Y_out_fold_t_R1[which(M_out_fold_t_R1==1)])
-      }
-    fit_t_R1_h <- SIDR_Ravinew(X = X_out_fold_t_R1_adjust_scale[which(M_out_fold_t_R1==1), ],
-                               Y = Y_out_fold_t_R1[which(M_out_fold_t_R1==1)],
-                               initial=c(1,as.vector(SDR_t_R1[-1]/SDR_t_R1[1])), 
-                               kernel = kernel,
-                               method = method, 
-                               index_ID=1:length(Y_out_fold_t_R1[which(M_out_fold_t_R1==1)]))
-    }else if(single_index_method=="norm1coef"){
-    fit_t_R1_h  <- fit_SensIAT_single_index_norm1coef_model(X = X_out_fold_t_R1_adjust_scale[which(M_out_fold_t_R1==1), ],
-                                                            Y = Y_out_fold_t_R1[which(M_out_fold_t_R1==1)],
-                                                            ids=1:length(Y_out_fold_t_R1[which(M_out_fold_t_R1==1)]), 
-                                                            kernel=kernel, bw.selection="ise", bw.method="optim", use_mave=use_mave)
-    }
+    fit_t_R0_h <- SIM(X=X_out_fold_t_R0_adjust_scale[which(M_out_fold_t_R0==1), ], Y=Y_out_fold_t_R0[which(M_out_fold_t_R0==1)], 
+                      kernel=kernel, method=method, single_index_method=single_index_method, use_mave=use_mave)
+    fit_t_R1_h <- SIM(X=X_out_fold_t_R1_adjust_scale[which(M_out_fold_t_R1==1), ], Y=Y_out_fold_t_R1[which(M_out_fold_t_R1==1)], 
+                      kernel=kernel, method=method, single_index_method=single_index_method, use_mave=use_mave)
     
     ## get prediction for X'beta
     X_in_fold_t_R0_beta_t_R0 <- as.vector(X_in_fold_t_R0_adjust_scale %*% fit_t_R0_h$coef)
