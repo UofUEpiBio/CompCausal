@@ -57,7 +57,7 @@ IF_trunc_func <- function(IF){
 #'   and E[Y(t)-Y0], E[Y(t)-Y0|R=1], E[Y(t)-Y0|R=0]
 #'   
 #' Estimates study-specific and overall outcome means (and difference from baseline)
-#' using cross-fitting with single index models and
+#' using cross-fitting with single index models (SIMs) and
 #' nuisance models for treatment and outcome missingness (`mgcv::gam`). The function
 #' also computes influence-function-based variances, confidence intervals, and
 #' optional truncated influence-function diagnostics.
@@ -80,6 +80,15 @@ IF_trunc_func <- function(IF){
 #'   probability weights. If `FALSE`, apply IF truncation diagnostics.
 #' @param quant Numeric in `(0, 1)` used as the upper quantile for simple weight
 #'   truncation when `simple_trunc = TRUE`.
+#' @param kernel Characters; Kernel used for SIMs. `K2_Biweight` for Epanechnikov kernel, 
+#'   `dnorm` for Gaussian kernel. 
+#' @param method Characters; Optimization method used for SIMs. Choices are: `optim`, `nlminb`, `nmk`. 
+#' @param single_index_method Characters; Three implementations for SIMs: `fixed_bandwidth` 
+#'    for setting bandwidth to 1, `fixed_coef` for setting the first coefficient to 1, and `norm1coef`
+#'    for setting the norm of coefficients to 1. 
+#' @param use_mave Logical; if `TRUE`, use Minimum Average Variance Estimation (MAVE) method for initial
+#'    coefficients value for SIMs. If `FALSE`, use sliced inverse regression. 
+#' @param s_t_y A function of Y in the exponential tilting model. 
 #' @param coef_g.fit Optional starting values for a treatment model; currently
 #'   retained for interface compatibility.
 #' @param coef_t_R0.fit Optional starting coefficients for treatment model fit
@@ -462,26 +471,26 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
     
     ## Compute influence function for each gamma_t
     for (g in 1:length(gamma)){
-      
+    
       ## conditional expectation of Y * exp given R=0, T=t and X, for I(R=0, T=t)
-      mu_Yexp_t_R0_X_t_R0 <- c(dF_t_R0_X_t_R0 %*% (y_t_R0[-1]*exp(gamma[g]*pnorm((y_t_R0[-1]-60)/25))+
-                                                     y_t_R0[-ny_t_R0]*exp(gamma[g]*pnorm((y_t_R0[-ny_t_R0]-60)/25)))/2)
+      mu_Yexp_t_R0_X_t_R0 <- c(dF_t_R0_X_t_R0 %*% (y_t_R0[-1]*exp(gamma[g]*s_t_y(y_t_R0[-1]))+
+                                                     y_t_R0[-ny_t_R0]*exp(gamma[g]*s_t_y(y_t_R0[-ny_t_R0])))/2)
       
       ## conditional expectation of exp given R=0, T=t and X, for I(R=0, T=t)
-      mu_exp_t_R0_X_t_R0 <- c(dF_t_R0_X_t_R0 %*% (exp(gamma[g]*pnorm((y_t_R0[-1]-60)/25))+
-                                                    exp(gamma[g]*pnorm((y_t_R0[-ny_t_R0]-60)/25)))/2)
+      mu_exp_t_R0_X_t_R0 <- c(dF_t_R0_X_t_R0 %*% (exp(gamma[g]*s_t_y(y_t_R0[-1]))+
+                                                    exp(gamma[g]*s_t_y(y_t_R0[-ny_t_R0])))/2)
       
       ## conditional expectation of Y * exp given R=0, T=t and X, for I(R=0, T=1-t)
-      mu_Yexp_t_R0_X_t0_R0 <- c(dF_t_R0_X_t0_R0 %*% (y_t_R0[-1]*exp(gamma[g]*pnorm((y_t_R0[-1]-60)/25))+
-                                                       y_t_R0[-ny_t_R0]*exp(gamma[g]*pnorm((y_t_R0[-ny_t_R0]-60)/25)))/2)
+      mu_Yexp_t_R0_X_t0_R0 <- c(dF_t_R0_X_t0_R0 %*% (y_t_R0[-1]*exp(gamma[g]*s_t_y(y_t_R0[-1]))+
+                                                       y_t_R0[-ny_t_R0]*exp(gamma[g]*s_t_y(y_t_R0[-ny_t_R0])))/2)
       
       ## conditional expectation of exp given R=0, T=t and X, for I(R=0, T=1-t)
-      mu_exp_t_R0_X_t0_R0 <- c(dF_t_R0_X_t0_R0 %*% (exp(gamma[g]*pnorm((y_t_R0[-1]-60)/25))+
-                                                      exp(gamma[g]*pnorm((y_t_R0[-ny_t_R0]-60)/25)))/2)
-      
+      mu_exp_t_R0_X_t0_R0 <- c(dF_t_R0_X_t0_R0 %*% (exp(gamma[g]*s_t_y(y_t_R0[-1]))+
+                                                      exp(gamma[g]*s_t_y(y_t_R0[-ny_t_R0])))/2)
+
     ## IF+psi within each fold
     if(trt==1){
-      if_temp <- c(M_in_fold_t_R0*eta_t_R0_weight*(Y_in_fold_t_R0+(pi_R0_weight-1)*exp(gamma[g]*pnorm((Y_in_fold_t_R0-60)/25))/mu_exp_t_R0_X_t_R0*
+      if_temp <- c(M_in_fold_t_R0*eta_t_R0_weight*(Y_in_fold_t_R0+(pi_R0_weight-1)*exp(gamma[g]*s_t_y(Y_in_fold_t_R0))/mu_exp_t_R0_X_t_R0*
                                               (Y_in_fold_t_R0-mu_Yexp_t_R0_X_t_R0/mu_exp_t_R0_X_t_R0)), 
                    M_in_fold_t0_R0*eta_t0_R0_weight*mu_Yexp_t_R0_X_t0_R0/mu_exp_t_R0_X_t0_R0, 
                    M_in_fold_R1*eta_T_R1_weight*(trt.ind_in_fold_R1*pi_R1_weight*(Y_in_fold_R1-mu_Y_t_R1_X_R1)+mu_Y_t_R1_X_R1))+
@@ -490,7 +499,7 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
           (1-M_in_fold_R1*eta_T_R1_weight)*mu_Y_t_R1_X_R1)
       if_temp_diff <- if_temp-pain_bq_temp
       
-      if_R0_temp <- c(M_in_fold_t_R0*eta_t_R0_weight/(1-prop.R1)*(Y_in_fold_t_R0+(pi_R0_weight-1)*exp(gamma[g]*pnorm((Y_in_fold_t_R0-60)/25))/mu_exp_t_R0_X_t_R0*
+      if_R0_temp <- c(M_in_fold_t_R0*eta_t_R0_weight/(1-prop.R1)*(Y_in_fold_t_R0+(pi_R0_weight-1)*exp(gamma[g]*s_t_y(Y_in_fold_t_R0))/mu_exp_t_R0_X_t_R0*
                                                  (Y_in_fold_t_R0-mu_Yexp_t_R0_X_t_R0/mu_exp_t_R0_X_t_R0)), 
                       M_in_fold_t0_R0*eta_t0_R0_weight/(1-prop.R1)*mu_Yexp_t_R0_X_t0_R0/mu_exp_t_R0_X_t0_R0, 
                       rep(0, length(M_in_fold_R1)))+
@@ -500,7 +509,7 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
       if_R0_temp_diff <- if_R0_temp-pain_bq_R0_temp
     }else{
       if_temp <- c(M_in_fold_t0_R0*eta_t0_R0_weight*mu_Yexp_t_R0_X_t0_R0/mu_exp_t_R0_X_t0_R0, 
-                   M_in_fold_t_R0*eta_t_R0_weight*(Y_in_fold_t_R0+(pi_R0_weight-1)*exp(gamma[g]*pnorm((Y_in_fold_t_R0-60)/25))/mu_exp_t_R0_X_t_R0*
+                   M_in_fold_t_R0*eta_t_R0_weight*(Y_in_fold_t_R0+(pi_R0_weight-1)*exp(gamma[g]*s_t_y(Y_in_fold_t_R0))/mu_exp_t_R0_X_t_R0*
                                               (Y_in_fold_t_R0-mu_Yexp_t_R0_X_t_R0/mu_exp_t_R0_X_t_R0)), 
                    M_in_fold_R1*eta_T_R1_weight*(trt.ind_in_fold_R1*pi_R1_weight*(Y_in_fold_R1-mu_Y_t_R1_X_R1)+mu_Y_t_R1_X_R1))+
         c((1-M_in_fold_t0_R0*eta_t0_R0_weight)*mu_Yexp_t_R0_X_t0_R0/mu_exp_t_R0_X_t0_R0,
@@ -509,7 +518,7 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
       if_temp_diff <- if_temp-pain_bq_temp
       
       if_R0_temp  <- c(M_in_fold_t0_R0*eta_t0_R0_weight/(1-prop.R1)*mu_Yexp_t_R0_X_t0_R0/mu_exp_t_R0_X_t0_R0, 
-                         M_in_fold_t_R0*eta_t_R0_weight/(1-prop.R1)*(Y_in_fold_t_R0+(pi_R0_weight-1)*exp(gamma[g]*pnorm((Y_in_fold_t_R0-60)/25))/mu_exp_t_R0_X_t_R0*
+                         M_in_fold_t_R0*eta_t_R0_weight/(1-prop.R1)*(Y_in_fold_t_R0+(pi_R0_weight-1)*exp(gamma[g]*s_t_y(Y_in_fold_t_R0))/mu_exp_t_R0_X_t_R0*
                                                     (Y_in_fold_t_R0-mu_Yexp_t_R0_X_t_R0/mu_exp_t_R0_X_t_R0)), 
                          rep(0, length(M_in_fold_R1)))+
         c((1-M_in_fold_t0_R0*eta_t0_R0_weight)*mu_Yexp_t_R0_X_t0_R0/(mu_exp_t_R0_X_t0_R0*(1-prop.R1)),
