@@ -17,7 +17,7 @@ eq <- function(theta,z) {
 }
 
 ## Induced estimates with single index model
-counterfactual <- function(Y, Y0, M, R, X, t, trt, gamma, est){
+counterfactual <- function(Y, Y0, M, R, X, t, trt, gamma, est, est_R0, est_R1){
   
   result <- vector(length=length(gamma))
   n <- length(t)
@@ -98,14 +98,31 @@ counterfactual <- function(Y, Y0, M, R, X, t, trt, gamma, est){
   
   ## empirical mean
   prop_t <- sum(trt.ind)/n
+  prop_t_R0 <- mean(trt.ind[which(R==0)])
+  prop_t_R1 <- mean(trt.ind[which(R==1)])
+  prop_R <- mean(R)
+  
   mean_Y0_t0 <- mean(Y0[which(t!=trt)])
   mean_Y0_t <- mean(Y0[which(t==trt)])
+  mean_Y0_R0_t0 <- mean(Y0[which(t!=trt&R==0)])
+  mean_Y0_R0_t <- mean(Y0[which(t==trt&R==0)])
+  mean_Y0_R1_t0 <- mean(Y0[which(t!=trt&R==1)])
+  mean_Y0_R1_t <- mean(Y0[which(t==trt&R==1)])
   
   result_t0 <- (est-mean(mu_X_t_R0*pi_R0*g0+mu_X_t_R1*pi_R1*g1))/(1-prop_t)-mean_Y0_t0
   result_t <- mean(mu_X_t_R0*pi_R0*g0+mu_X_t_R1*pi_R1*g1)/prop_t-mean_Y0_t
-  return(c(result_t0, result_t))
+  
+  result_t0_R0 <- (est_R0-mean(mu_X_t_R0*pi_R0*g0)/(1-prop_R))/(1-prop_t_R0)-mean_Y0_R0_t0
+  result_t_R0 <- mean(mu_X_t_R0*pi_R0*g0)/((1-prop_R)*prop_t_R0)-mean_Y0_R0_t
+  
+  result_t0_R1 <- (est_R1-mean(mu_X_t_R1*pi_R1*g1)/prop_R)/(1-prop_t_R1)-mean_Y0_R1_t0
+  result_t_R1 <- mean(mu_X_t_R1*pi_R1*g1)/(prop_R*prop_t_R1)-mean_Y0_R1_t
+  
+  return(data.frame(CC=c(result_t0, result_t), PPS=c(result_t0_R0, result_t_R0), 
+                    RCT=c(result_t0_R1, result_t_R1)))
   
 }
+
 
 
 ## truth: beta regression
