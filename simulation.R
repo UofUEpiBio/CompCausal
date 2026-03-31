@@ -139,6 +139,19 @@ Y.new[M.new==0] <- NA
 data <- data.frame(cbind(Y.new, M.new, R.new, T.new, X.new))
 colnames(data) <- c("Y", "M", "R", "t", colnames(X.new))
 
+################
+## estimation ##
+################
+
+rand_seed <- 18890
+fold <- 5
+
+X_sim = data.frame(dplyr::select(data, c(age, womac_bq, expectationb, ChronicPainb)))
+
+topical_WOMAC_12m <- fit_one_analysis(trt_val=1, fold=fold, seed=rand_seed, gamma=seq(-2, 2, by=0.5), 
+                                      single_index_method="norm1coef", method="optim", kernel="dnorm")
+oral_WOMAC_12m    <- fit_one_analysis(trt_val=0, fold=fold, seed=rand_seed, gamma=seq(-2, 2, by=0.5), 
+                                      single_index_method="norm1coef", method="optim", kernel="dnorm")
 
 
 

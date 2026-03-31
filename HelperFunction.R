@@ -405,35 +405,33 @@ pboot <- function(data, X_sim, sim.size, seed){
 }
 
 ## run algorithm
-fit_one <- function(data, X, trt_val) {
+fit_one_analysis <- function(trt_val, fold, seed, gamma, 
+                             single_index_method, method, kernel) {
   # try mave first
-  out <- try(est_psi(Y=data$Y, M=data$M, R=data$R, 
-                     X=X,
-                     t=data$t, trt=trt_val, gamma=seq(-5, 5, by=1), fold=5,
-                     IF_output=FALSE, simple_trunc=FALSE, quant=NULL, kernel="dnorm",
-                     method="optim", single_index_method="norm1coef",
-                     use_mave=TRUE, seed=NULL),
+  out <- try(est_psi(Y=data$Y, M=data$M, Y0=X_sim$womac_bq, R=data$R, X=X_sim,
+                     t=data$t, trt=trt_val, gamma=gamma, fold=fold,
+                     IF_output=FALSE, simple_trunc=FALSE, quant=NULL, kernel=kernel,
+                     method=method, single_index_method=single_index_method,
+                     use_mave=TRUE, seed=seed),
              silent = TRUE)
   
   if (inherits(out, "try-error")) {
     # fallback cumSIR
-    out <- try(est_psi(Y=data$Y, M=data$M, R=data$R, 
-                       X=X,
-                       t=data$t, trt=trt_val, gamma=seq(-5, 5, by=1), fold=5,
-                       IF_output=FALSE, simple_trunc=FALSE, quant=NULL, kernel="dnorm",
-                       method="optim", single_index_method="norm1coef",
-                       use_mave=FALSE, seed=NULL),
+    out <- try(est_psi(Y=data$Y, M=data$M, R=data$R, X=X_sim,
+                       t=data$t, trt=trt_val, gamma=gamma, fold=fold,
+                       IF_output=FALSE, simple_trunc=FALSE, quant=NULL, kernel=kernel,
+                       method=method, single_index_method=single_index_method,
+                       use_mave=FALSE, seed=seed),
                silent = TRUE)
   }
   
   if (inherits(out, "try-error") || is.null(out)) {
-    return(rep(NA_real_, 6*length(seq(-5, 5, by=1))))
+    return(NULL)
   }else{
-    return(c(out$est_trunc, out$est_trunc_R1, out$est_trunc_R0, 
-             out$var_trunc, out$var_trunc_R1, out$var_trunc_R0))
+    return(out)
   }
+  
 }
-
 
 
 
