@@ -330,36 +330,14 @@ est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
       
       if(!simple_trunc){
         
-        if (eq(max(abs(if_R0_temp)),z=if_R0_temp)>0) {
-          trunc <- max(abs(if_R0_temp))
-        } else {
-          trunc <- uniroot(eq, z=if_R0_temp, interval=c(0.01, max(abs(if_R0_temp))))$root
-        }
-        if_R0_temp_trunc <- pmin(abs(if_R0_temp),trunc) * sign(if_R0_temp)
+        if_R0_temp_trunc <- IF_trunc_func(if_R0_temp)
         containers_trunc$IF_R0[[g]] <- c(containers_trunc$IF_R0[[g]], if_R0_temp_trunc)
         
-        
-        if (eq(max(abs(if_R0_temp_diff)),z=if_R0_temp_diff)>0) {
-          trunc <- max(abs(if_R0_temp_diff))
-        } else {
-          trunc <- uniroot(eq, z=if_R0_temp_diff, interval=c(0.01, max(abs(if_R0_temp_diff))))$root
-        }
-        if_R0_temp_trunc_diff <- pmin(abs(if_R0_temp_diff),trunc) * sign(if_R0_temp_diff)
+        if_R0_temp_trunc_diff <- IF_trunc_func(if_R0_temp_diff)
         containers_trunc$IF_R0_diff[[g]] <- c(containers_trunc$IF_R0_diff[[g]], if_R0_temp_trunc_diff)
         
-        if (eq(max(abs(if_R1_temp)),z=if_R1_temp)>0) {
-          trunc <- max(abs(if_R1_temp))
-        } else {
-          trunc <- uniroot(eq, z=if_R1_temp, interval=c(0.01, max(abs(if_R1_temp))))$root
-        }
-        if_R1_temp_trunc <- pmin(abs(if_R1_temp),trunc) *  sign(if_R1_temp)
-        
-        if (eq(max(abs(if_R1_temp_diff)),z=if_R1_temp_diff)>0) {
-          trunc <- max(abs(if_R1_temp_diff))
-        } else {
-          trunc <- uniroot(eq, z=if_R1_temp_diff, interval=c(0.01, max(abs(if_R1_temp_diff))))$root
-        }
-        if_R1_temp_trunc_diff <- pmin(abs(if_R1_temp_diff),trunc) * sign(if_R1_temp_diff)
+        if_R1_temp_trunc <- IF_trunc_func(if_R1_temp)
+        if_R1_temp_trunc_diff <- IF_trunc_func(if_R1_temp_diff)
         
         if_temp_trunc <- if_R1_temp_trunc*prop.R1+if_R0_temp_trunc*(1-prop.R1)
         containers_trunc$IF[[g]] <- c(containers_trunc$IF[[g]], if_temp_trunc)
