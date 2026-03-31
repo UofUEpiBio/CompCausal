@@ -82,7 +82,7 @@ est_exchange_create_containers <- function(gamma, fold) {
 #' #                         simple_trunc = TRUE, quant = 0.99, kernel="dnorm", 
 #' #                         single_index_method="norm1coef", method="optim")
 
-est_psi_exchange <- function(Y, M, Y0, R, X, t, trt, gamma, fold, seed, IF_output, 
+est_psi_exchange <- function(Y, M, Y0=NULL, R, X, t, trt, gamma, fold, seed, IF_output, 
                              simple_trunc, quant, kernel, method="optim", single_index_method, 
                              use_mave=TRUE, s_t_y=NULL){
   
@@ -92,8 +92,9 @@ est_psi_exchange <- function(Y, M, Y0, R, X, t, trt, gamma, fold, seed, IF_outpu
   
   n <- length(t)
   Y[is.na(Y)] <- 0
-  
+
   trt.ind <- as.numeric(t==trt) # create treatment indicator variable
+  if(is.null(Y0)){Y0 <- rep(0, n)}
   
   ## set up covariates list and design matrix for modeling
   X_with_T <- cbind(as.factor(t), X)

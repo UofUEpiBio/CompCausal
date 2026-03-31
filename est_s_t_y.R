@@ -154,7 +154,7 @@ SIM <- function(X, Y, kernel, method, single_index_method, use_mave){
 #' #                fold = 5, seed = 1, IF_output = FALSE,
 #' #                simple_trunc = TRUE, quant = 0.99, kernel="dnorm", 
 #' #                single_index_method="norm1coef", method="optim")
-est_psi <- function(Y, M, Y0, R, X, t, trt, gamma, fold, seed, IF_output, 
+est_psi <- function(Y, M, Y0=NULL, R, X, t, trt, gamma, fold, seed, IF_output, 
                     simple_trunc, quant, kernel, single_index_method, method="optim", 
                     use_mave=TRUE, s_t_y=NULL, coef_g.fit=NULL, coef_t_R0.fit=NULL, 
                     coef_t_R1.fit=NULL, coef_M_R0.fit=NULL, coef_M_R1.fit=NULL){
@@ -167,6 +167,7 @@ est_psi <- function(Y, M, Y0, R, X, t, trt, gamma, fold, seed, IF_output,
   Y[is.na(Y)] <- 0
   
   trt.ind <- as.numeric(t==trt) # create treatment indicator variable
+  if(is.null(Y0)){Y0 <- rep(0, n)}
   
   ## set up covariates list and design matrix for modeling
   X_with_T <- cbind(as.factor(t), X)
