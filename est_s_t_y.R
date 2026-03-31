@@ -150,7 +150,7 @@ SIM <- function(X, Y, kernel, method, single_index_method, use_mave){
 #' conditional means and sensitivity-adjusted moments.
 #'
 #' @examples
-#' # out <- est_psi(Y, M, R, X, t, trt = 1, gamma = c(0, 0.5),
+#' # out <- est_psi(Y, M, Y0, R, X, t, trt = 1, gamma = c(0, 0.5),
 #' #                fold = 5, seed = 1, IF_output = FALSE,
 #' #                simple_trunc = TRUE, quant = 0.99, kernel="dnorm", 
 #' #                single_index_method="norm1coef", method="optim")

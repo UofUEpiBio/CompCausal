@@ -34,8 +34,53 @@ est_exchange_create_containers <- function(gamma, fold) {
 
 
 #' One-step, split sample estimator for E[Y(t)], E[Y(t)|R=0], 
-#'   and E[Y(t)-Y0], E[Y(t)-Y0|R=0]
+#'   and E[Y(t)-Y0], E[Y(t)-Y0|R=0], under sensitivity analysis for exchangability assumption
+#'
+#' @param Y Numeric outcome vector. Missing values are internally replaced with
+#'   `0` prior to model fitting.
+#' @param M Binary indicator for observed outcome (`1` = observed, `0` =
+#'   missing).
 #' @param Y0 Numeric baseline outcome vector. No missing data. 
+#' @param R Binary group indicator used to stratify nuisance and outcome models.
+#' @param X Data frame or matrix of baseline covariates.
+#' @param t Treatment assignment vector.
+#' @param trt Treatment level for which the target estimand is computed.
+#' @param gamma Numeric vector of sensitivity parameters.
+#' @param fold Number of cross-fitting folds.
+#' @param seed Optional integer random seed for fold assignment. Use `NULL` to
+#'   leave RNG state unchanged.
+#' @param IF_output Logical; if `TRUE`, include influence-function vectors in
+#'   the returned list.
+#' @param simple_trunc Logical; if `TRUE`, apply quantile truncation to inverse
+#'   probability weights. If `FALSE`, apply IF truncation diagnostics.
+#' @param quant Numeric in `(0, 1)` used as the upper quantile for simple weight
+#'   truncation when `simple_trunc = TRUE`.
+#' @param kernel Characters; Kernel used for SIMs. `K2_Biweight` for Epanechnikov kernel, 
+#'   `dnorm` for Gaussian kernel. 
+#' @param single_index_method Characters; Three implementations for SIMs: `fixed_bandwidth` 
+#'    for setting bandwidth to 1, `fixed_coef` for setting the first coefficient to 1, and `norm1coef`
+#'    for setting the norm of coefficients to 1. 
+#' @param method Characters; Optimization method used for SIMs. Choices are: `optim`, `nlminb`, `nmk`. 
+#'    Note that method is set to `optim` if single_index_method=`norm1coef`. 
+#' @param use_mave Logical; if `TRUE`, use Minimum Average Variance Estimation (MAVE) method for initial
+#'    coefficients value for SIMs. If `FALSE`, use sliced inverse regression. Default is `TRUE`. 
+#' @param s_t_y A function of Y in the exponential tilting model. If NULL, s_t_y is set to pnorm((y
+#' @return A named list of estimates and uncertainty summaries for each value in
+#'   `gamma`. Core elements include point estimates (`est`, `est_R0`), variance
+#'   estimates (`var`, `var_R0`), and confidence interval bounds (`lowerCI*`, `upperCI*`). 
+#'   Additional components depend on `simple_trunc` and `IF_output`:
+#'   \itemize{
+#'   \item `simple_trunc = TRUE`: returns quantile-weight-truncated summaries only.
+#'   \item `simple_trunc = FALSE`: additionally returns truncated summaries and
+#'   truncated IF objects when requested.
+#'   \item `IF_output = TRUE`: includes influence-function lists (`IF*`) and,
+#'   when relevant, truncated IF lists (`IF_trunc*`).
+#'   }
+#' @examples
+#' # out <- est_psi_exchange(Y, M, Y0, R, X, t, trt = 1, gamma = c(0, 0.5),
+#' #                         fold = 5, seed = 1, IF_output = FALSE,
+#' #                         simple_trunc = TRUE, quant = 0.99, kernel="dnorm", 
+#' #                         single_index_method="norm1coef", method="optim")
 
 est_psi_exchange <- function(Y, M, Y0, R, X, t, trt, gamma, fold, seed, IF_output, 
                              simple_trunc, quant, kernel, method="optim", single_index_method, 
