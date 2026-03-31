@@ -272,20 +272,21 @@ est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
     ## Compute influence function for each gamma_t
     for (g in 1:length(gamma)){
       
-      mu_Yexp_t_R1_X_R0 <- c(dF_t_R1_X_R0 %*% (y_t_R1[-1]*exp(gamma[g]*pnorm((y_t_R1[-1]-60)/25))+
-                                                 y_t_R1[-ny_t_R1]*exp(gamma[g]*pnorm((y_t_R1[-ny_t_R1]-60)/25)))/2)
+      mu_Yexp_t_R1_X_R0 <- c(dF_t_R1_X_R0 %*% (y_t_R1[-1]*exp(gamma[g]*s_t_y(y_t_R1[-1]))+
+                                                 y_t_R1[-ny_t_R1]*exp(gamma[g]*s_t_y(y_t_R1[-ny_t_R1])))/2)
       
-      mu_exp_t_R1_X_R0 <- c(dF_t_R1_X_R0 %*% (exp(gamma[g]*pnorm((y_t_R1[-1]-60)/25))+
-                                                exp(gamma[g]*pnorm((y_t_R1[-ny_t_R1]-60)/25)))/2)
+      mu_exp_t_R1_X_R0 <- c(dF_t_R1_X_R0 %*% (exp(gamma[g]*s_t_y(y_t_R1[-1]))+
+                                                exp(gamma[g]*s_t_y(y_t_R1[-ny_t_R1])))/2)
       
-      mu_Yexp_t_R1_X_R1 <- c(dF_t_R1_X_R1 %*% (y_t_R1[-1]*exp(gamma[g]*pnorm((y_t_R1[-1]-60)/25))+
-                                                 y_t_R1[-ny_t_R1]*exp(gamma[g]*pnorm((y_t_R1[-ny_t_R1]-60)/25)))/2)
+      mu_Yexp_t_R1_X_R1 <- c(dF_t_R1_X_R1 %*% (y_t_R1[-1]*exp(gamma[g]*s_t_y(y_t_R1[-1]))+
+                                                 y_t_R1[-ny_t_R1]*exp(gamma[g]*s_t_y(y_t_R1[-ny_t_R1])))/2)
       
-      mu_exp_t_R1_X_R1 <- c(dF_t_R1_X_R1 %*% (exp(gamma[g]*pnorm((y_t_R1[-1]-60)/25))+
-                                                exp(gamma[g]*pnorm((y_t_R1[-ny_t_R1]-60)/25)))/2)
+      mu_exp_t_R1_X_R1 <- c(dF_t_R1_X_R1 %*% (exp(gamma[g]*s_t_y(y_t_R1[-1]))+
+                                                exp(gamma[g]*s_t_y(y_t_R1[-ny_t_R1])))/2)
+      
       
       ## IF+psi within each fold
-      if_temp <- c(M_in_fold_R1*eta_T_R1_weight*trt.ind_in_fold_R1*g_weight*exp(gamma[g]*pnorm((Y_in_fold_R1-60)/25))/mu_exp_t_R1_X_R1*
+      if_temp <- c(M_in_fold_R1*eta_T_R1_weight*trt.ind_in_fold_R1*g_weight*exp(gamma[g]*s_t_y(Y_in_fold_R1))/mu_exp_t_R1_X_R1*
                      (Y_in_fold_R1-mu_Yexp_t_R1_X_R1/mu_exp_t_R1_X_R1)+ 
                      M_in_fold_R1*eta_T_R1_weight*(trt.ind_in_fold_R1*pi_R1_weight*(Y_in_fold_R1-mu_Y_t_R1_X_R1)+mu_Y_t_R1_X_R1), 
                    M_in_fold_R0*eta_T_R0_weight*mu_Yexp_t_R1_X_R0/mu_exp_t_R1_X_R0)+
@@ -293,7 +294,7 @@ est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
           (1-M_in_fold_R0*eta_T_R0_weight)*mu_Yexp_t_R1_X_R0/mu_exp_t_R1_X_R0)
       if_temp_diff <- if_temp-pain_bq_temp
       
-      if_R0_temp <- c(M_in_fold_R1*eta_T_R1_weight/(1-prop.R1)*trt.ind_in_fold_R1*g_weight*exp(gamma[g]*pnorm((Y_in_fold_R1-60)/25))/mu_exp_t_R1_X_R1*
+      if_R0_temp <- c(M_in_fold_R1*eta_T_R1_weight/(1-prop.R1)*trt.ind_in_fold_R1*g_weight*exp(gamma[g]*s_t_y(Y_in_fold_R1))/mu_exp_t_R1_X_R1*
                         (Y_in_fold_R1-mu_Yexp_t_R1_X_R1/mu_exp_t_R1_X_R1), 
                       M_in_fold_R0*eta_T_R0_weight/(1-prop.R1)*mu_Yexp_t_R1_X_R0/mu_exp_t_R1_X_R0)+
         c(rep(0, length(M_in_fold_R1)), 
