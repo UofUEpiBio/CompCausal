@@ -95,6 +95,7 @@ SIM <- function(X, Y, kernel, method, single_index_method, use_mave){
 #'   `0` prior to model fitting.
 #' @param M Binary indicator for observed outcome (`1` = observed, `0` =
 #'   missing).
+#' @param Y0 Numeric baseline outcome vector. No missing data. 
 #' @param R Binary group indicator used to stratify nuisance and outcome models.
 #' @param X Data frame or matrix of baseline covariates.
 #' @param t Treatment assignment vector.
@@ -153,7 +154,7 @@ SIM <- function(X, Y, kernel, method, single_index_method, use_mave){
 #' #                fold = 5, seed = 1, IF_output = FALSE,
 #' #                simple_trunc = TRUE, quant = 0.99, kernel="dnorm", 
 #' #                single_index_method="norm1coef", method="optim")
-est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output, 
+est_psi <- function(Y, M, Y0, R, X, t, trt, gamma, fold, seed, IF_output, 
                     simple_trunc, quant, kernel, single_index_method, method="optim", 
                     use_mave=TRUE, s_t_y=NULL, coef_g.fit=NULL, coef_t_R0.fit=NULL, 
                     coef_t_R1.fit=NULL, coef_M_R0.fit=NULL, coef_M_R1.fit=NULL){
@@ -241,6 +242,10 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
     X_in_fold_t0_R0 <- X_in_fold[which(t_in_fold!=trt & R_in_fold==0), ]
     X_in_fold_R1 <- X_in_fold[which(R_in_fold==1), ]
     
+    Y0_in_fold_t_R0 <- Y0[which(t_in_fold==trt & R_in_fold==0)]
+    Y0_in_fold_t0_R0 <- Y0[which(t_in_fold!=trt & R_in_fold==0)]
+    Y0_in_fold_R1 <- Y0[which(R_in_fold==1)]
+    
     X_with_T_in_fold_t_R0 <- X_with_T_in_fold[which(t_in_fold==trt & R_in_fold==0), ]
     X_with_T_in_fold_t0_R0 <- X_with_T_in_fold[which(t_in_fold!=trt & R_in_fold==0), ]
     X_with_T_in_fold_R1 <- X_with_T_in_fold[which(R_in_fold==1), ]
@@ -282,13 +287,13 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
     fold_index_eta_T_R1_l <- c(fold_index_eta_T_R1_l, rep(k, length(eta_T_R1)))
     
     if(trt==1){
-      pain_bq_temp <- c(X_in_fold_t_R0$pain_bq, X_in_fold_t0_R0$pain_bq, X_in_fold_R1$pain_bq)
-      pain_bq_R1_temp <- c(rep(0, length(X_in_fold_t_R0$pain_bq)+length(X_in_fold_t0_R0$pain_bq)), X_in_fold_R1$pain_bq)/prop.R1
-      pain_bq_R0_temp <- c(X_in_fold_t_R0$pain_bq, X_in_fold_t0_R0$pain_bq, rep(0, length(X_in_fold_R1$pain_bq)))/(1-prop.R1)
+      pain_bq_temp <- c(Y0_in_fold_t_R0, Y0_in_fold_t0_R0, Y0_in_fold_R1)
+      pain_bq_R1_temp <- c(rep(0, length(Y0_in_fold_t_R0)+length(Y0_in_fold_t0_R0)), Y0_in_fold_R1)/prop.R1
+      pain_bq_R0_temp <- c(Y0_in_fold_t_R0, Y0_in_fold_t0_R0, rep(0, length(Y0_in_fold_R1)))/(1-prop.R1)
     }else{
-      pain_bq_temp <- c(X_in_fold_t0_R0$pain_bq, X_in_fold_t_R0$pain_bq, X_in_fold_R1$pain_bq)
-      pain_bq_R1_temp <- c(rep(0, length(X_in_fold_t0_R0$pain_bq)+length(X_in_fold_t_R0$pain_bq)), X_in_fold_R1$pain_bq)/prop.R1
-      pain_bq_R0_temp <- c(X_in_fold_t0_R0$pain_bq, X_in_fold_t_R0$pain_bq, rep(0, length(X_in_fold_R1$pain_bq)))/(1-prop.R1)
+      pain_bq_temp <- c(Y0_in_fold_t0_R0, Y0_in_fold_t_R0, Y0_in_fold_R1)
+      pain_bq_R1_temp <- c(rep(0, length(Y0_in_fold_t0_R0)+length(Y0_in_fold_t_R0)), Y0_in_fold_R1)/prop.R1
+      pain_bq_R0_temp <- c(Y0_in_fold_t0_R0, Y0_in_fold_t_R0, rep(0, length(Y0_in_fold_R1)))/(1-prop.R1)
     }
     pain_bq_reordered <- c(pain_bq_reordered, pain_bq_temp)
     pain_bq_reordered_R1 <- c(pain_bq_reordered_R1, pain_bq_R1_temp)
