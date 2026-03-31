@@ -135,7 +135,7 @@ counterfactual <- function(Y, Y0, M, R, X, t, trt, gamma, est, est_R1, est_R0){
 
 
 ## truth: beta regression
-truth <- function(Y, Y0, M, R, t, X, trt, gamma){
+truth_beta <- function(Y, Y0, M, R, t, X, trt, gamma){
   
   truth_t <- c()
   truth_t_R1 <- c()
@@ -213,6 +213,7 @@ truth <- function(Y, Y0, M, R, t, X, trt, gamma){
               t_R1_diff=truth_t_R1_diff))
   
 }
+
 
 ## parametric bootstrap: simulate new data based on models from original data
 pboot <- function(data, X_sim, sim.size, seed){
