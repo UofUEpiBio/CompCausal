@@ -404,7 +404,7 @@ pboot <- function(data, X_sim, sim.size, seed){
   
 }
 
-## run algorithm
+## run algorithm with simulated data
 fit_one_analysis <- function(trt_val, fold, seed, gamma, 
                              single_index_method, method, kernel) {
   # try mave first
