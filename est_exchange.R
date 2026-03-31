@@ -219,6 +219,8 @@ est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
     
     trt.ind_in_fold_R1 <- trt.ind_in_fold[which(R_in_fold==1)]
     
+    containers$id_list <- c(containers$id_list, fold_list[[k]])
+    
     ## get the weights in fold k
     pi_R1_weight <- pi_R1_weight_l[which(fold_index_pi_R1_l==k)]
     g_weight <- g_weight_l[which(fold_index_g_l==k)]
@@ -229,7 +231,6 @@ est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
     pain_bq_temp <- pain_bq_reordered[which(fold_index_pain==k)]
     pain_bq_R0_temp <- pain_bq_reordered_R0[which(fold_index_pain==k)]
     pain_bq_R1_temp <- pain_bq_reordered_R1[which(fold_index_pain==k)]
-    
     
     ## fit models
     fit_t_R1_h <- SIM(X=X_out_fold_t_R1_adjust_scale[which(M_out_fold_t_R1==1), ], Y=Y_out_fold_t_R1[which(M_out_fold_t_R1==1)], 
@@ -268,6 +269,10 @@ est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
     
     ## P(R=1)
     prop.R1 <- mean(R_in_fold)
+    
+    ## containers$vector_R0
+    ind_R0_temp <- c(rep(0, length(M_in_fold_R1)), rep(1/(1-prop.R1), length(M_in_fold_R0)))
+    containers$vector_R0 <- c(containers$vector_R0, ind_R0_temp)
     
     ## Compute influence function for each gamma_t
     for (g in 1:length(gamma)){
@@ -308,20 +313,20 @@ est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
                       M_in_fold_R1*eta_T_R1_weight/prop.R1*(trt.ind_in_fold_R1*pi_R1_weight*(Y_in_fold_R1-mu_Y_t_R1_X_R1)+mu_Y_t_R1_X_R1))+
         c(rep(0, length(M_in_fold_R0)), (1-M_in_fold_R1*eta_T_R1_weight)*mu_Y_t_R1_X_R1/prop.R1)
       if_R1_temp_diff <- if_R1_temp-pain_bq_R1_temp
+    
+      containers$IF[[g]] <- c(containers$IF[[g]], if_temp)
+      containers$IF_R0[[g]] <- c(containers$IF_R0[[g]], if_R0_temp)
+      containers$IF_diff[[g]] <- c(containers$IF_diff[[g]], if_temp_diff)
+      containers$IF_R0_diff[[g]] <- c(containers$IF_R0_diff[[g]], if_R0_temp_diff)
       
-      IF[[g]] <- c(IF[[g]], if_temp)
-      IF_R0[[g]] <- c(IF_R0[[g]], if_R0_temp)
-      IF_diff[[g]] <- c(IF_diff[[g]], if_temp_diff)
-      IF_R0_diff[[g]] <- c(IF_R0_diff[[g]], if_R0_temp_diff)
-      
-      est_temp[k, g] <- mean(if_temp)
-      est_R0_temp[k, g] <- mean(if_R0_temp)
-      var_temp[k, g] <- sum((if_temp - mean(if_temp))^2)/(nk_in_fold-1)
-      var_R0_temp[k, g] <- sum((if_R0_temp - vector_mean_R0_temp)^2)/(nk_in_fold-1)
-      est_temp_diff[k, g] <- mean(if_temp_diff)
-      est_R0_temp_diff[k, g] <- mean(if_R0_temp_diff)
-      var_temp_diff[k, g] <- sum((if_temp_diff - mean(if_temp_diff))^2)/(nk_in_fold-1)
-      var_R0_temp_diff[k, g] <- sum((if_R0_temp_diff - vector_mean_R0_temp_diff)^2)/(nk_in_fold-1)
+      containers$est_temp[k, g] <- mean(if_temp)
+      containers$est_R0_temp[k, g] <- mean(if_R0_temp)
+      containers$var_temp[k, g] <- sum((if_temp - mean(if_temp))^2)/(nk_in_fold-1)
+      containers$var_R0_temp[k, g] <- sum((if_R0_temp - ind_R0_temp*mean(if_R0_temp))^2)/(nk_in_fold-1)
+      containers$est_temp_diff[k, g] <- mean(if_temp_diff)
+      containers$est_R0_temp_diff[k, g] <- mean(if_R0_temp_diff)
+      containers$var_temp_diff[k, g] <- sum((if_temp_diff - mean(if_temp_diff))^2)/(nk_in_fold-1)
+      containers$var_R0_temp_diff[k, g] <- sum((if_R0_temp_diff - ind_R0_temp*mean(if_R0_temp_diff))^2)/(nk_in_fold-1)
       
       if(!simple_trunc){
         
@@ -331,7 +336,8 @@ est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
           trunc <- uniroot(eq, z=if_R0_temp, interval=c(0.01, max(abs(if_R0_temp))))$root
         }
         if_R0_temp_trunc <- pmin(abs(if_R0_temp),trunc) * sign(if_R0_temp)
-        IF_R0_trunc[[g]] <- c(IF_R0_trunc[[g]], if_R0_temp_trunc)
+        containers_trunc$IF_R0[[g]] <- c(containers_trunc$IF_R0[[g]], if_R0_temp_trunc)
+        
         
         if (eq(max(abs(if_R0_temp_diff)),z=if_R0_temp_diff)>0) {
           trunc <- max(abs(if_R0_temp_diff))
@@ -339,10 +345,7 @@ est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
           trunc <- uniroot(eq, z=if_R0_temp_diff, interval=c(0.01, max(abs(if_R0_temp_diff))))$root
         }
         if_R0_temp_trunc_diff <- pmin(abs(if_R0_temp_diff),trunc) * sign(if_R0_temp_diff)
-        IF_R0_trunc_diff[[g]] <- c(IF_R0_trunc_diff[[g]], if_R0_temp_trunc_diff)
-        
-        vector_mean_R0_temp <- c(rep(0, length(M_in_fold_R1)), rep(1/(1-prop.R1), length(M_in_fold_R0)))*mean(if_R0_temp_trunc)
-        vector_mean_R0_temp_diff <- c(rep(0, length(M_in_fold_R1)), rep(1/(1-prop.R1), length(M_in_fold_R0)))*mean(if_R0_temp_trunc_diff)
+        containers_trunc$IF_R0_diff[[g]] <- c(containers_trunc$IF_R0_diff[[g]], if_R0_temp_trunc_diff)
         
         if (eq(max(abs(if_R1_temp)),z=if_R1_temp)>0) {
           trunc <- max(abs(if_R1_temp))
@@ -359,59 +362,58 @@ est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
         if_R1_temp_trunc_diff <- pmin(abs(if_R1_temp_diff),trunc) * sign(if_R1_temp_diff)
         
         if_temp_trunc <- if_R1_temp_trunc*prop.R1+if_R0_temp_trunc*(1-prop.R1)
-        IF_trunc[[g]] <- c(IF_trunc[[g]], if_temp_trunc)
+        containers_trunc$IF[[g]] <- c(containers_trunc$IF[[g]], if_temp_trunc)
         if_temp_trunc_diff <- if_R1_temp_trunc_diff*prop.R1+if_R0_temp_trunc_diff*(1-prop.R1)
-        IF_trunc_diff[[g]] <- c(IF_trunc_diff[[g]], if_temp_trunc_diff)
+        containers_trunc$IF_diff[[g]] <- c(containers_trunc$IF_diff[[g]], if_temp_trunc_diff)
         
-        est_temp_trunc[k, g] <- mean(if_temp_trunc)
-        est_R0_temp_trunc[k, g] <- mean(if_R0_temp_trunc)
-        var_temp_trunc[k, g] <- sum((if_temp_trunc - mean(if_temp_trunc))^2)/(nk_in_fold-1)
-        var_R0_temp_trunc[k, g] <- sum((if_R0_temp_trunc - vector_mean_R0_temp)^2)/(nk_in_fold-1)
+        containers_trunc$est_temp[k, g] <- mean(if_temp_trunc)
+        containers_trunc$est_R0_temp[k, g] <- mean(if_R0_temp_trunc)
+        containers_trunc$var_temp[k, g] <- sum((if_temp_trunc - mean(if_temp_trunc))^2)/(nk_in_fold-1)
+        containers_trunc$var_R0_temp[k, g] <- sum((if_R0_temp_trunc - ind_R0_temp*mean(if_R0_temp_trunc))^2)/(nk_in_fold-1)
         
-        est_temp_trunc_diff[k, g] <- mean(if_temp_trunc_diff)
-        est_R0_temp_trunc_diff[k, g] <- mean(if_R0_temp_trunc_diff)
-        var_temp_trunc_diff[k, g] <- sum((if_temp_trunc_diff - mean(if_temp_trunc_diff))^2)/(nk_in_fold-1)
-        var_R0_temp_trunc_diff[k, g] <- sum((if_R0_temp_trunc_diff - vector_mean_R0_temp_diff)^2)/(nk_in_fold-1)
+        containers_trunc$est_temp_diff[k, g] <- mean(if_temp_trunc_diff)
+        containers_trunc$est_R0_temp_diff[k, g] <- mean(if_R0_temp_trunc_diff)
+        containers_trunc$var_temp_diff[k, g] <- sum((if_temp_trunc_diff - mean(if_temp_trunc_diff))^2)/(nk_in_fold-1)
+        containers_trunc$var_R0_temp_diff[k, g] <- sum((if_R0_temp_trunc_diff - ind_R0_temp*mean(if_R0_temp_trunc_diff))^2)/(nk_in_fold-1)
         
       }
     }
   }
   
   ## output containers
-  r_est <- colMeans(est_temp)
-  r_est_R0 <- colMeans(est_R0_temp)
-  r_var <- colSums(var_temp)/(fold*n)
-  r_var_R0 <- colSums(var_R0_temp)/(fold*n)
+  r_est <- colMeans(containers$est_temp)
+  r_est_R0 <- colMeans(containers$est_R0_temp)
+  r_var <- colSums(containers$var_temp)/(fold*n)
+  r_var_R0 <- colSums(containers$var_R0_temp)/(fold*n)
   r_lowerCI <- r_est-qnorm(0.975)*sqrt(r_var)
   r_lowerCI_R0 <- r_est_R0-qnorm(0.975)*sqrt(r_var_R0)
   r_upperCI <- r_est+qnorm(0.975)*sqrt(r_var) 
   r_upperCI_R0 <- r_est_R0+qnorm(0.975)*sqrt(r_var_R0) 
-  r_est_diff <- colMeans(est_temp_diff)
-  r_est_R0_diff <- colMeans(est_R0_temp_diff)
-  r_var_diff <- colSums(var_temp_diff)/(fold*n)
-  r_var_R0_diff <- colSums(var_R0_temp_diff)/(fold*n)
+  r_est_diff <- colMeans(containers$est_temp_diff)
+  r_est_R0_diff <- colMeans(containers$est_R0_temp_diff)
+  r_var_diff <- colSums(containers$var_temp_diff)/(fold*n)
+  r_var_R0_diff <- colSums(containers$var_R0_temp_diff)/(fold*n)
   r_lowerCI_diff <- r_est_diff-qnorm(0.975)*sqrt(r_var_diff)
   r_lowerCI_R0_diff <- r_est_R0_diff-qnorm(0.975)*sqrt(r_var_R0_diff)
   r_upperCI_diff <- r_est_diff+qnorm(0.975)*sqrt(r_var_diff) 
   r_upperCI_R0_diff <- r_est_R0_diff+qnorm(0.975)*sqrt(r_var_R0_diff)
   if(!simple_trunc){
-    r_est_trunc <- colMeans(est_temp_trunc)
-    r_est_trunc_R0 <- colMeans(est_R0_temp_trunc)
-    r_var_trunc <- colSums(var_temp_trunc)/(fold*n)
-    r_var_trunc_R0 <- colSums(var_R0_temp_trunc)/(fold*n)
+    r_est_trunc <- colMeans(containers_trunc$est_temp)
+    r_est_trunc_R0 <- colMeans(containers_trunc$est_R0_temp)
+    r_var_trunc <- colSums(containers_trunc$var_temp)/(fold*n)
+    r_var_trunc_R0 <- colSums(containers_trunc$var_R0_temp)/(fold*n)
     r_lowerCI_trunc <- r_est_trunc-qnorm(0.975)*sqrt(r_var_trunc)
     r_lowerCI_trunc_R0 <- r_est_trunc_R0-qnorm(0.975)*sqrt(r_var_trunc_R0)
     r_upperCI_trunc <- r_est_trunc+qnorm(0.975)*sqrt(r_var_trunc) 
     r_upperCI_trunc_R0 <- r_est_trunc_R0+qnorm(0.975)*sqrt(r_var_trunc_R0) 
-    r_est_trunc_diff <- colMeans(est_temp_trunc_diff)
-    r_est_trunc_R0_diff <- colMeans(est_R0_temp_trunc_diff)
-    r_var_trunc_diff <- colSums(var_temp_trunc_diff)/(fold*n)
-    r_var_trunc_R0_diff <- colSums(var_R0_temp_trunc_diff)/(fold*n)
+    r_est_trunc_diff <- colMeans(containers_trunc$est_temp_diff)
+    r_est_trunc_R0_diff <- colMeans(containers_trunc$est_R0_temp_diff)
+    r_var_trunc_diff <- colSums(containers_trunc$var_temp_diff)/(fold*n)
+    r_var_trunc_R0_diff <- colSums(containers_trunc$var_R0_temp_diff)/(fold*n)
     r_lowerCI_trunc_diff <- r_est_trunc_diff-qnorm(0.975)*sqrt(r_var_trunc_diff)
     r_lowerCI_trunc_R0_diff <- r_est_trunc_R0_diff-qnorm(0.975)*sqrt(r_var_trunc_R0_diff)
     r_upperCI_trunc_diff <- r_est_trunc_diff+qnorm(0.975)*sqrt(r_var_trunc_diff) 
     r_upperCI_trunc_R0_diff <- r_est_trunc_R0_diff+qnorm(0.975)*sqrt(r_var_trunc_R0_diff) 
-    
   }
   
   ## output final results
@@ -425,10 +427,10 @@ est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
                      var_diff=r_var_diff, var_R0_diff=r_var_R0_diff, 
                      lowerCI_diff=r_lowerCI_diff, lowerCI_R0_diff=r_lowerCI_R0_diff, 
                      upperCI_diff=r_upperCI_diff, upperCI_R0_diff=r_upperCI_R0_diff, 
-                     IF=IF, IF_R0=IF_R0, 
-                     IF_diff=IF_diff, IF_R0_diff=IF_R0_diff, 
-                     pain_bq_reordered=pain_bq_reordered, 
-                     pain_bq_reordered_R0=pain_bq_reordered_R0)
+                     IF=containers$IF, IF_R0=containers$IF_R0, 
+                     IF_diff=containers$IF_diff, IF_R0_diff=containers$IF_R0_diff, 
+                     pain_bq_reordered=pain_bq_reordered, pain_bq_reordered_R0=pain_bq_reordered_R0, 
+                     id_list=containers$id_list)
     }else{
       result <- list(est=r_est, est_R0=r_est_R0, 
                      est_trunc=r_est_trunc, est_trunc_R0=r_est_trunc_R0,
@@ -446,12 +448,12 @@ est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
                      upperCI_diff=r_upperCI_diff, upperCI_R0_diff=r_upperCI_R0_diff, 
                      lowerCI_trunc_diff=r_lowerCI_trunc_diff, lowerCI_trunc_R0_diff=r_lowerCI_trunc_R0_diff, 
                      upperCI_trunc_diff=r_upperCI_trunc_diff, upperCI_trunc_R0_diff=r_upperCI_trunc_R0_diff, 
-                     IF=IF, IF_R0=IF_R0,
-                     IF_trunc=IF_trunc, IF_trunc_R0=IF_R0_trunc,
-                     IF_diff=IF_diff, IF_R0_diff=IF_R0_diff,
-                     IF_trunc_diff=IF_trunc_diff, IF_trunc_R0_diff=IF_R0_trunc_diff,
-                     pain_bq_reordered=pain_bq_reordered, 
-                     pain_bq_reordered_R0=pain_bq_reordered_R0)
+                     IF=containers$IF, IF_R0=containers$IF_R0,
+                     IF_trunc=containers_trunc$IF, IF_trunc_R0=containers_trunc$IF_R0,
+                     IF_diff=containers$IF_diff, IF_R0_diff=containers$IF_R0_diff,
+                     IF_trunc_diff=containers_trunc$IF_diff, IF_trunc_R0_diff=containers_trunc$IF_R0_diff,
+                     pain_bq_reordered=pain_bq_reordered, pain_bq_reordered_R0=pain_bq_reordered_R0, 
+                     id_list=containers$id_list)
     }
   }else{
     if(simple_trunc){
@@ -463,8 +465,7 @@ est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
                      var_diff=r_var_diff, var_R0_diff=r_var_R0_diff, 
                      lowerCI_diff=r_lowerCI_diff, lowerCI_R0_diff=r_lowerCI_R0_diff, 
                      upperCI_diff=r_upperCI_diff, upperCI_R0_diff=r_upperCI_R0_diff, 
-                     pain_bq_reordered=pain_bq_reordered, 
-                     pain_bq_reordered_R0=pain_bq_reordered_R0)
+                     pain_bq_reordered=pain_bq_reordered, pain_bq_reordered_R0=pain_bq_reordered_R0)
     }else{
       result <- list(est=r_est, est_R0=r_est_R0, 
                      est_trunc=r_est_trunc, est_trunc_R0=r_est_trunc_R0,
@@ -482,8 +483,7 @@ est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
                      upperCI_diff=r_upperCI_diff, upperCI_R0_diff=r_upperCI_R0_diff, 
                      lowerCI_trunc_diff=r_lowerCI_trunc_diff, lowerCI_trunc_R0_diff=r_lowerCI_trunc_R0_diff, 
                      upperCI_trunc_diff=r_upperCI_trunc_diff, upperCI_trunc_R0_diff=r_upperCI_trunc_R0_diff, 
-                     pain_bq_reordered=pain_bq_reordered, 
-                     pain_bq_reordered_R0=pain_bq_reordered_R0)
+                     pain_bq_reordered=pain_bq_reordered, pain_bq_reordered_R0=pain_bq_reordered_R0)
     }
   }
   
