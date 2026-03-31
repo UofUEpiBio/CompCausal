@@ -35,8 +35,9 @@ est_exchange_create_containers <- function(gamma, fold) {
 
 #' One-step, split sample estimator for E[Y(t)], E[Y(t)|R=0], 
 #'   and E[Y(t)-Y0], E[Y(t)-Y0|R=0]
+#' @param Y0 Numeric baseline outcome vector. No missing data. 
 
-est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output, 
+est_psi_exchange <- function(Y, M, Y0, R, X, t, trt, gamma, fold, seed, IF_output, 
                              simple_trunc, quant, kernel, method="optim", single_index_method, 
                              use_mave=TRUE, s_t_y=NULL){
   
@@ -119,6 +120,9 @@ est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
     X_in_fold_R1 <- X_in_fold[which(R_in_fold==1), ]
     X_in_fold_R0 <- X_in_fold[which(R_in_fold==0), ]
     
+    Y0_in_fold_R1 <- Y0[which(R_in_fold==1)]
+    Y0_in_fold_R0 <- Y0[which(R_in_fold==0)]
+    
     X_with_T_in_fold_R0 <- X_with_T_in_fold[which(R_in_fold==0), ]
     X_with_T_in_fold_R1 <- X_with_T_in_fold[which(R_in_fold==1), ]
     
@@ -153,9 +157,10 @@ est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
     fold_index_eta_T_R0_l <- c(fold_index_eta_T_R0_l, rep(k, length(eta_T_R0)))
     fold_index_eta_T_R1_l <- c(fold_index_eta_T_R1_l, rep(k, length(eta_T_R1)))
     
-    pain_bq_temp <- c(X_in_fold_R0$womac_bq, X_in_fold_R1$womac_bq)
-    pain_bq_R0_temp <- c(X_in_fold_R0$womac_bq, rep(0, length(X_in_fold_R1$womac_bq)))/(1-prop.R1)
-    pain_bq_R1_temp <- c(rep(0, length(X_in_fold_R0$womac_bq)), X_in_fold_R1$womac_bq)/prop.R1
+    pain_bq_temp <- c(Y0_in_fold_R0, Y0_in_fold_R1)
+    pain_bq_R0_temp <- c(Y0_in_fold_R0, rep(0, length(Y0_in_fold_R1)))/(1-prop.R1)
+    pain_bq_R1_temp <- c(rep(0, length(Y0_in_fold_R0)),Y0_in_fold_R1)/prop.R1
+    
     pain_bq_reordered <- c(pain_bq_reordered, pain_bq_temp)
     pain_bq_reordered_R0 <- c(pain_bq_reordered_R0, pain_bq_R0_temp)
     pain_bq_reordered_R1 <- c(pain_bq_reordered_R1, pain_bq_R1_temp)
