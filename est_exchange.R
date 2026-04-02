@@ -179,7 +179,7 @@ est_psi_exchange <- function(Y, M, Y0=NULL, R, X, t, trt, gamma, fold, seed, IF_
     M_R0.fit <- mgcv::gam(as.formula(paste("M_out_fold_R0 ~", gam.var.M)), data=X_with_T_out_fold_R0, family=binomial) ## missing data model
     M_R1.fit <- mgcv::gam(as.formula(paste("M_out_fold_R1 ~", gam.var.M)), data=X_with_T_out_fold_R1, family=binomial) ## missing data model
     
-    prop.R1 <- mean(R_in_fold)
+    prop.R1 <- mean(R_out_fold)
     
     ## get predictions for pi
     if(trt==1){
@@ -319,7 +319,7 @@ est_psi_exchange <- function(Y, M, Y0=NULL, R, X, t, trt, gamma, fold, seed, IF_
     mu_Y_t_R1_X_R1 <- c(dF_t_R1_X_R1 %*% (y_t_R1[-1]+y_t_R1[-ny_t_R1])/2)
     
     ## P(R=1)
-    prop.R1 <- mean(R_in_fold)
+    prop.R1 <- mean(R_out_fold)
     
     ## containers$vector_R0
     ind_R0_temp <- c(rep(0, length(M_in_fold_R1)), rep(1/(1-prop.R1), length(M_in_fold_R0)))

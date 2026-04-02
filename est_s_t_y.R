@@ -261,7 +261,7 @@ est_psi <- function(Y, M, Y0=NULL, R, X, t, trt, gamma, fold, seed, IF_output,
     M_R1.fit <- mgcv::gam(as.formula(paste("M_out_fold_R1 ~", gam.var.M)), data=X_with_T_out_fold_R1, 
                           family=binomial, start=coef_M_R1.fit) ## missing data model
     
-    prop.R1 <- mean(R_in_fold)
+    prop.R1 <- mean(R_out_fold)
     
     ## get predictions for pi
     if(trt==1){
