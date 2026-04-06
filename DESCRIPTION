@@ -1,0 +1,34 @@
+Package: comprehensivecohort
+Type: Package
+Title: Comprehensive Cohort Models
+Version: 0.0.9000
+Depends:
+    R (>= 4.1.0)
+Authors@R: c(
+  person(
+    "Jennifer", "Xu", email = "jennifer.xu@hsc.utah.edu", role = c("aut", "cre")
+    ),
+  person(given="George", family="Vega Yon", role=c("ctb"),
+  email="g.vegayon@gmail.com", comment = c(ORCID = "0000-0002-3171-0844")),
+  person("Daniel", "Scharfstein", , "daniel.scharfstein@hsc.utah.edu", role = c("pdr", "aut"),
+           comment = c(ORCID = "0000-0001-7482-9653"))
+  )
+Description: TBD.
+URL: https://github.com/UofUEpiBio/Comprehensive_cohort
+BugReports: https://github.com/UofUEpiBio/Comprehensive_cohort/issues
+License: MIT + file LICENSE
+RoxygenNote: 7.3.3
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Imports:
+    utils,
+    splines,
+    betareg,
+    stats,
+    methods
+Suggests:
+    tinytest,
+    quarto
+VignetteBuilder:
+    quarto
+LazyData: true

@@ -33,8 +33,8 @@ est_exchange_create_containers <- function(gamma, fold) {
 
 
 
-#' One-step, split sample estimator for E[Y(t)], E[Y(t)|R=0], 
-#'   and E[Y(t)-Y0], E[Y(t)-Y0|R=0], under sensitivity analysis for exchangability assumption
+#' One-step, split sample estimator for E\[Y(t)\], E\[Y(t)|R=0\], 
+#'   and E\[Y(t)-Y0\], E\[Y(t)-Y0|R=0\], under sensitivity analysis for exchangability assumption
 #'
 #' @param Y Numeric outcome vector. Missing values are internally replaced with
 #'   `0` prior to model fitting.
@@ -81,7 +81,7 @@ est_exchange_create_containers <- function(gamma, fold) {
 #' #                         fold = 5, seed = 1, IF_output = FALSE,
 #' #                         simple_trunc = TRUE, quant = 0.99, kernel="dnorm", 
 #' #                         single_index_method="norm1coef", method="optim")
-
+#' @export
 est_psi_exchange <- function(Y, M, Y0=NULL, R, X, t, trt, gamma, fold, seed, IF_output, 
                              simple_trunc, quant, kernel, method="optim", single_index_method, 
                              use_mave=TRUE, s_t_y=NULL){
