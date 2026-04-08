@@ -82,8 +82,8 @@ SIM <- function(X, Y, kernel, method, single_index_method, use_mave){
 }
 
 
-#' One-step, split sample estimator for E[Y(t)], E[Y(t)|R=1], E[Y(t)|R=0], 
-#'   and E[Y(t)-Y0], E[Y(t)-Y0|R=1], E[Y(t)-Y0|R=0]
+#' One-step, split sample estimator for E\[Y(t)\], E\[Y(t)|R=1\], E\[Y(t)|R=0\], 
+#'   and E\[Y(t)-Y0\], E\[Y(t)-Y0|R=1\], E\[Y(t)-Y0|R=0\]
 #'   
 #' Estimates study-specific and overall outcome means (and difference from baseline)
 #' using cross-fitting with single index models (SIMs) and
@@ -154,6 +154,7 @@ SIM <- function(X, Y, kernel, method, single_index_method, use_mave){
 #' #                fold = 5, seed = 1, IF_output = FALSE,
 #' #                simple_trunc = TRUE, quant = 0.99, kernel="dnorm", 
 #' #                single_index_method="norm1coef", method="optim")
+#' @export
 est_psi <- function(Y, M, Y0=NULL, R, X, t, trt, gamma, fold, seed, IF_output, 
                     simple_trunc, quant, kernel, single_index_method, method="optim", 
                     use_mave=TRUE, s_t_y=NULL, coef_g.fit=NULL, coef_t_R0.fit=NULL, 

@@ -1,0 +1,14 @@
+Makefile
+.*.Rproj
+.Rhistory
+.RData
+.Rproj.user
+data-raw/
+
+# Other things to ignore
+README.qmd
+
+# Development
+.devcontainer/
+.github/
+.vscode/
