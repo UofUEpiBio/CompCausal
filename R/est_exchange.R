@@ -349,9 +349,6 @@ est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
         c(rep(0, length(M_in_fold_R1)), 
           (1-M_in_fold_R0*eta_T_R0_weight)/(1-prop.R1)*mu_Yexp_t_R1_X_R0/mu_exp_t_R1_X_R0)
 
-      vector_mean_R0_temp <- c(rep(0, length(M_in_fold_R1)), rep(1/(1-prop.R1), length(M_in_fold_R0)))*mean(if_R0_temp)
-      vector_mean_R0_temp_diff <- c(rep(0, length(M_in_fold_R1)), rep(1/(1-prop.R1), length(M_in_fold_R0)))*mean(if_R0_temp_diff)
-      
       upsilon_R1_temp <- c(rep(0, length(M_in_fold_R0)), 
                       M_in_fold_R1*eta_T_R1_weight/prop.R1*(trt.ind_in_fold_R1*pi_R1_weight*(Y_in_fold_R1-mu_Y_t_R1_X_R1)+mu_Y_t_R1_X_R1))+
         c(rep(0, length(M_in_fold_R0)), (1-M_in_fold_R1*eta_T_R1_weight)*mu_Y_t_R1_X_R1/prop.R1)
