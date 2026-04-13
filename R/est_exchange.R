@@ -122,8 +122,7 @@ est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
   fold_index_eta_T_R0_l <- c()
   fold_index_eta_T_R1_l <- c()
   fold_index_l <- c()
-  fold_index_l <- c()
-  
+
   ## compute weights across folds
   for (k in 1:fold){
     ## out-of-fold data
@@ -425,14 +424,8 @@ est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
                      var=r_var, var_R0=r_var_R0, 
                      lowerCI=r_lowerCI, lowerCI_R0=r_lowerCI_R0, 
                      upperCI=r_upperCI, upperCI_R0=r_upperCI_R0, 
-                     est_diff=r_est_diff, est_R0_diff=r_est_R0_diff, 
-                     var_diff=r_var_diff, var_R0_diff=r_var_R0_diff, 
-                     lowerCI_diff=r_lowerCI_diff, lowerCI_R0_diff=r_lowerCI_R0_diff, 
-                     upperCI_diff=r_upperCI_diff, upperCI_R0_diff=r_upperCI_R0_diff, 
                      IF=containers$IF, IF_R0=containers$IF_R0, 
-                     IF_diff=containers$IF_diff, IF_R0_diff=containers$IF_R0_diff, 
-                     pain_bq_reordered=pain_bq_reordered, pain_bq_reordered_R0=pain_bq_reordered_R0, 
-                     id_list=containers$id_list)
+                     id_list=containers$id_list, fold_index_l=fold_index_l)
     }else{
       result <- list(est=r_est, est_R0=r_est_R0, 
                      est_trunc=r_est_trunc, est_trunc_R0=r_est_trunc_R0,
@@ -442,20 +435,9 @@ est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
                      upperCI=r_upperCI, upperCI_R0=r_upperCI_R0,
                      lowerCI_trunc=r_lowerCI_trunc, lowerCI_trunc_R0=r_lowerCI_trunc_R0,
                      upperCI_trunc=r_upperCI_trunc, upperCI_trunc_R0=r_upperCI_trunc_R0,
-                     est_diff=r_est_diff, est_R0_diff=r_est_R0_diff,
-                     est_trunc_diff=r_est_trunc_diff, est_trunc_R0_diff=r_est_trunc_R0_diff,
-                     var_diff=r_var_diff, var_R0_diff=r_var_R0_diff,
-                     var_trunc_diff=r_var_trunc_diff, var_trunc_R0_diff=r_var_trunc_R0_diff,
-                     lowerCI_diff=r_lowerCI_diff, lowerCI_R0_diff=r_lowerCI_R0_diff,
-                     upperCI_diff=r_upperCI_diff, upperCI_R0_diff=r_upperCI_R0_diff, 
-                     lowerCI_trunc_diff=r_lowerCI_trunc_diff, lowerCI_trunc_R0_diff=r_lowerCI_trunc_R0_diff, 
-                     upperCI_trunc_diff=r_upperCI_trunc_diff, upperCI_trunc_R0_diff=r_upperCI_trunc_R0_diff, 
                      IF=containers$IF, IF_R0=containers$IF_R0,
                      IF_trunc=containers_trunc$IF, IF_trunc_R0=containers_trunc$IF_R0,
-                     IF_diff=containers$IF_diff, IF_R0_diff=containers$IF_R0_diff,
-                     IF_trunc_diff=containers_trunc$IF_diff, IF_trunc_R0_diff=containers_trunc$IF_R0_diff,
-                     pain_bq_reordered=pain_bq_reordered, pain_bq_reordered_R0=pain_bq_reordered_R0, 
-                     id_list=containers$id_list)
+                     id_list=containers$id_list, fold_index_l=fold_index_l)
     }
   }else{
     if(simple_trunc){
@@ -463,11 +445,7 @@ est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
                      var=r_var, var_R0=r_var_R0, 
                      lowerCI=r_lowerCI, lowerCI_R0=r_lowerCI_R0, 
                      upperCI=r_upperCI, upperCI_R0=r_upperCI_R0, 
-                     est_diff=r_est_diff, est_R0_diff=r_est_R0_diff, 
-                     var_diff=r_var_diff, var_R0_diff=r_var_R0_diff, 
-                     lowerCI_diff=r_lowerCI_diff, lowerCI_R0_diff=r_lowerCI_R0_diff, 
-                     upperCI_diff=r_upperCI_diff, upperCI_R0_diff=r_upperCI_R0_diff, 
-                     pain_bq_reordered=pain_bq_reordered, pain_bq_reordered_R0=pain_bq_reordered_R0)
+                     id_list=containers$id_list, fold_index_l=fold_index_l)
     }else{
       result <- list(est=r_est, est_R0=r_est_R0, 
                      est_trunc=r_est_trunc, est_trunc_R0=r_est_trunc_R0,
@@ -477,15 +455,7 @@ est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
                      upperCI=r_upperCI, upperCI_R0=r_upperCI_R0,
                      lowerCI_trunc=r_lowerCI_trunc, lowerCI_trunc_R0=r_lowerCI_trunc_R0,
                      upperCI_trunc=r_upperCI_trunc, upperCI_trunc_R0=r_upperCI_trunc_R0,
-                     est_diff=r_est_diff, est_R0_diff=r_est_R0_diff,
-                     est_trunc_diff=r_est_trunc_diff, est_trunc_R0_diff=r_est_trunc_R0_diff,
-                     var_diff=r_var_diff, var_R0_diff=r_var_R0_diff,
-                     var_trunc_diff=r_var_trunc_diff, var_trunc_R0_diff=r_var_trunc_R0_diff,
-                     lowerCI_diff=r_lowerCI_diff, lowerCI_R0_diff=r_lowerCI_R0_diff,
-                     upperCI_diff=r_upperCI_diff, upperCI_R0_diff=r_upperCI_R0_diff, 
-                     lowerCI_trunc_diff=r_lowerCI_trunc_diff, lowerCI_trunc_R0_diff=r_lowerCI_trunc_R0_diff, 
-                     upperCI_trunc_diff=r_upperCI_trunc_diff, upperCI_trunc_R0_diff=r_upperCI_trunc_R0_diff, 
-                     pain_bq_reordered=pain_bq_reordered, pain_bq_reordered_R0=pain_bq_reordered_R0)
+                     id_list=containers$id_list, fold_index_l=fold_index_l)
     }
   }
   
