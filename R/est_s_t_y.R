@@ -247,6 +247,8 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
                           family=binomial, start=coef_M_R0.fit) ## missing data model
     M_R1.fit <- mgcv::gam(as.formula(paste("M_out_fold_R1 ~", gam.var.M)), data=X_with_T_out_fold_R1, 
                           family=binomial, start=coef_M_R1.fit) ## missing data model
+    g.fit <- mgcv::gam(as.formula(paste("R_out_fold ~", gam.var)), data=X_out_fold, 
+                       family=binomial, start=coef_g.fit) ## treatment model
     
     prop.R1 <- mean(R_out_fold)
     
@@ -430,11 +432,11 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
     dF_t_R1_X_mk <- F_t_R1_X_mk[, -1, drop = FALSE]-F_t_R1_X_mk[,-ny_t_R1, drop = FALSE]
     
     ## conditional expectation of Y given R=0, T=t and X, for I(R=0, T=t)
-    mu_Y_t_R0_X_t_R0 <- c(dF_t_R0_X_t_R0 %*% (y_t_R0+c(0, y_t_R0[-ny_t_R0]))/2)
+    mu_Y_t_R0_X_t_R0 <- c(dF_t_R0_X_t_R0 %*% (y_t_R0[-1]+y_t_R0[-ny_t_R0])/2)
     mu_Y_t_R0_X_mk <- c(dF_t_R0_X_mk %*% (y_t_R0[-1]+y_t_R0[-ny_t_R0])/2)
     
     ## conditional expectation of Y given R=1, T=t and X, for I(R=1)
-    mu_Y_t_R1_X_R1 <- c(dF_t_R1_X_R1 %*% (y_t_R1+c(0, y_t_R1[-ny_t_R1]))/2)
+    mu_Y_t_R1_X_R1 <- c(dF_t_R1_X_R1 %*% (y_t_R1[-1]+y_t_R1[-ny_t_R1])/2)
     mu_Y_t_R1_X_mk <- c(dF_t_R1_X_mk %*% (y_t_R1[-1]+y_t_R1[-ny_t_R1])/2)
     
     ## P(R=1)
