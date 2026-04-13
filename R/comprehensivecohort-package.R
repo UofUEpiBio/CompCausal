@@ -5,5 +5,7 @@
 #' @import betareg
 #' @import splines
 #' @import methods
+#' @import tidyverse
+#' @import matrixStats
 #' @keywords internal
 "_PACKAGE"

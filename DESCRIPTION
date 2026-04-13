@@ -25,7 +25,9 @@ Imports:
     splines,
     betareg,
     stats,
-    methods
+    methods, 
+    tidyverse, 
+    matrixStats
 Suggests:
     tinytest,
     quarto
