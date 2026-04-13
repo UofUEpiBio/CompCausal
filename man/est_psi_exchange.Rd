@@ -3,12 +3,11 @@
 \name{est_psi_exchange}
 \alias{est_psi_exchange}
 \title{One-step, split sample estimator for E[Y(t)], E[Y(t)|R=0],
-and E[Y(t)-Y0], E[Y(t)-Y0|R=0], under sensitivity analysis for exchangability assumption}
+under sensitivity analysis for exchangability assumption}
 \usage{
 est_psi_exchange(
   Y,
   M,
-  Y0 = NULL,
   R,
   X,
   t,
@@ -32,8 +31,6 @@ est_psi_exchange(
 
 \item{M}{Binary indicator for observed outcome (\code{1} = observed, \code{0} =
 missing).}
-
-\item{Y0}{Numeric baseline outcome vector. No missing data.}
 
 \item{R}{Binary group indicator used to stratify nuisance and outcome models.}
 
@@ -89,10 +86,10 @@ when relevant, truncated IF lists (\verb{IF_trunc*}).
 }
 \description{
 One-step, split sample estimator for E[Y(t)], E[Y(t)|R=0],
-and E[Y(t)-Y0], E[Y(t)-Y0|R=0], under sensitivity analysis for exchangability assumption
+under sensitivity analysis for exchangability assumption
 }
 \examples{
-# out <- est_psi_exchange(Y, M, Y0, R, X, t, trt = 1, gamma = c(0, 0.5),
+# out <- est_psi_exchange(Y, M, R, X, t, trt = 1, gamma = c(0, 0.5),
 #                         fold = 5, seed = 1, IF_output = FALSE,
 #                         simple_trunc = TRUE, quant = 0.99, kernel="dnorm", 
 #                         single_index_method="norm1coef", method="optim")

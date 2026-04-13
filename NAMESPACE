@@ -3,6 +3,8 @@
 export(est_psi)
 export(est_psi_exchange)
 import(betareg)
+import(matrixStats)
 import(methods)
 import(splines)
 import(stats)
+import(tidyverse)

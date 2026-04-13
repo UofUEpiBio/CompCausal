@@ -3,7 +3,6 @@
 \name{est_psi}
 \alias{est_psi}
 \title{One-step, split sample estimator for E[Y(t)], E[Y(t)|R=1], E[Y(t)|R=0],
-and E[Y(t)-Y0], E[Y(t)-Y0|R=1], E[Y(t)-Y0|R=0]
 
 Estimates study-specific and overall outcome means (and difference from baseline)
 using cross-fitting with single index models (SIMs) and
@@ -14,7 +13,6 @@ optional truncated influence-function diagnostics.}
 est_psi(
   Y,
   M,
-  Y0 = NULL,
   R,
   X,
   t,
@@ -44,9 +42,7 @@ est_psi(
 \item{M}{Binary indicator for observed outcome (\code{1} = observed, \code{0} =
 missing).}
 
-\item{Y0}{Numeric baseline outcome vector. No missing data.}
-
-\item{R}{Binary group indicator used to stratify nuisance and outcome models.}
+\item{R}{Binary randomization consent indicator (1 for RCT, 0 for PPS).}
 
 \item{X}{Data frame or matrix of baseline covariates.}
 
@@ -115,7 +111,6 @@ when relevant, truncated IF lists (\verb{IF_trunc*}).
 }
 \description{
 One-step, split sample estimator for E[Y(t)], E[Y(t)|R=1], E[Y(t)|R=0],
-and E[Y(t)-Y0], E[Y(t)-Y0|R=1], E[Y(t)-Y0|R=0]
 
 Estimates study-specific and overall outcome means (and difference from baseline)
 using cross-fitting with single index models (SIMs) and
@@ -130,7 +125,7 @@ and then integrated over estimated conditional distributions to obtain
 conditional means and sensitivity-adjusted moments.
 }
 \examples{
-# out <- est_psi(Y, M, Y0, R, X, t, trt = 1, gamma = c(0, 0.5),
+# out <- est_psi(Y, M, R, X, t, trt = 1, gamma = c(0, 0.5),
 #                fold = 5, seed = 1, IF_output = FALSE,
 #                simple_trunc = TRUE, quant = 0.99, kernel="dnorm", 
 #                single_index_method="norm1coef", method="optim")
