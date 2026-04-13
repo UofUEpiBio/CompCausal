@@ -12,20 +12,21 @@ remotes::install_github("UofUEpiBio/Comprehensive_cohort")
 library(comprehensivecohort)
 ```
 
-    Loading required package: splines
-
-    Loading required package: betareg
-
 ``` r
 data(ccohort)
 
+## simple truncation
 out <- with(ccohort, {
-  est_psi(Y, M, Y0 = NULL, R, X = data.frame(womac_bq), t, trt = 1, gamma = c(0, 0.5),
-    fold = 5, seed = 1, IF_output = FALSE,
-    simple_trunc = TRUE, quant = 0.99, kernel="dnorm", 
-    single_index_method="norm1coef", method="optim")
+  est_psi(Y, M, R, X = data.frame(age, womac_bq, expectationb, ChronicPainb), 
+          t, trt = 1, gamma = c(0, 0.5), fold = 5, seed = 1, IF_output = FALSE,
+          simple_trunc = TRUE, quant = 0.99, kernel="dnorm", 
+          single_index_method="norm1coef", method="optim")
+})
+## data adaptive truncation
+out <- with(ccohort, {
+  est_psi(Y, M, R, X = data.frame(age, womac_bq, expectationb, ChronicPainb), 
+          t, trt = 1, gamma = c(0, 0.5), fold = 5, seed = 1, IF_output = FALSE,
+          simple_trunc = FALSE, quant = NULL, kernel="dnorm", 
+          single_index_method="norm1coef", method="optim")
 })
 ```
-
-    Error in `X_out_fold[which(R_out_fold == 0), ]`:
-    ! incorrect number of dimensions
