@@ -378,35 +378,6 @@ pboot <- function(data, X_sim, sim.size, seed){
   
 }
 
-## run algorithm with simulated data
-fit_one_analysis <- function(trt_val, fold, seed, gamma, IF_output, 
-                             single_index_method, method, kernel) {
-  # try mave first
-  out <- try(est_psi(Y=data$Y, M=data$M, R=data$R, X=X,
-                     t=data$t, trt=trt_val, gamma=gamma, fold=fold,
-                     IF_output=IF_output, simple_trunc=FALSE, quant=NULL, kernel=kernel,
-                     method=method, single_index_method=single_index_method,
-                     use_mave=TRUE, seed=seed),
-             silent = TRUE)
-  
-  if (inherits(out, "try-error")) {
-    # fallback cumSIR
-    out <- try(est_psi(Y=data$Y, M=data$M, R=data$R, X=X,
-                       t=data$t, trt=trt_val, gamma=gamma, fold=fold,
-                       IF_output=IF_output, simple_trunc=FALSE, quant=NULL, kernel=kernel,
-                       method=method, single_index_method=single_index_method,
-                       use_mave=FALSE, seed=seed),
-               silent = TRUE)
-  }
-  
-  if (inherits(out, "try-error") || is.null(out)) {
-    return(NULL)
-  }else{
-    return(out)
-  }
-  
-}
-
 
 
 
