@@ -86,7 +86,7 @@ SIM <- function(X, Y, kernel, method, single_index_method, use_mave){
 #' @param M Binary indicator for observed outcome (`1` = observed, `0` =
 #'   missing).
 #' @param Y0 Numeric baseline outcome vector. No missing data. 
-#' @param R Binary group indicator used to stratify nuisance and outcome models.
+#' @param R Binary randomization consent indicator (1 for RCT, 0 for PPS). 
 #' @param X Data frame or matrix of baseline covariates.
 #' @param t Treatment assignment vector.
 #' @param trt Treatment level for which the target estimand is computed.
