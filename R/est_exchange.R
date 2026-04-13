@@ -34,7 +34,6 @@ est_exchange_create_containers <- function(gamma, fold) {
 #'   `0` prior to model fitting.
 #' @param M Binary indicator for observed outcome (`1` = observed, `0` =
 #'   missing).
-#' @param Y0 Numeric baseline outcome vector. No missing data. 
 #' @param R Binary group indicator used to stratify nuisance and outcome models.
 #' @param X Data frame or matrix of baseline covariates.
 #' @param t Treatment assignment vector.
