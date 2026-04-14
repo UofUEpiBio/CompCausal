@@ -154,8 +154,8 @@ truth_beta <- function(Y, M, R, t, X, trt, gamma){
   phi_t_R0 <- Y_t_R0.fit$coefficients$precision
   phi_t_R1 <- Y_t_R1.fit$coefficients$precision
   
-  mu_X_t_R0 <- 100*predict(Y_t_R0.fit, newdata=X, type="response")
-  mu_X_t_R1 <- 100*predict(Y_t_R1.fit, newdata=X, type="response")
+  mu_X_t_R0 <- 100*betareg::predict(Y_t_R0.fit, newdata=X, type="response")
+  mu_X_t_R1 <- 100*betareg::predict(Y_t_R1.fit, newdata=X, type="response")
   
   ## fit g model
   g.fit <- mgcv::gam(as.formula(paste("R ~", gam.var)), data=cbind(R, X), family=binomial) 

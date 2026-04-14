@@ -46,8 +46,8 @@ X$ChronicPainb <- relevel(factor(X$ChronicPainb), ref="1-2")
 ## truth ##
 ###########
 
-truth_topical <- truth_beta(Y=Y, Y0=X$womac_bq, M=M, R=R, t=t, X=X, trt=1, gamma=seq(-2, 2, by=0.5))
-truth_oral <- truth_beta(Y=Y, Y0=X$womac_bq, M=M, R=R, t=t, X=X, trt=0, gamma=seq(-2, 2, by=0.5))
+truth_topical <- truth_beta(Y=Y, M=M, R=R, t=t, X=X, trt=1, gamma=seq(-2, 2, by=0.5))
+truth_oral <- truth_beta(Y=Y, M=M, R=R, t=t, X=X, trt=0, gamma=seq(-2, 2, by=0.5))
 
 ################
 ## fit models ##
@@ -108,10 +108,10 @@ T.new_R0 <- rbinom(n=sim.size,size=1,prob=prob.T_R0)
 T.new <- T.new_R1*R.new+T.new_R0*(1-R.new)
 
 ## new Y
-mu_t_R0 <- predict(Y_t_R0.fit, newdata=X.new, type="response")
-mu_t0_R0 <- predict(Y_t0_R0.fit, newdata=X.new, type="response")
-mu_t_R1 <- predict(Y_t_R1.fit, newdata=X.new, type="response")
-mu_t0_R1 <- predict(Y_t0_R1.fit, newdata=X.new, type="response")
+mu_t_R0 <- betareg::predict(Y_t_R0.fit, newdata=X.new, type="response")
+mu_t0_R0 <- betareg::predict(Y_t0_R0.fit, newdata=X.new, type="response")
+mu_t_R1 <- betareg::predict(Y_t_R1.fit, newdata=X.new, type="response")
+mu_t0_R1 <- betareg::predict(Y_t0_R1.fit, newdata=X.new, type="response")
 
 phi_t_R0 <- Y_t_R0.fit$coefficients$precision
 phi_t0_R0 <- Y_t0_R0.fit$coefficients$precision

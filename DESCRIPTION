@@ -1,6 +1,6 @@
 Package: comprehensivecohort
 Type: Package
-Title: Comprehensive Cohort Models
+Title: Inferring causal effects in comprehensive cohort studies
 Version: 0.0.9000
 Depends:
     R (>= 4.1.0)
@@ -13,7 +13,11 @@ Authors@R: c(
   person("Daniel", "Scharfstein", , "daniel.scharfstein@hsc.utah.edu", role = c("pdr", "aut"),
            comment = c(ORCID = "0000-0001-7482-9653"))
   )
-Description: TBD.
+Description: This package provide R implementations of the estimation methods for 
+             inferring causal effects in comprehensive cohort studies, 
+             in the presence of unmeasured confounding and missing outcomes. The causal 
+             effects include comprehensive cohort causal effects, randomized trial causal effects, 
+             and patient preference causal effect. 
 URL: https://github.com/UofUEpiBio/Comprehensive_cohort
 BugReports: https://github.com/UofUEpiBio/Comprehensive_cohort/issues
 License: MIT + file LICENSE
@@ -27,7 +31,15 @@ Imports:
     stats,
     methods, 
     tidyverse, 
-    matrixStats
+    matrixStats,
+    MAVE,
+    assertthat,
+    dfoptim,
+    ManifoldOptim,
+    mgcv,
+    purrr,
+    Rcpp,
+    rlang
 Suggests:
     tinytest,
     quarto

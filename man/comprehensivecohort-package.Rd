@@ -4,9 +4,13 @@
 \name{comprehensivecohort-package}
 \alias{comprehensivecohort}
 \alias{comprehensivecohort-package}
-\title{comprehensivecohort: Comprehensive Cohort Models}
+\title{comprehensivecohort: Inferring causal effects in comprehensive cohort studies}
 \description{
-TBD
+This package provide R implementations of the estimation methods for
+inferring causal effects in comprehensive cohort studies,
+in the presence of unmeasured confounding and missing outcomes. The causal
+effects include comprehensive cohort causal effects, randomized trial causal effects,
+and patient preference causal effect.
 }
 \seealso{
 Useful links:
@@ -30,4 +34,12 @@ Other contributors:
 }
 
 }
-\keyword{internal}
+\keyword{Causal}
+\keyword{Comprehensive}
+\keyword{Missing}
+\keyword{Unmeasured}
+\keyword{at}
+\keyword{cohort,}
+\keyword{confounding,}
+\keyword{effect}
+\keyword{random,}
