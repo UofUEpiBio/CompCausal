@@ -139,51 +139,6 @@ Y.new[M.new==0] <- NA
 data <- data.frame(cbind(Y.new, M.new, R.new, T.new, X.new))
 colnames(data) <- c("Y", "M", "R", "t", colnames(X.new))
 
-################
-## estimation ##
-################
-
-## run algorithm with simulated data
-fit_one_analysis <- function(trt_val, fold, seed, gamma, IF_output, 
-                             single_index_method, method, kernel) {
-  # try mave first
-  out <- try(est_psi(Y=data$Y, M=data$M, R=data$R, X=X,
-                     t=data$t, trt=trt_val, gamma=gamma, fold=fold,
-                     IF_output=IF_output, simple_trunc=FALSE, quant=NULL, kernel=kernel,
-                     method=method, single_index_method=single_index_method,
-                     use_mave=TRUE, seed=seed),
-             silent = TRUE)
-  
-  if (inherits(out, "try-error")) {
-    # fallback cumSIR
-    out <- try(est_psi(Y=data$Y, M=data$M, R=data$R, X=X,
-                       t=data$t, trt=trt_val, gamma=gamma, fold=fold,
-                       IF_output=IF_output, simple_trunc=FALSE, quant=NULL, kernel=kernel,
-                       method=method, single_index_method=single_index_method,
-                       use_mave=FALSE, seed=seed),
-               silent = TRUE)
-  }
-  
-  if (inherits(out, "try-error") || is.null(out)) {
-    return(NULL)
-  }else{
-    return(out)
-  }
-  
-}
-
-
-rand_seed <- 18890
-fold <- 5
-
-X = data.frame(dplyr::select(data, c(age, womac_bq, expectationb, ChronicPainb)))
-
-topical_WOMAC_12m_sim <- fit_one_analysis(trt_val=1, fold=fold, seed=rand_seed, gamma=seq(-2, 2, by=0.5), IF_output=FALSE,
-                                          single_index_method="norm1coef", method="optim", kernel="dnorm")
-oral_WOMAC_12m_sim    <- fit_one_analysis(trt_val=0, fold=fold, seed=rand_seed, gamma=seq(-2, 2, by=0.5), IF_output=FALSE,
-                                          single_index_method="norm1coef", method="optim", kernel="dnorm")
-
-
 
 
 
