@@ -439,7 +439,7 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
     mu_Y_t_R1_X_mk <- c(dF_t_R1_X_mk %*% (y_t_R1[-1]+y_t_R1[-ny_t_R1])/2)
     
     ## P(R=1)
-    prop.R1 <- mean(R_in_fold)
+    prop.R1 <- mean(R_out_fold)
     
     ## containers$vector_R1 and containers$vector_R0
     ind_R1_temp <- c(rep(0, length(M_in_fold_t_R0)+length(M_in_fold_t0_R0)), rep(1/prop.R1, length(M_in_fold_R1)))
