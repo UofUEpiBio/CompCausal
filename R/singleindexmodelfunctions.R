@@ -1,6 +1,6 @@
-# single index model's function
-
-# return the initial value for beta
+#' single index model's function
+#' return the initial value for beta
+#' @noRd
 cumuSIR <- function(X, Y, eps = 1e-7){
   X <- as.matrix(X)
   Y <- as.matrix(Y)
@@ -28,7 +28,8 @@ cumuSIR <- function(X, Y, eps = 1e-7){
 }
 
 
-# find the optimal bandwidth, default set for kernel is 
+#' find the optimal bandwidth, default set for kernel is 
+#' @noRd
 SIDRnew_h2 <- function(X, Y,
                        Y.CP = NULL,
                        beta = NULL,

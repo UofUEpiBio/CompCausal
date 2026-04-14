@@ -1,3 +1,5 @@
+#'
+#' @noRd
 SIDR_Ravinew <- function(X, Y,
                          Y.CP = NULL,
                          initial = NULL,

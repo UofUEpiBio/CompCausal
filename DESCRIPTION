@@ -20,7 +20,7 @@ Description: This package provide R implementations of the estimation methods fo
              and patient preference causal effect. 
 URL: https://github.com/UofUEpiBio/Comprehensive_cohort
 BugReports: https://github.com/UofUEpiBio/Comprehensive_cohort/issues
-License: MIT
+License: MIT + file LICENSE
 RoxygenNote: 7.3.3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
