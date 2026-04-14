@@ -10,7 +10,8 @@
 #' @import betareg
 #' @import splines
 #' @import methods
-#' @import tidyverse
+#' @import dplyr
+#' @import ggplot2
 #' @import matrixStats
 #' @import MAVE
 #' @import assertthat
