@@ -467,10 +467,10 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
                                                       exp(gamma[g]*s_t_y(y_t_R0[-ny_t_R0])))/2)
 
       mu_Yexp_t_R0_X_mk <- c(dF_t_R0_X_mk %*% (y_t_R0[-1]*exp(gamma[g]*s_t_y(y_t_R0[-1]))+
-                                                 y_t_R0[-ny_t_R0]*exp(gamma[g]*s_t_y(y_t_R0[-1])))/2)
+                                                 y_t_R0[-ny_t_R0]*exp(gamma[g]*s_t_y(y_t_R0[-ny_t_R0])))/2)
       
       mu_exp_t_R0_X_mk <- c(dF_t_R0_X_mk %*% (exp(gamma[g]*s_t_y(y_t_R0[-1]))+
-                                                exp(gamma[g]*s_t_y(y_t_R0[-1])))/2)
+                                                exp(gamma[g]*s_t_y(y_t_R0[-ny_t_R0])))/2)
       
     ## IF+psi within each fold
     if(trt==1){
