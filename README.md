@@ -29,7 +29,7 @@ out <- with(ccohort, {
 ```
 
 We can also apply data adaptive truncation for the entire influence function:
-```
+```r
 ## data adaptive truncation
 out <- with(ccohort, {
   est_psi(Y, M, R, X = data.frame(age, womac_bq, expectationb, ChronicPainb), 

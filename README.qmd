@@ -9,7 +9,7 @@ comprehensivecohort is a R package for inferring causal effects in comprehensive
 
 ## Installment
 
-```r
+```{r}
 remotes::install_github("UofUEpiBio/Comprehensive_cohort")
 ```
 
