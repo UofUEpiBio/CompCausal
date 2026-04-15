@@ -1,0 +1,49 @@
+Package: comprehensivecohort
+Type: Package
+Title: Inferring causal effects in comprehensive cohort studies
+Version: 0.0.9000
+Depends:
+    R (>= 4.1.0)
+Authors@R: c(
+  person(
+    "Jennifer", "Xu", email = "jennifer.xu@hsc.utah.edu", role = c("aut", "cre")
+    ),
+  person(given="George", family="Vega Yon", role=c("ctb"),
+  email="g.vegayon@gmail.com", comment = c(ORCID = "0000-0002-3171-0844")),
+  person("Daniel", "Scharfstein", , "daniel.scharfstein@hsc.utah.edu", role = c("pdr", "aut"),
+           comment = c(ORCID = "0000-0001-7482-9653"))
+  )
+Description: This package provide R implementations of the estimation methods for 
+             inferring causal effects in comprehensive cohort studies, 
+             in the presence of unmeasured confounding and missing outcomes. The causal 
+             effects include comprehensive cohort causal effects, randomized trial causal effects, 
+             and patient preference causal effect. 
+URL: https://github.com/UofUEpiBio/Comprehensive_cohort
+BugReports: https://github.com/UofUEpiBio/Comprehensive_cohort/issues
+License: MIT + file LICENSE
+RoxygenNote: 7.3.3
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Imports:
+    utils,
+    splines,
+    betareg,
+    stats,
+    methods, 
+    dplyr,
+    ggplot2, 
+    matrixStats,
+    MAVE,
+    assertthat,
+    dfoptim,
+    ManifoldOptim,
+    mgcv,
+    purrr,
+    Rcpp,
+    rlang
+Suggests:
+    tinytest,
+    quarto
+VignetteBuilder:
+    quarto
+LazyData: true

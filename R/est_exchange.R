@@ -1,0 +1,458 @@
+#' Create containers for cross-fitted estimator
+#' 
+#' This helper function initializes an environment to hold influence-function
+#' vectors, point estimates, variance estimates, and other intermediate 
+#' quantities for the cross-fitted estimator. 
+#' The structure is designed to facilitate storage and retrieval of these 
+#' objects across multiple folds and sensitivity parameter values.
+#' @noRd
+est_exchange_create_containers <- function(gamma, fold) {
+  
+  e <- new.env(parent = emptyenv())
+  e$IF               <- vector(mode = "list", length = length(gamma))
+  e$IF_R0            <- vector(mode = "list", length = length(gamma))
+  e$est_temp         <- matrix(0, nrow = fold, ncol = length(gamma))
+  e$est_R0_temp      <- matrix(0, nrow = fold, ncol = length(gamma))
+  e$var_temp         <- matrix(0, nrow = fold, ncol = length(gamma))
+  e$var_R0_temp      <- matrix(0, nrow = fold, ncol = length(gamma))
+  e$vector_R0        <- c()
+  e$id_list          <- c()
+  
+  structure(
+    e,
+    class = c("est_container", class(e))
+  )
+}
+
+
+
+
+#' One-step, split sample estimator for E\[Y(t)\], E\[Y(t)|R=0\], 
+#'   under sensitivity analysis for exchangability assumption
+#'
+#' @param Y Numeric outcome vector. Missing values are internally replaced with
+#'   `0` prior to model fitting.
+#' @param M Binary indicator for observed outcome (`1` = observed, `0` =
+#'   missing).
+#' @param R Binary group indicator used to stratify nuisance and outcome models.
+#' @param X Data frame or matrix of baseline covariates.
+#' @param t Treatment assignment vector.
+#' @param trt Treatment level for which the target estimand is computed.
+#' @param gamma Numeric vector of sensitivity parameters.
+#' @param fold Number of cross-fitting folds.
+#' @param seed Optional integer random seed for fold assignment. Use `NULL` to
+#'   leave RNG state unchanged.
+#' @param IF_output Logical; if `TRUE`, include influence-function vectors in
+#'   the returned list.
+#' @param simple_trunc Logical; if `TRUE`, apply quantile truncation to inverse
+#'   probability weights. If `FALSE`, apply IF truncation diagnostics.
+#' @param quant Numeric in `(0, 1)` used as the upper quantile for simple weight
+#'   truncation when `simple_trunc = TRUE`.
+#' @param kernel Characters; Kernel used for SIMs. `K2_Biweight` for Epanechnikov kernel, 
+#'   `dnorm` for Gaussian kernel. 
+#' @param single_index_method Characters; Three implementations for SIMs: `fixed_bandwidth` 
+#'    for setting bandwidth to 1, `fixed_coef` for setting the first coefficient to 1, and `norm1coef`
+#'    for setting the norm of coefficients to 1. 
+#' @param method Characters; Optimization method used for SIMs. Choices are: `optim`, `nlminb`, `nmk`. 
+#'    Note that method is set to `optim` if single_index_method=`norm1coef`. 
+#' @param use_mave Logical; if `TRUE`, use Minimum Average Variance Estimation (MAVE) method for initial
+#'    coefficients value for SIMs. If `FALSE`, use sliced inverse regression. Default is `TRUE`. 
+#' @param s_t_y A function of Y in the exponential tilting model. If NULL, s_t_y is set to pnorm((y
+#' @return A named list of estimates and uncertainty summaries for each value in
+#'   `gamma`. Core elements include point estimates (`est`, `est_R0`), variance
+#'   estimates (`var`, `var_R0`), and confidence interval bounds (`lowerCI*`, `upperCI*`). 
+#'   Additional components depend on `simple_trunc` and `IF_output`:
+#'   \itemize{
+#'   \item `simple_trunc = TRUE`: returns quantile-weight-truncated summaries only.
+#'   \item `simple_trunc = FALSE`: additionally returns truncated summaries and
+#'   truncated IF objects when requested.
+#'   \item `IF_output = TRUE`: includes influence-function lists (`IF*`) and,
+#'   when relevant, truncated IF lists (`IF_trunc*`).
+#'   }
+#' @examples
+#' # out <- est_psi_exchange(Y, M, R, X, t, trt = 1, gamma = c(0, 0.5),
+#' #                         fold = 5, seed = 1, IF_output = FALSE,
+#' #                         simple_trunc = TRUE, quant = 0.99, kernel="dnorm", 
+#' #                         single_index_method="norm1coef", method="optim")
+#' @export
+est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output, 
+                             simple_trunc, quant, kernel, method="optim", single_index_method, 
+                             use_mave=TRUE, s_t_y=NULL){
+  
+  if(is.null(s_t_y)){
+    s_t_y <- function(y){pnorm((y-60)/25)}
+  }
+  
+  n <- length(t)
+  Y[is.na(Y)] <- 0
+
+  trt.ind <- as.numeric(t==trt) # create treatment indicator variable
+
+  ## set up covariates list and design matrix for modeling
+  X_with_T <- cbind(as.factor(t), X)
+  colnames(X_with_T)[1] <- "treatment"
+  gam.var <- paste(gam.variables(X), collapse = "+") ## gam variables for treatment assignment model
+  gam.var.M <- paste(gam.variables(X_with_T), collapse = "+") ## gam variables for missing data model
+  index.var.Y <- single.index.variables(X)
+  X_adjust <- model.matrix(as.formula(paste("~", paste(index.var.Y, collapse = "+"))), data = X)[,-1]
+  X_adjust_scale <- scale(X_adjust)
+  
+  ## empty containers
+  containers <- est_exchange_create_containers(gamma, fold)
+  if (!simple_trunc){
+    containers_trunc <- est_exchange_create_containers(gamma, fold)
+  }
+  
+  ## cross fit
+  if(!is.null(seed)){set.seed(seed)}
+  indx <- sample(1:n)
+  fold_list <- split(1:n, indx %% fold)
+  fold_nk_list <- vector(length=fold)
+  
+  ## containers
+  pi_R1_l <- c()
+  g_l <- c()
+  g_l_mk <- c()
+  eta_T_R0_l <- c()
+  eta_T_R1_l <- c()
+  fold_index_pi_R1_l <- c()
+  fold_index_g_l <- c()
+  fold_index_g_l_mk <- c()
+  fold_index_eta_T_R0_l <- c()
+  fold_index_eta_T_R1_l <- c()
+  fold_index_l <- c()
+
+  ## compute weights across folds
+  for (k in 1:fold){
+    ## out-of-fold data
+    if(fold>1){
+      out_fold_id_list <- setdiff(1:n, fold_list[[k]])
+    }else{
+      out_fold_id_list <- 1:n
+    }
+    M_out_fold <- M[out_fold_id_list]
+    R_out_fold <- R[out_fold_id_list]
+    t_out_fold <- t[out_fold_id_list]
+    trt.ind_out_fold <- trt.ind[out_fold_id_list]
+    X_out_fold <- X[out_fold_id_list, ]
+    X_with_T_out_fold <- X_with_T[out_fold_id_list, ]
+    
+    t_out_fold_R1 <- t_out_fold[which(R_out_fold==1)]
+    X_out_fold_R1 <- X_out_fold[which(R_out_fold==1), ]
+    
+    M_out_fold_R0 <- M_out_fold[which(R_out_fold==0)]
+    X_with_T_out_fold_R0 <- X_with_T_out_fold[which(R_out_fold==0), ]
+    M_out_fold_R1 <- M_out_fold[which(R_out_fold==1)]
+    X_with_T_out_fold_R1 <- X_with_T_out_fold[which(R_out_fold==1), ]
+    
+    ## in-fold data
+    nk_in_fold <- length(fold_list[[k]])
+    fold_nk_list[k] <- nk_in_fold
+    R_in_fold <- R[fold_list[[k]]]
+    X_in_fold <- X[fold_list[[k]], ]
+    X_with_T_in_fold <- X_with_T[fold_list[[k]], ]
+    
+    X_in_fold_R1 <- X_in_fold[which(R_in_fold==1), ]
+    X_in_fold_R0 <- X_in_fold[which(R_in_fold==0), ]
+    
+    X_with_T_in_fold_R0 <- X_with_T_in_fold[which(R_in_fold==0), ]
+    X_with_T_in_fold_R1 <- X_with_T_in_fold[which(R_in_fold==1), ]
+    
+    ## fit models
+    t_R1.fit <- mgcv::gam(as.formula(paste("t_out_fold_R1 ~", gam.var)), data=X_out_fold_R1, family=binomial) ## treatment model
+    g.fit <- mgcv::gam(as.formula(paste("R_out_fold ~", gam.var)), data=X_out_fold, family=binomial)
+    
+    M_R0.fit <- mgcv::gam(as.formula(paste("M_out_fold_R0 ~", gam.var.M)), data=X_with_T_out_fold_R0, family=binomial) ## missing data model
+    M_R1.fit <- mgcv::gam(as.formula(paste("M_out_fold_R1 ~", gam.var.M)), data=X_with_T_out_fold_R1, family=binomial) ## missing data model
+    
+    prop.R1 <- mean(R_out_fold)
+    
+    ## get predictions for pi
+    if(trt==1){
+      pi_R1 <- predict(t_R1.fit, newdata=X_in_fold_R1, type="response")  
+    }else{
+      pi_R1 <- 1-predict(t_R1.fit, newdata=X_in_fold_R1, type="response")  
+    }
+    pi_R1_l <- c(pi_R1_l, pi_R1)
+    fold_index_pi_R1_l <- c(fold_index_pi_R1_l, rep(k, length(pi_R1)))
+    
+    ## get predictions for g
+    g1 <- predict(g.fit, newdata=X_in_fold_R1, type="response")
+    g_l <- c(g_l, g1)
+    fold_index_g_l <- c(fold_index_g_l, rep(k, length(g1)))
+    
+    g_mk <- predict(g.fit, newdata=X_out_fold, type="response") 
+    g_l_mk <- c(g_l_mk, g_mk)
+    fold_index_g_l_mk <- c(fold_index_g_l_mk, rep(k, length(g_mk)))
+    
+    ## get predictions for eta
+    eta_T_R0 <- predict(M_R0.fit, newdata=X_with_T_in_fold_R0, type="response")
+    eta_T_R1 <- predict(M_R1.fit, newdata=X_with_T_in_fold_R1, type="response")
+    eta_T_R0_l <- c(eta_T_R0_l, eta_T_R0)
+    eta_T_R1_l <- c(eta_T_R1_l, eta_T_R1)
+    fold_index_eta_T_R0_l <- c(fold_index_eta_T_R0_l, rep(k, length(eta_T_R0)))
+    fold_index_eta_T_R1_l <- c(fold_index_eta_T_R1_l, rep(k, length(eta_T_R1)))
+    
+    fold_index_l <- c(fold_index_l, rep(k, dim(X_in_fold)[1]))
+  }
+  
+  ## weight truncation
+  if(!simple_trunc){
+    pi_R1_l <- pmin(pmax(pi_R1_l,0.01),0.99)
+    g_l <- pmin(pmax(g_l,0.01),0.99)
+    eta_T_R0_l <- pmin(pmax(eta_T_R0_l,0.01),0.99)
+    eta_T_R1_l <- pmin(pmax(eta_T_R1_l,0.01),0.99)
+  }
+  pi_R1_weight_l <- 1/pi_R1_l
+  g_weight_l <- (1-g_l)/g_l
+  eta_T_R0_weight_l <- 1/eta_T_R0_l
+  eta_T_R1_weight_l <- 1/eta_T_R1_l
+  
+  if(simple_trunc){
+    pi_R1_weight_l[which(pi_R1_weight_l >= quantile(pi_R1_weight_l, probs = quant))] <- quantile(pi_R1_weight_l, probs = quant)
+    g_weight_l[which(g_weight_l>=quantile(g_weight_l, probs=quant))] <- quantile(g_weight_l, probs=quant)
+    eta_T_R0_weight_l[which(eta_T_R0_weight_l>=quantile(eta_T_R0_weight_l, probs = quant))] <- quantile(eta_T_R0_weight_l, probs = quant)
+    eta_T_R1_weight_l[which(eta_T_R1_weight_l>=quantile(eta_T_R1_weight_l, probs = quant))] <- quantile(eta_T_R1_weight_l, probs = quant)
+  }
+  
+  ## compute outcome model and influence function for each fold
+  for (k in 1:fold){
+    
+    ## out-of-fold data
+    if(fold>1){
+      out_fold_id_list <- setdiff(1:n, fold_list[[k]])
+    }else{
+      out_fold_id_list <- 1:n
+    }
+    Y_out_fold <- Y[out_fold_id_list]
+    M_out_fold <- M[out_fold_id_list]
+    R_out_fold <- R[out_fold_id_list]
+    t_out_fold <- t[out_fold_id_list]
+    X_out_fold_adjust_scale <- X_adjust_scale[out_fold_id_list, ]
+    
+    Y_out_fold_t_R1 <- Y_out_fold[which(t_out_fold==trt & R_out_fold==1)]
+    X_out_fold_t_R1_adjust_scale <- X_out_fold_adjust_scale[which(t_out_fold==trt & R_out_fold==1), ]
+    M_out_fold_t_R1 <- M_out_fold[which(t_out_fold==trt & R_out_fold==1)]
+    
+    ## in-fold data
+    nk_in_fold <- length(fold_list[[k]])
+    Y_in_fold <- Y[fold_list[[k]]]
+    M_in_fold <- M[fold_list[[k]]]
+    R_in_fold <- R[fold_list[[k]]]
+    t_in_fold <- t[fold_list[[k]]]
+    trt.ind_in_fold <- trt.ind[fold_list[[k]]]
+    X_in_fold_adjust_scale <- X_adjust_scale[fold_list[[k]], ]
+    
+    X_in_fold_R0_adjust_scale <- X_in_fold_adjust_scale[which(R_in_fold==0), ]
+    X_in_fold_R1_adjust_scale <- X_in_fold_adjust_scale[which(R_in_fold==1), ]
+    
+    M_in_fold_R0 <- M_in_fold[which(R_in_fold==0)]
+    M_in_fold_R1 <- M_in_fold[which(R_in_fold==1)]
+    
+    Y_in_fold_R1 <- Y_in_fold[which(R_in_fold==1)]
+    
+    trt.ind_in_fold_R1 <- trt.ind_in_fold[which(R_in_fold==1)]
+    
+    containers$id_list <- c(containers$id_list, fold_list[[k]])
+    
+    ## get the weights in fold k
+    pi_R1_weight <- pi_R1_weight_l[which(fold_index_pi_R1_l==k)]
+    g_weight <- g_weight_l[which(fold_index_g_l==k)]
+    eta_T_R0_weight <- eta_T_R0_weight_l[which(fold_index_eta_T_R0_l==k)]
+    eta_T_R1_weight <- eta_T_R1_weight_l[which(fold_index_eta_T_R1_l==k)]
+    g_mk <- g_l_mk[which(fold_index_g_l_mk==k)]
+    
+    ## fit models
+    fit_t_R1_h <- SIM(X=X_out_fold_t_R1_adjust_scale[which(M_out_fold_t_R1==1), ], Y=Y_out_fold_t_R1[which(M_out_fold_t_R1==1)], 
+                      kernel=kernel, method=method, single_index_method=single_index_method, use_mave=use_mave)
+    
+    ## get prediction for X'beta
+    X_in_fold_R0_beta_t_R1 <- as.vector(X_in_fold_R0_adjust_scale %*% fit_t_R1_h$coef)
+    X_in_fold_R1_beta_t_R1 <- as.vector(X_in_fold_R1_adjust_scale %*% fit_t_R1_h$coef)
+    X_out_fold_t_R1_beta_t_R1 <- as.vector(X_out_fold_t_R1_adjust_scale[which(M_out_fold_t_R1==1), ] %*% fit_t_R1_h$coef)
+    X_out_fold_beta_t_R1 <- as.vector(X_out_fold_adjust_scale %*% fit_t_R1_h$coef)
+    
+    ## compute CDF
+    y_t_R1 = sort(unique(Y_out_fold_t_R1[which(M_out_fold_t_R1==1)]))    
+    ny_t_R1 = length(y_t_R1) 
+    F_t_R1_X_R1 <- NW_new(Xb=X_out_fold_t_R1_beta_t_R1, Y=Y_out_fold_t_R1[which(M_out_fold_t_R1==1)], 
+                          xb=X_in_fold_R1_beta_t_R1, y=y_t_R1, h=fit_t_R1_h$bandwidth, 
+                          kernel = kernel)
+    F_t_R1_X_R0 <- NW_new(Xb=X_out_fold_t_R1_beta_t_R1, Y=Y_out_fold_t_R1[which(M_out_fold_t_R1==1)], 
+                          xb=X_in_fold_R0_beta_t_R1, y=y_t_R1, h=fit_t_R1_h$bandwidth, 
+                          kernel = kernel)
+    F_t_R1_X_mk <- NW_new(Xb=X_out_fold_t_R1_beta_t_R1, Y=Y_out_fold_t_R1[which(M_out_fold_t_R1==1)], 
+                          xb=X_out_fold_beta_t_R1, y=y_t_R1, h=fit_t_R1_h$bandwidth, 
+                          kernel = kernel)
+    
+    #fix up cases where CDF is improper by finding closest people with closest X'beta
+    i1 = which(apply(F_t_R1_X_R1==0,1,prod)==1)
+    i1.closest <- apply(abs(outer(X_in_fold_R1_beta_t_R1[i1], X_in_fold_R1_beta_t_R1[-i1], FUN = "-")), 1, which.min)
+    F_t_R1_X_R1[i1, ] <- F_t_R1_X_R1[-i1, ][i1.closest, ]
+    
+    i1 = which(apply(F_t_R1_X_R0==0,1,prod)==1)
+    i1.closest <- apply(abs(outer(X_in_fold_R0_beta_t_R1[i1], X_in_fold_R0_beta_t_R1[-i1], FUN = "-")), 1, which.min)
+    F_t_R1_X_R0[i1, ] <- F_t_R1_X_R0[-i1, ][i1.closest, ]
+    
+    i1 = which(apply(F_t_R1_X_mk==0,1,prod)==1)
+    i1.closest <- apply(abs(outer(X_out_fold_beta_t_R1[i1], X_out_fold_beta_t_R1[-i1], FUN = "-")), 1, which.min)
+    F_t_R1_X_mk[i1, ] <- F_t_R1_X_mk[-i1, ,drop = FALSE][i1.closest, ]
+    
+    #compute PDF
+    dF_t_R1_X_R1 <- F_t_R1_X_R1[, -1, drop = FALSE]-F_t_R1_X_R1[,-ny_t_R1, drop = FALSE]
+    dF_t_R1_X_R0 <- F_t_R1_X_R0[, -1, drop = FALSE]-F_t_R1_X_R0[,-ny_t_R1, drop = FALSE]
+    dF_t_R1_X_mk <- F_t_R1_X_mk[, -1, drop = FALSE]-F_t_R1_X_mk[,-ny_t_R1, drop = FALSE]
+    
+    ## conditional expectation of Y given R=1, T=t and X, for I(R=1)
+    mu_Y_t_R1_X_R1 <- c(dF_t_R1_X_R1 %*% (y_t_R1[-1]+y_t_R1[-ny_t_R1])/2)
+    mu_Y_t_R1_X_mk <- c(dF_t_R1_X_mk %*% (y_t_R1[-1]+y_t_R1[-ny_t_R1])/2)
+    
+    ## P(R=1)
+    prop.R1 <- mean(R_out_fold)
+    
+    ## containers$vector_R0
+    ind_R0_temp <- c(rep(0, length(M_in_fold_R1)), rep(1/(1-prop.R1), length(M_in_fold_R0)))
+    containers$vector_R0 <- c(containers$vector_R0, ind_R0_temp)
+    
+    ## Compute influence function for each gamma_t
+    for (g in 1:length(gamma)){
+      
+      mu_Yexp_t_R1_X_R0 <- c(dF_t_R1_X_R0 %*% (y_t_R1[-1]*exp(gamma[g]*s_t_y(y_t_R1[-1]))+
+                                                 y_t_R1[-ny_t_R1]*exp(gamma[g]*s_t_y(y_t_R1[-ny_t_R1])))/2)
+      
+      mu_exp_t_R1_X_R0 <- c(dF_t_R1_X_R0 %*% (exp(gamma[g]*s_t_y(y_t_R1[-1]))+
+                                                exp(gamma[g]*s_t_y(y_t_R1[-ny_t_R1])))/2)
+      
+      mu_Yexp_t_R1_X_R1 <- c(dF_t_R1_X_R1 %*% (y_t_R1[-1]*exp(gamma[g]*s_t_y(y_t_R1[-1]))+
+                                                 y_t_R1[-ny_t_R1]*exp(gamma[g]*s_t_y(y_t_R1[-ny_t_R1])))/2)
+      
+      mu_exp_t_R1_X_R1 <- c(dF_t_R1_X_R1 %*% (exp(gamma[g]*s_t_y(y_t_R1[-1]))+
+                                                exp(gamma[g]*s_t_y(y_t_R1[-ny_t_R1])))/2)
+      
+      mu_Yexp_t_R1_X_mk <- c(dF_t_R1_X_mk %*% (y_t_R1[-1]*exp(gamma[g]*pnorm((y_t_R1[-1]-60)/25))+
+                                                 y_t_R1[-ny_t_R1]*exp(gamma[g]*pnorm((y_t_R1[-ny_t_R1]-60)/25)))/2)
+      
+      mu_exp_t_R1_X_mk <- c(dF_t_R1_X_mk %*% (exp(gamma[g]*pnorm((y_t_R1[-1]-60)/25))+
+                                                exp(gamma[g]*pnorm((y_t_R1[-ny_t_R1]-60)/25)))/2)
+      
+      ## IF+psi within each fold
+      upsilon_temp <- c(M_in_fold_R1*eta_T_R1_weight*trt.ind_in_fold_R1*g_weight*exp(gamma[g]*s_t_y(Y_in_fold_R1))/mu_exp_t_R1_X_R1*
+                     (Y_in_fold_R1-mu_Yexp_t_R1_X_R1/mu_exp_t_R1_X_R1)+ 
+                     M_in_fold_R1*eta_T_R1_weight*(trt.ind_in_fold_R1*pi_R1_weight*(Y_in_fold_R1-mu_Y_t_R1_X_R1)+mu_Y_t_R1_X_R1), 
+                   M_in_fold_R0*eta_T_R0_weight*mu_Yexp_t_R1_X_R0/mu_exp_t_R1_X_R0)+
+        c((1-M_in_fold_R1*eta_T_R1_weight)*mu_Y_t_R1_X_R1, 
+          (1-M_in_fold_R0*eta_T_R0_weight)*mu_Yexp_t_R1_X_R0/mu_exp_t_R1_X_R0)
+
+      upsilon_R0_temp <- c(M_in_fold_R1*eta_T_R1_weight/(1-prop.R1)*trt.ind_in_fold_R1*g_weight*exp(gamma[g]*s_t_y(Y_in_fold_R1))/mu_exp_t_R1_X_R1*
+                        (Y_in_fold_R1-mu_Yexp_t_R1_X_R1/mu_exp_t_R1_X_R1), 
+                      M_in_fold_R0*eta_T_R0_weight/(1-prop.R1)*mu_Yexp_t_R1_X_R0/mu_exp_t_R1_X_R0)+
+        c(rep(0, length(M_in_fold_R1)), 
+          (1-M_in_fold_R0*eta_T_R0_weight)/(1-prop.R1)*mu_Yexp_t_R1_X_R0/mu_exp_t_R1_X_R0)
+
+      upsilon_R1_temp <- c(rep(0, length(M_in_fold_R0)), 
+                      M_in_fold_R1*eta_T_R1_weight/prop.R1*(trt.ind_in_fold_R1*pi_R1_weight*(Y_in_fold_R1-mu_Y_t_R1_X_R1)+mu_Y_t_R1_X_R1))+
+        c(rep(0, length(M_in_fold_R0)), (1-M_in_fold_R1*eta_T_R1_weight)*mu_Y_t_R1_X_R1/prop.R1)
+
+      ## plug-ins
+      est_R0_plugin_mk <- mean((1-g_mk)*mu_Yexp_t_R1_X_mk/mu_exp_t_R1_X_mk)/(1-prop.R1)
+      
+      containers$est_temp[k, g] <- mean(upsilon_temp)
+      containers$est_R0_temp[k, g] <- mean(est_R0_plugin_mk+upsilon_R0_temp-ind_R0_temp*est_R0_plugin_mk)
+      
+      if_temp <- upsilon_temp-containers$est_temp[k, g]
+      if_R0_temp <- upsilon_R0_temp-ind_R0_temp*containers$est_R0_temp[k, g]
+      
+      containers$IF[[g]] <- c(containers$IF[[g]], if_temp)
+      containers$IF_R0[[g]] <- c(containers$IF_R0[[g]], if_R0_temp)
+
+      containers$var_temp[k, g] <- sum(if_temp^2)/(nk_in_fold-1)
+      containers$var_R0_temp[k, g] <- sum(if_R0_temp^2)/(nk_in_fold-1)
+
+      if(!simple_trunc){
+        
+        est_R0_plugin_mk_if <- (1-g_mk)*mu_Yexp_t_R1_X_mk/mu_exp_t_R1_X_mk/(1-prop.R1)
+        
+        upsilon_R1_temp_trunc <- IF_trunc_func(upsilon_R1_temp)
+        upsilon_R0_temp_trunc <- IF_trunc_func(upsilon_R0_temp)
+        est_R0_plugin_mk_if_trunc <- IF_trunc_func(est_R0_plugin_mk_if)
+        upsilon_temp_trunc <- upsilon_R1_temp_trunc*prop.R1+upsilon_R0_temp_trunc*(1-prop.R1)
+        
+        containers_trunc$est_temp[k, g] <- mean(upsilon_temp_trunc)
+        containers_trunc$est_R0_temp[k, g] <- mean(mean(est_R0_plugin_mk_if_trunc)+upsilon_R0_temp_trunc-ind_R0_temp*mean(est_R0_plugin_mk_if_trunc))
+        
+        if_temp_trunc <- upsilon_temp_trunc-containers_trunc$est_temp[k, g]
+        if_R0_temp_trunc <- upsilon_R0_temp_trunc-ind_R0_temp*containers_trunc$est_R0_temp[k, g]
+        
+        containers_trunc$IF[[g]] <- c(containers_trunc$IF[[g]], if_temp_trunc)
+        containers_trunc$IF_R0[[g]] <- c(containers_trunc$IF_R0[[g]], if_R0_temp_trunc)
+        
+        containers_trunc$var_temp[k, g] <- sum(if_temp_trunc^2)/(nk_in_fold-1)
+        containers_trunc$var_R0_temp[k, g] <- sum(if_R0_temp_trunc^2)/(nk_in_fold-1)
+
+      }
+    }
+  }
+  
+  ## output containers
+  r_est <- colMeans(containers$est_temp)
+  r_est_R0 <- colMeans(containers$est_R0_temp)
+  r_var <- colSums(containers$var_temp)/(fold*n)
+  r_var_R0 <- colSums(containers$var_R0_temp)/(fold*n)
+  r_lowerCI <- r_est-qnorm(0.975)*sqrt(r_var)
+  r_lowerCI_R0 <- r_est_R0-qnorm(0.975)*sqrt(r_var_R0)
+  r_upperCI <- r_est+qnorm(0.975)*sqrt(r_var) 
+  r_upperCI_R0 <- r_est_R0+qnorm(0.975)*sqrt(r_var_R0) 
+  if(!simple_trunc){
+    r_est_trunc <- colMeans(containers_trunc$est_temp)
+    r_est_trunc_R0 <- colMeans(containers_trunc$est_R0_temp)
+    r_var_trunc <- colSums(containers_trunc$var_temp)/(fold*n)
+    r_var_trunc_R0 <- colSums(containers_trunc$var_R0_temp)/(fold*n)
+    r_lowerCI_trunc <- r_est_trunc-qnorm(0.975)*sqrt(r_var_trunc)
+    r_lowerCI_trunc_R0 <- r_est_trunc_R0-qnorm(0.975)*sqrt(r_var_trunc_R0)
+    r_upperCI_trunc <- r_est_trunc+qnorm(0.975)*sqrt(r_var_trunc) 
+    r_upperCI_trunc_R0 <- r_est_trunc_R0+qnorm(0.975)*sqrt(r_var_trunc_R0) 
+  }
+  
+  ## output final results
+  if(IF_output){
+    if(simple_trunc){
+      result <- list(est=r_est, est_R0=r_est_R0, 
+                     var=r_var, var_R0=r_var_R0, 
+                     lowerCI=r_lowerCI, lowerCI_R0=r_lowerCI_R0, 
+                     upperCI=r_upperCI, upperCI_R0=r_upperCI_R0, 
+                     IF=containers$IF, IF_R0=containers$IF_R0, 
+                     id_list=containers$id_list, fold_index_l=fold_index_l)
+    }else{
+      result <- list(est=r_est, est_R0=r_est_R0, 
+                     est_trunc=r_est_trunc, est_trunc_R0=r_est_trunc_R0,
+                     var=r_var, var_R0=r_var_R0,
+                     var_trunc=r_var_trunc, var_trunc_R0=r_var_trunc_R0,
+                     lowerCI=r_lowerCI, lowerCI_R0=r_lowerCI_R0,
+                     upperCI=r_upperCI, upperCI_R0=r_upperCI_R0,
+                     lowerCI_trunc=r_lowerCI_trunc, lowerCI_trunc_R0=r_lowerCI_trunc_R0,
+                     upperCI_trunc=r_upperCI_trunc, upperCI_trunc_R0=r_upperCI_trunc_R0,
+                     IF=containers$IF, IF_R0=containers$IF_R0,
+                     IF_trunc=containers_trunc$IF, IF_trunc_R0=containers_trunc$IF_R0,
+                     id_list=containers$id_list, fold_index_l=fold_index_l)
+    }
+  }else{
+    if(simple_trunc){
+      result <- list(est=r_est, est_R0=r_est_R0, 
+                     var=r_var, var_R0=r_var_R0, 
+                     lowerCI=r_lowerCI, lowerCI_R0=r_lowerCI_R0, 
+                     upperCI=r_upperCI, upperCI_R0=r_upperCI_R0, 
+                     id_list=containers$id_list, fold_index_l=fold_index_l)
+    }else{
+      result <- list(est=r_est, est_R0=r_est_R0, 
+                     est_trunc=r_est_trunc, est_trunc_R0=r_est_trunc_R0,
+                     var=r_var, var_R0=r_var_R0,
+                     var_trunc=r_var_trunc, var_trunc_R0=r_var_trunc_R0,
+                     lowerCI=r_lowerCI, lowerCI_R0=r_lowerCI_R0,
+                     upperCI=r_upperCI, upperCI_R0=r_upperCI_R0,
+                     lowerCI_trunc=r_lowerCI_trunc, lowerCI_trunc_R0=r_lowerCI_trunc_R0,
+                     upperCI_trunc=r_upperCI_trunc, upperCI_trunc_R0=r_upperCI_trunc_R0,
+                     id_list=containers$id_list, fold_index_l=fold_index_l)
+    }
+  }
+  
+}

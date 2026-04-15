@@ -1,4 +1,5 @@
-##### This function defined by MingYueh
+#' This function defined by MingYueh
+#' @noRd
 SIDRnew <- function(X, Y,
                     Y.CP = NULL,
                     initial = NULL,

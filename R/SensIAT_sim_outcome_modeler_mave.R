@@ -1,18 +1,19 @@
-# Single Index Model using MAVE and Optimizing Bandwidth.
-#
-# Single index model estimation using minimum average variance estimation (MAVE).
-# A direction is estimated using MAVE, and then the bandwidth is selected by
-# minimization of the cross-validated pseudo-integrated squared error.
-# Optionally, the initial coefficients of the outcome model can be re-estimated
-# by optimization on a spherical manifold.  This option requires the
-# [ManifoldOptim][ManifoldOptim::manifold.optim] package.
+#' Single Index Model using MAVE and Optimizing Bandwidth.
+#'
+#' Single index model estimation using minimum average variance estimation (MAVE).
+#' A direction is estimated using MAVE, and then the bandwidth is selected by
+#' minimization of the cross-validated pseudo-integrated squared error.
+#' Optionally, the initial coefficients of the outcome model can be re-estimated
+#' by optimization on a spherical manifold.  This option requires the
+#' [ManifoldOptim][ManifoldOptim::manifold.optim] package.
+#' @noRd
 
 fit_SensIAT_single_index_norm1coef_model <-
 function(X, Y, ids, 
          kernel = "K2_Biweight",
          mave.method = "meanMAVE",
          use_mave,
-         id = ..id..,
+#         id = ..id..,
          bw.selection = c('ise', 'mse'),
          bw.method = c('optim', 'grid', 'optimize'),
          bw.range = c(0.01, 1.5),
