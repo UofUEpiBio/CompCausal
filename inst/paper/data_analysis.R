@@ -221,11 +221,11 @@ for(i in 1:nboot){
   X.new <- X[boot.indices,]
   X_adjust_scale.new <- X_adjust_scale[boot.indices, ]
   ## new R
-  prob.R <- predict(g.fit, newdata=X.new, type="response") 
+  prob.R <- stats::predict(g.fit, newdata=X.new, type="response") 
   R.new <- rbinom(n=n, size=1, prob=prob.R)
   ## new T
   T.new_R1 <- rbinom(n=n,size=1,prob=0.5)
-  prob.T_R0 <- predict(t_R0.fit, newdata=X.new, type="response")
+  prob.T_R0 <- stats::predict(t_R0.fit, newdata=X.new, type="response")
   T.new_R0 <- rbinom(n=n,size=1,prob=prob.T_R0)
   T.new <- T.new_R1*R.new+T.new_R0*(1-R.new)
   
@@ -286,8 +286,8 @@ for(i in 1:nboot){
   ## new M
   X_with_t.new <- cbind(T.new, X.new)
   colnames(X_with_t.new)[1] <- "treatment"
-  prob.M_R0 <- predict(M_R0.fit, newdata=X_with_t.new, type="response")
-  prob.M_R1 <- predict(M_R1.fit, newdata=X_with_t.new, type="response")
+  prob.M_R0 <- stats::predict(M_R0.fit, newdata=X_with_t.new, type="response")
+  prob.M_R1 <- stats::predict(M_R1.fit, newdata=X_with_t.new, type="response")
   M.new_R0 <- rbinom(n=n,size=1,prob=prob.M_R0)
   M.new_R1 <- rbinom(n=n,size=1,prob=prob.M_R1)
   M.new <- M.new_R0*(1-R.new)+M.new_R1*R.new

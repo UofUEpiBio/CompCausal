@@ -27,12 +27,11 @@ Roxygen: list(markdown = TRUE)
 Imports:
     utils,
     splines,
-    betareg,
     stats,
+    betareg,
     methods, 
     dplyr,
-    ggplot2, 
-    matrixStats,
+    ggplot2,
     MAVE,
     assertthat,
     dfoptim,
@@ -42,8 +41,5 @@ Imports:
     Rcpp,
     rlang
 Suggests:
-    tinytest,
-    quarto
-VignetteBuilder:
-    quarto
+    tinytest
 LazyData: true

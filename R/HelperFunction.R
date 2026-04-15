@@ -86,14 +86,14 @@ counterfactual <- function(Y, M, R, X, t, trt, gamma, est, est_R1, est_R0){
   
   ## fit g model
   g.fit <- mgcv::gam(as.formula(paste("R ~", gam.var)), data=cbind(R, X), family=binomial) 
-  g1 <- predict(g.fit, newdata=X, type="response") 
+  g1 <- stats::predict(g.fit, newdata=X, type="response") 
   g0 <- 1-g1
   
   ## fit treatment assignment model
   t_R0.fit <- mgcv::gam(as.formula(paste("trt.ind_R0 ~", gam.var)), data=X_R0, family=binomial) ## treatment model
   t_R1.fit <- mgcv::gam(as.formula(paste("trt.ind_R1 ~", gam.var)), data=X_R1, family=binomial) ## treatment model
-  pi_R0 <- predict(t_R0.fit, newdata=X, type="response") 
-  pi_R1 <- predict(t_R1.fit, newdata=X, type="response")
+  pi_R0 <- stats::predict(t_R0.fit, newdata=X, type="response") 
+  pi_R1 <- stats::predict(t_R1.fit, newdata=X, type="response")
   
   ## empirical mean
   prop_t <- sum(trt.ind)/n
@@ -148,8 +148,8 @@ truth_beta <- function(Y, M, R, t, X, trt, gamma){
   Y01[Y01 <= 0] <- eps
   Y01[Y01 >= 1] <- 1 - eps
   
-  Y_t_R0.fit <- betareg(as.formula(paste("Y01 ~", paste(index.var.Y, collapse = "+"))), data=cbind(Y01, X)[which(t==trt & R==0 & M==1), ])
-  Y_t_R1.fit <- betareg(as.formula(paste("Y01 ~", paste(index.var.Y, collapse = "+"))), data=cbind(Y01, X)[which(t==trt & R==1 & M==1), ])
+  Y_t_R0.fit <- betareg::betareg(as.formula(paste("Y01 ~", paste(index.var.Y, collapse = "+"))), data=cbind(Y01, X)[which(t==trt & R==0 & M==1), ])
+  Y_t_R1.fit <- betareg::betareg(as.formula(paste("Y01 ~", paste(index.var.Y, collapse = "+"))), data=cbind(Y01, X)[which(t==trt & R==1 & M==1), ])
   
   phi_t_R0 <- Y_t_R0.fit$coefficients$precision
   phi_t_R1 <- Y_t_R1.fit$coefficients$precision
@@ -159,12 +159,12 @@ truth_beta <- function(Y, M, R, t, X, trt, gamma){
   
   ## fit g model
   g.fit <- mgcv::gam(as.formula(paste("R ~", gam.var)), data=cbind(R, X), family=binomial) 
-  g1 <- predict(g.fit, newdata=X, type="response") 
+  g1 <- stats::predict(g.fit, newdata=X, type="response") 
   g0 <- 1-g1
   
   ## fit treatment assignment model
   t_R0.fit <- mgcv::gam(as.formula(paste("trt.ind_R0 ~", gam.var)), data=X_R0, family=binomial) ## treatment model
-  pi_R0 <- predict(t_R0.fit, newdata=X, type="response") 
+  pi_R0 <- stats::predict(t_R0.fit, newdata=X, type="response") 
   
   for(g in 1:length(gamma)){
     
