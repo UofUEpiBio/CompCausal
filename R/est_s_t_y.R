@@ -253,13 +253,13 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
     
     ## get predictions for pi
     if(trt==1){
-      pi_R0 <- predict(t_R0.fit, newdata=X_in_fold_t_R0, type="response") 
-      pi_R1 <- predict(t_R1.fit, newdata=X_in_fold_R1, type="response")  
-      pi_R0_mk <- predict(t_R0.fit, newdata=X_out_fold, type="response")
+      pi_R0 <- stats::predict(t_R0.fit, newdata=X_in_fold_t_R0, type="response") 
+      pi_R1 <- stats::predict(t_R1.fit, newdata=X_in_fold_R1, type="response")  
+      pi_R0_mk <- stats::predict(t_R0.fit, newdata=X_out_fold, type="response")
     }else{
-      pi_R0 <- 1-predict(t_R0.fit, newdata=X_in_fold_t_R0, type="response") 
-      pi_R1 <- 1-predict(t_R1.fit, newdata=X_in_fold_R1, type="response")  
-      pi_R0_mk <- 1-predict(t_R0.fit, newdata=X_out_fold, type="response") 
+      pi_R0 <- 1-stats::predict(t_R0.fit, newdata=X_in_fold_t_R0, type="response") 
+      pi_R1 <- 1-stats::predict(t_R1.fit, newdata=X_in_fold_R1, type="response")  
+      pi_R0_mk <- 1-stats::predict(t_R0.fit, newdata=X_out_fold, type="response") 
     }
     pi_R0_l <- c(pi_R0_l, pi_R0)
     pi_R1_l <- c(pi_R1_l, pi_R1)
@@ -269,9 +269,9 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
     fold_index_pi_R0_l_mk <- c(fold_index_pi_R0_l_mk, rep(k, length(pi_R0_mk)))
     
     ## get predictions for eta
-    eta_t_R0 <- predict(M_R0.fit, newdata=mutate(X_with_T_in_fold_t_R0, treatment=trt), type="response")
-    eta_t0_R0 <- predict(M_R0.fit, newdata=mutate(X_with_T_in_fold_t0_R0, treatment=1-trt), type="response")
-    eta_T_R1 <- predict(M_R1.fit, newdata=X_with_T_in_fold_R1, type="response")
+    eta_t_R0 <- stats::predict(M_R0.fit, newdata=mutate(X_with_T_in_fold_t_R0, treatment=trt), type="response")
+    eta_t0_R0 <- stats::predict(M_R0.fit, newdata=mutate(X_with_T_in_fold_t0_R0, treatment=1-trt), type="response")
+    eta_T_R1 <- stats::predict(M_R1.fit, newdata=X_with_T_in_fold_R1, type="response")
     eta_t_R0_l <- c(eta_t_R0_l, eta_t_R0)
     eta_t0_R0_l <- c(eta_t0_R0_l, eta_t0_R0)
     eta_T_R1_l <- c(eta_T_R1_l, eta_T_R1)
@@ -280,7 +280,7 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
     fold_index_eta_T_R1_l <- c(fold_index_eta_T_R1_l, rep(k, length(eta_T_R1)))
     
     ## get predictions for g
-    g_mk <- predict(g.fit, newdata=X_out_fold, type="response") 
+    g_mk <- stats::predict(g.fit, newdata=X_out_fold, type="response") 
     g_l_mk <- c(g_l_mk, g_mk)
     fold_index_g_l_mk <- c(fold_index_g_l_mk, rep(k, length(g_mk)))
     
