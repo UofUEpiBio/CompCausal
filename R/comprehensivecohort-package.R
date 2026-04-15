@@ -7,7 +7,7 @@
 #' and patient preference causal effect. 
 #' @import utils
 #' @importFrom stats predict coef as.formula binomial dbeta dnorm integrate model.matrix nlminb optim optimize pnorm qnorm quantile sd uniroot var
-#' @importFrom betareg betareg predict
+#' @importFrom betareg betareg
 #' @import splines
 #' @import methods
 #' @import dplyr
