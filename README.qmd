@@ -2,14 +2,15 @@
 format: gfm
 ---
 
-#  comprehensivecohort
+#  comprehensivecohort: Inferring Comprehensive Cohort Causal Effects in the Presence of Unmeasured Confounding and Missing Outcomes
 
-comprehensivecohort is a R package for inferring causal effects in comprehensive cohort studies. 
+The `comprehensivecohort` package provide functions for estimating the comprehensive cohort causal effects (CCCE) in comprehensive cohort studies in the presence of unmeasured confounding and missing outcomes. Details about the study design, assumptions and methodologies can be found in the vignettes and paper. 
 
 
 ## Installment
 
-```{r}
+### Github version
+```{r message=FALSE}
 remotes::install_github("UofUEpiBio/Comprehensive_cohort")
 ```
 

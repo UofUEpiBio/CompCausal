@@ -1,10 +1,16 @@
 
 
-#  comprehensivecohort
+# comprehensivecohort: Inferring Comprehensive Cohort Causal Effects in the Presence of Unmeasured Confounding and Missing Outcomes
 
-comprehensivecohort is a R package for inferring causal effects in comprehensive cohort studies. 
+The `comprehensivecohort` package provide functions for estimating the
+comprehensive cohort causal effects (CCCE) in comprehensive cohort
+studies in the presence of unmeasured confounding and missing outcomes.
+Details about the study design, assumptions and methodologies can be
+found in the vignettes and paper.
 
 ## Installment
+
+### Github version
 
 ``` r
 remotes::install_github("UofUEpiBio/Comprehensive_cohort")
@@ -12,7 +18,8 @@ remotes::install_github("UofUEpiBio/Comprehensive_cohort")
 
 ## Examples
 
-Here is an example of how to use the main function `est_psi` with quantile truncation of weights. 
+Here is an example of how to use the main function `est_psi` with
+quantile truncation of weights.
 
 ``` r
 library(comprehensivecohort)
@@ -28,8 +35,10 @@ out <- with(ccohort, {
 })
 ```
 
-We can also apply data adaptive truncation for the entire influence function:
-```r
+We can also apply data adaptive truncation for the entire influence
+function:
+
+``` r
 ## data adaptive truncation
 out <- with(ccohort, {
   est_psi(Y, M, R, X = data.frame(age, womac_bq, expectationb, ChronicPainb), 
@@ -38,7 +47,3 @@ out <- with(ccohort, {
           single_index_method="norm1coef", method="optim")
 })
 ```
-
-
-
-
