@@ -1,0 +1,36 @@
+---
+title: "Introduction to main functions"
+date: today
+vignette: >
+  %\VignetteIndexEntry{Introduction to main functions}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+The `comprehensivecohort` package provides tools for analyzing data from comprehensive cohort studies in the presence of unmeasured confounding and missing outcome (either continuous or binary). The goal is to estimate the comprehensive cohort causal effects (CCCE), the average causal effect for the entire cohort. 
+
+## Comprehensive cohort study design
+
+## Causal estimands
+
+## Assumptions
+
+# Data
+
+# Methods
+
+# Results
+
+
+
+
+
+
+
+
