@@ -75,7 +75,7 @@ SIM <- function(X, Y, kernel, method, single_index_method, use_mave){
 
 #' One-step, split sample estimator for E\[Y(t)\], E\[Y(t)|R=1\], E\[Y(t)|R=0\], 
 #'   
-#' Estimates study-specific and overall outcome means (and difference from baseline)
+#' @description Estimates study-specific and overall outcome means (and difference from baseline)
 #' using cross-fitting with single index models (SIMs) and
 #' nuisance models for treatment and outcome missingness (`mgcv::gam`). The function
 #' also computes influence-function-based variances, confidence intervals, and
