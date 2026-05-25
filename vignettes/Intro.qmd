@@ -11,9 +11,9 @@ vignette: >
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Introduction
+The `comprehensivecohort` package provides tools for analyzing data from comprehensive cohort studies in the presence of unmeasured confounding and missing outcome (either continuous or binary). The goal is to estimate the comprehensive cohort causal effects (CCCE), the average causal effect for the entire cohort. The vignette has two parts: 1). Methodologies. This part will cover details on what is comprehensive cohort study design, the causal estimands, assumptions, and brief description of the estimation process. 2). Implementation. This part will focus on how to use the R functions to implement the estimation of CCCE under pre-specified sensitivity parameters. We will also provide codes for results. 
 
-The `comprehensivecohort` package provides tools for analyzing data from comprehensive cohort studies in the presence of unmeasured confounding and missing outcome (either continuous or binary). The goal is to estimate the comprehensive cohort causal effects (CCCE), the average causal effect for the entire cohort. 
+# Methodologies
 
 ## Comprehensive cohort study design
 
@@ -21,11 +21,13 @@ The `comprehensivecohort` package provides tools for analyzing data from compreh
 
 ## Assumptions
 
-# Data
+## Methods
 
-# Methods
+# Implementation
 
-# Results
+## Data
+
+## Results
 
 
 
