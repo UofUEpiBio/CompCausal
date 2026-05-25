@@ -12,3 +12,7 @@ README.qmd
 .devcontainer/
 .github/
 .vscode/
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.positai$
+^\.claude$
