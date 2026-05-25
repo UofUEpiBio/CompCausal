@@ -2,11 +2,13 @@
 
 # comprehensivecohort: Inferring Comprehensive Cohort Causal Effects in the Presence of Unmeasured Confounding and Missing Outcomes
 
-The `comprehensivecohort` package provide functions for estimating the
+The `comprehensivecohort` package provides functions for estimating the
 comprehensive cohort causal effects (CCCE) in comprehensive cohort
-studies in the presence of unmeasured confounding and missing outcomes.
-Details about the study design, assumptions and methodologies can be
-found in the vignettes and paper.
+studies. We develop a semiparametric sensitivity analysis framework for
+assessing the impact of unmeasured confounding in the observational arm,
+and could also handle outcomes missing at random. Details about the
+study design, assumptions and methodologies can be found in the
+vignettes and paper.
 
 ## Installment
 
