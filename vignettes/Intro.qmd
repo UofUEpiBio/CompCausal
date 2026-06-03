@@ -1,6 +1,8 @@
 ---
 title: "Introduction to main functions"
 date: today
+bibliography: references.bib
+link-citations: true
 vignette: >
   %\VignetteIndexEntry{Introduction to main functions}
   %\VignetteEngine{quarto::html}
@@ -65,11 +67,11 @@ where the exact form of $\upsilon_{t, 1}(\widetilde{P})(\widetilde{O})$ and $\up
 
 (2). Estimate $\widetilde{P}$
 
-To construct a estimator for $E[Y(t)]$, we need to estimate $\pi_{t, r}(X)$, $\eta_1(X, r, t)$ and $\widetilde{F}_{t, r}(y|X)$ for $r=0, 1$. The estimation methods we apply have fast enough convergence rate so that our resulting estimators converge to a normal distribution at $\sqrt{n}$-rates. Specifically, we apply the generalized additive model (GAM) with a logistic link function for $\pi_{t, r}(X)$ and $\eta_1(X, r, t)$ for $r=0, 1$. We apply the single index model for $\widetilde{F}_{t, r}(y|X)$ for $r=0, 1$. We then estimate  $\widetilde{\mu}_{t, 0}\big(Y\exp(\gamma_t s_t( Y)); X\big)$, $\widetilde{\mu}_{t, 0}\big(\exp(\gamma_t s_t(Y)); X\big)$ and $\widetilde{\mu}_{t, r}\big(Y; X\big)$ by numeric integration. 
+To construct a estimator for $E[Y(t)]$, we need to estimate $\pi_{t, r}(X)$, $\eta_1(X, r, t)$ and $\widetilde{F}_{t, r}(y|X)$ for $r=0, 1$. The estimation methods we apply have fast enough convergence rate so that our resulting estimators converge to a normal distribution at $\sqrt{n}$-rates. Specifically, we apply the generalized additive model (GAM) with a logistic link function [@hastie1990tibshirani] for $\pi_{t, r}(X)$ and $\eta_1(X, r, t)$ for $r=0, 1$. We apply the single index model [@chiang2012new] for $\widetilde{F}_{t, r}(y|X)$ for $r=0, 1$. We then estimate  $\widetilde{\mu}_{t, 0}\big(Y\exp(\gamma_t s_t( Y)); X\big)$, $\widetilde{\mu}_{t, 0}\big(\exp(\gamma_t s_t(Y)); X\big)$ and $\widetilde{\mu}_{t, r}\big(Y; X\big)$ by numeric integration. 
 
 (3). Compute the one-step, truncated, split sample estimator 
 
-We apply K-fold sample splitting and tuning-free Huberization procedure to truncate the k-th split $\upsilon_{t, 1} \left(\widehat{\widetilde{P}}^{(-k)}\right) (\widetilde{O}_i)$ and $\upsilon_{t, 0}\left(\widehat{\widetilde{P}}^{(-k)} ; \gamma_t\right) (\widetilde{O}_i)$: 
+We apply K-fold sample splitting and tuning-free Huberization procedure [@tuning_wang_2021] to truncate the k-th split $\upsilon_{t, 1} \left(\widehat{\widetilde{P}}^{(-k)}\right) (\widetilde{O}_i)$ and $\upsilon_{t, 0}\left(\widehat{\widetilde{P}}^{(-k)} ; \gamma_t\right) (\widetilde{O}_i)$: 
 
 \begin{equation*}
     	\widehat{\psi}^\dagger_t(\gamma_t) = \frac{1}{K} \sum_{k=1}^K \underbrace{\left\{\frac{1}{n_k} \sum_{i: S_i=k}\Bigg[ \underbrace{\upsilon_{t, 1}^\dagger \left(\widehat{\widetilde{P}}^{(-k)}\right) (\widetilde{O}_i)\times P_{n/n_k}^{(-k)}(R=1) +\upsilon_{t, 0}^\dagger \left(\widehat{\widetilde{P}}^{(-k)} ; \gamma_t\right) (\widetilde{O}_i)\times P_{n/n_k}^{(-k)}(R=0)}_{\upsilon_t^\dagger\left(\widehat{\widetilde{P}}^{(-k)} ; \gamma_t\right)(\widetilde{O}_i)}\Bigg]\right\}}_{\widehat{\psi}_t^{(k)\dagger}(\gamma_t)}
@@ -85,6 +87,7 @@ The $95\%$ Wald confidence interval for $\psi_t(\widetilde{P}; \gamma_t)$ is $\w
 
 # Implementation
 
+We will demonstrate how to use the R functions in `comprehensivecohort` to estimating CCCE, using an example data included in the package. First, install package directly from git: 
 
 ```{r message=FALSE}
 remotes::install_github("UofUEpiBio/Comprehensive_cohort")
@@ -92,13 +95,33 @@ remotes::install_github("UofUEpiBio/Comprehensive_cohort")
 
 ## Data
 
+The dataset included in the package is a simulated data based on the TOIB study [@underwood2008topical]. The TOIB study is a comprehensive cohort study on the effect of topical versus oral non-steroidal anti-inflammatory drugs (NSAIDs) in managing knee pain among older adults with chronic knee pain. In the analysis, the outcome of interest is Western Ontario and McMaster Universities Osteoarthritis Index (WOMAC) pain score ($0-100$) at 12 months. We include age, baseline WOMAC pain score, expected pain a year from now and chronic pain grade as baseline covariates. 
+
 ```{r}
 library(comprehensivecohort)
-
+## load data
 data(ccohort)
+## data structure
+str(ccohort)
 ```
 
+The dataset has 563 observations and 8 variables, which include:
+
+* Y: WOMAC pain score at 12 months, continuous variable ranging from 0 to 100. $NA$ indicate missing outcome. 
+* M: outcome missingness indicator, binary variable. $1$ if $Y$ is observed, $0$ if $Y$ is missing. 
+* R: randomization consent indicator, binary variable. $1$ for RCT, $0$ for OBS. 
+* t: treatment indicator, binary variable. $1$ for topical NSAIDs treatment group, $0$ for oral NSAIDs treatment group. 
+* age: age, continuous variable. 
+* womac_bq: WOMAC pain score at baseline, continuous variable ranging from 0 to 100. No missing value. 
+* expectationb: expected pain a year from now, categorical variable. Three levels: much/a little worse, about the same, a little/much better/free of pain. 
+* ChronicPainb: chronic pain grade, categorical variable. Two levels: 1-2, 3-4. 
+
+## Application 
+
 ## Results
+
+
+# References
 
 
 
