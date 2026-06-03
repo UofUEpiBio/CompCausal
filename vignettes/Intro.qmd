@@ -11,21 +11,92 @@ vignette: >
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-The `comprehensivecohort` package provides tools for analyzing data from comprehensive cohort studies in the presence of unmeasured confounding and missing outcome (either continuous or binary). The goal is to estimate the comprehensive cohort causal effects (CCCE), the average causal effect for the entire cohort. The vignette has two parts: 1). Methodologies. This part will cover details on what is comprehensive cohort study design, the causal estimands, assumptions, and brief description of the estimation process. 2). Implementation. This part will focus on how to use the R functions to implement the estimation of CCCE under pre-specified sensitivity parameters. We will also provide codes for results. 
+The `comprehensivecohort` package provides tools for analyzing data from comprehensive cohort studies in the presence of unmeasured confounding and missing outcome (either continuous or binary). The goal is to estimate the comprehensive cohort causal effects (CCCE), the average causal effect for the entire cohort. This vignette has two parts: 1). Methodologies. This part will cover details on what is Comprehensive Cohort Study design, the causal estimands, assumptions, and brief descriptions of the estimation process. 2). Implementation. This part will focus on how to use the R functions to implement the estimation of CCCE under pre-specified sensitivity parameters. We will also provide codes for presenting results. 
 
 # Methodologies
 
-## Comprehensive cohort study design
+## Comprehensive Cohort Study design
+
+The Comprehensive Cohort Study (CCS) design is a nested study design where individuals can opt to participate in an randomized control trial (RCT) or the parallel observational study (OBS). In RCT, individuals are randomized to treatments. However, in OBS, individuals can choose the treatment options provided in RCT. All individuals are followed-up. Thus, baseline covariates, treatment and outcome information are collected for the entire cohort. 
 
 ## Causal estimands
 
+Let $X$ be baseline covariates, $R$ randomization consent indicator ($1$ for RCT, $0$ for OBS), $T$ binary treatment indicator, $Y$ as outcome and $M$ the missing outcome indicator ($M=1$ if $Y$ is observed, $M=0$ if $Y$ is missing). Let $O = (X, R, T, Y)$ be the full data without outcome missingness, and $\widetilde{O} = (X,R,T,M,Y:M=1)$ the observed data. Let $P$ and $\widetilde{P}$ be the distribution of $O$ and $\widetilde{O}$. 
+
+We further introduce the following notations: 
+
+* $\widetilde{F}_{t, r}(y|x)=P(Y\leq y\mid T=t, R=r, X=x, M=1)$
+* $\widetilde{\mu}_{t,r}(h(Y); x)=E[h(Y) \mid T=t, R=r, X=x, M=1]$
+* $\pi_{t,r}(x)=P(T = t \mid R=r, X=x)$
+* $g_r(x)=P(R = r \mid X=x)$
+* $\eta_m(x, r, t)=P(M =m \mid X=x, R=r, T=t)$
+
+Our causal estimand of interest is the **comprehensive cohort causal effect** (CCCE): $E[Y(1)]-E[Y(0)]$. We will draw inference about $E[Y(t)]$. 
+
 ## Assumptions
+
+* Consistency: $Y(t) = Y$ if $T=t$, for $t=0,1$. 
+* Positivity: $0 < P(T=1 \mid R=1) < 1$ and $0 < P(T=1 \mid R=0, X=x) < 1$ for all $x$ in the support of $X$. 
+* Randomization in RCT: $T \perp \{ Y(t), X \} \mid R=1$, for $t = 0, 1$. 
+* Confounding Controlled by $\gamma_t$ in OBS: 
+$$dF(y(t) \mid T=1-t,R=0,X)  =  dF(y(t) \mid  T=t,R=0,X) \times  \frac{ \exp\{  \gamma_t s_t(y(t)) \} }{ \mu_{t, 0} (\exp\{  \gamma_t s_t(Y(t)) \}; X)}$$
+* Missing-At-Random Assumption for Outcome: $M \perp Y \mid  T, X, R$. 
+
+Under the assumptions, we can identify $E[Y(t)]$ as
+
+\begin{aligned}
+\psi_t(\widetilde{P}; \gamma_t) =& \underbrace{E[ \widetilde{\mu}_{t,1}(Y;X) \big| R=1]}_{\psi_{t,1}(\widetilde{P})} P(R=1)\\
+&+  \underbrace{E \bigg[  \widetilde{\mu}_{t,0}(Y;X) \pi_{t,0}(X) +\frac{ \widetilde{\mu}_{t,0}(Y \! \exp\{  \gamma_t s_t(Y)\} ;X) }{\widetilde{\mu}_{t,0}( \exp\{  \gamma_t s_t(Y)\} ;X) } \pi_{1-t,0}(X) \bigg| R=0\bigg]}_{\psi_{t,0}(\widetilde{P}; \gamma_t)} P(R=0)
+\end{aligned}
+
+$\psi_{t, 1}(\widetilde{P})$ and $\psi_{t, 0}(\widetilde{P}; \gamma_t)$ are the identifications of $E[Y(t)|R=1]$ and $E[Y(t)|R=0]$. Details of estimations for $E[Y(t)|R=1]$ and $E[Y(t)|R=0]$ can be found in the paper. We define the **randomized trial causal effect** (RTCE) as $\mbox{RTCE}=\psi_{1, 1}(\widetilde{P})-\psi_{0, 1}(\widetilde{P})$; and the **patient preference causal effect** (PPCE) as $\mbox{PPCE}(\gamma_1,\gamma_0) = \psi_{1, 0}(\widetilde{P}; \gamma_1)-\psi_{0, 0}(\widetilde{P}; \gamma_0)$. 
 
 ## Methods
 
+We will describe the main estimation steps for $\psi_{t}(\widetilde{P}; \gamma_t)$: (1) Derive the efficient influence function. (2) Estimate $\widetilde{P}$. (3) Compute the one-step, truncated, split sample estimator. (4) Compute the variance and $95\%$ confidence interval.
+
+(1). Derive the efficient influence function for $\psi_t(\widetilde{P}; \gamma_t)$, denoted $\phi_t(\widetilde{P}; \gamma_t)(\widetilde{O})$
+
+$$\phi_t(\widetilde{P}; \gamma_t)(\widetilde{O})
+    =  \upsilon_{t, 1}(\widetilde{P})(\widetilde{O})\times P(R=1)+\upsilon_{t, 0}(\widetilde{P}; \gamma_t)(\widetilde{O})\times P(R=0) - \psi_t(\widetilde{P}; \gamma_t) \ , $$
+
+where the exact form of $\upsilon_{t, 1}(\widetilde{P})(\widetilde{O})$ and $\upsilon_{t, 0}(\widetilde{P}; \gamma_t)(\widetilde{O})$ can be found in the paper. 
+
+
+(2). Estimate $\widetilde{P}$
+
+To construct a estimator for $E[Y(t)]$, we need to estimate $\pi_{t, r}(X)$, $\eta_1(X, r, t)$ and $\widetilde{F}_{t, r}(y|X)$ for $r=0, 1$. The estimation methods we apply have fast enough convergence rate so that our resulting estimators converge to a normal distribution at $\sqrt{n}$-rates. Specifically, we apply the generalized additive model (GAM) with a logistic link function for $\pi_{t, r}(X)$ and $\eta_1(X, r, t)$ for $r=0, 1$. We apply the single index model for $\widetilde{F}_{t, r}(y|X)$ for $r=0, 1$. We then estimate  $\widetilde{\mu}_{t, 0}\big(Y\exp(\gamma_t s_t( Y)); X\big)$, $\widetilde{\mu}_{t, 0}\big(\exp(\gamma_t s_t(Y)); X\big)$ and $\widetilde{\mu}_{t, r}\big(Y; X\big)$ by numeric integration. 
+
+(3). Compute the one-step, truncated, split sample estimator 
+
+We apply K-fold sample splitting and tuning-free Huberization procedure to truncate the k-th split $\upsilon_{t, 1} \left(\widehat{\widetilde{P}}^{(-k)}\right) (\widetilde{O}_i)$ and $\upsilon_{t, 0}\left(\widehat{\widetilde{P}}^{(-k)} ; \gamma_t\right) (\widetilde{O}_i)$: 
+
+\begin{equation*}
+    	\widehat{\psi}^\dagger_t(\gamma_t) = \frac{1}{K} \sum_{k=1}^K \underbrace{\left\{\frac{1}{n_k} \sum_{i: S_i=k}\Bigg[ \underbrace{\upsilon_{t, 1}^\dagger \left(\widehat{\widetilde{P}}^{(-k)}\right) (\widetilde{O}_i)\times P_{n/n_k}^{(-k)}(R=1) +\upsilon_{t, 0}^\dagger \left(\widehat{\widetilde{P}}^{(-k)} ; \gamma_t\right) (\widetilde{O}_i)\times P_{n/n_k}^{(-k)}(R=0)}_{\upsilon_t^\dagger\left(\widehat{\widetilde{P}}^{(-k)} ; \gamma_t\right)(\widetilde{O}_i)}\Bigg]\right\}}_{\widehat{\psi}_t^{(k)\dagger}(\gamma_t)}
+\end{equation*}
+where $S_i$ is the split membership of the $i$th observation (i.e, $S_i \in \{1, \ldots, K\}$). 
+
+(4). Compute variance and $95\%$ confidence interval
+
+We estimate the variance of $\widehat{\psi}_t^\dagger(\gamma_t)$ by
+$$\sigma_t^{\dagger 2}=\frac{1}{nK}\sum_{k=1}^K\left\{\frac{1}{n_k-1}\sum_{i: S_i=k}\left\{\upsilon_t^\dagger\left(\widehat{\widetilde{P}}^{(-k)} ; \gamma_t\right)(\widetilde{O}_i)-\widehat{\psi}_t^{(k)\dagger}(\gamma_t)\right\}^2\right\}$$
+
+The $95\%$ Wald confidence interval for $\psi_t(\widetilde{P}; \gamma_t)$ is $\widehat{\psi}^\dagger_t(\gamma_t)\pm z_{0.975}\frac{\sigma_t^\dagger}{\sqrt{n}}$. 
+
 # Implementation
 
+
+```{r message=FALSE}
+remotes::install_github("UofUEpiBio/Comprehensive_cohort")
+```
+
 ## Data
+
+```{r}
+library(comprehensivecohort)
+
+data(ccohort)
+```
 
 ## Results
 
