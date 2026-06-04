@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2026-06-03">
+<meta name="dcterms.date" content="2026-06-04">
 
-<title>Introduction to main functions</title>
+<title>Introduction: methodologies and implementation</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -133,7 +133,7 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Introduction to main functions</h1>
+<h1 class="title">Introduction: methodologies and implementation</h1>
 </div>
 
 
@@ -144,7 +144,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">June 3, 2026</p>
+      <p class="date">June 4, 2026</p>
     </div>
   </div>
   
@@ -213,7 +213,7 @@ window.Quarto = {
 </section>
 <section id="implementation" class="level1">
 <h1>Implementation</h1>
-<p>We will demonstrate how to use the R functions in <code>comprehensivecohort</code> to estimating CCCE, using an example data included in the package. First, install package directly from git:</p>
+<p>We will demonstrate how to use the R functions in <code>comprehensivecohort</code> to estimate CCCE, using an example data included in the package. First, install package directly from git:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"UofUEpiBio/Comprehensive_cohort"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
@@ -240,7 +240,7 @@ window.Quarto = {
 </div>
 <p>The dataset has 563 observations and 8 variables, which include:</p>
 <ul>
-<li>Y: WOMAC pain score at 12 months, continuous variable ranging from 0 to 100. <span class="math inline">\(NA\)</span> indicate missing outcome.</li>
+<li>Y: WOMAC pain score at 12 months, continuous variable ranging from 0 to 100. NA indicate missing outcome.</li>
 <li>M: outcome missingness indicator, binary variable. <span class="math inline">\(1\)</span> if <span class="math inline">\(Y\)</span> is observed, <span class="math inline">\(0\)</span> if <span class="math inline">\(Y\)</span> is missing.</li>
 <li>R: randomization consent indicator, binary variable. <span class="math inline">\(1\)</span> for RCT, <span class="math inline">\(0\)</span> for OBS.</li>
 <li>t: treatment indicator, binary variable. <span class="math inline">\(1\)</span> for topical NSAIDs treatment group, <span class="math inline">\(0\)</span> for oral NSAIDs treatment group.</li>
@@ -252,6 +252,25 @@ window.Quarto = {
 </section>
 <section id="application" class="level2">
 <h2 class="anchored" data-anchor-id="application">Application</h2>
+<p>The main function is <code>est_psi()</code>, which outputs point estimates, variance and <span class="math inline">\(95\%\)</span> Walds confidence interval for <span class="math inline">\(\psi_t(\widetilde{P}; \gamma_t)\)</span>, <span class="math inline">\(\psi_{t, 0}(\widetilde{P}; \gamma_t)\)</span> and <span class="math inline">\(\psi_{t, 1}(\widetilde{P})\)</span> under one or more pre-specified <span class="math inline">\(\gamma_t\)</span>.</p>
+<p>Users need to input data and specify several parameters:</p>
+<ul>
+<li>Data: <span style="color: blue;">Y</span>, <span style="color: blue;">M</span>, <span style="color: blue;">R</span>, <span style="color: blue;">t</span>, <span style="color: blue;">M</span> (baseline covariates in the form of data frame)</li>
+<li>Estimand of interest: <span style="color: blue;">trt</span>=1 if estimating <span class="math inline">\(E[Y(1)]\)</span>, <span class="math inline">\(E[Y(1)|R=0]\)</span> and <span class="math inline">\(E[Y(1)|R=1]\)</span>; <span style="color: blue;">trt</span>=0 if estimating <span class="math inline">\(E[Y(0)]\)</span>, <span class="math inline">\(E[Y(0)|R=0]\)</span> and <span class="math inline">\(E[Y(0)|R=1]\)</span></li>
+<li>Sensitivity parameters: <span style="color: blue;">gamma</span>, a vector of <span class="math inline">\(\gamma_t\)</span> value.</li>
+<li>Single index model settings <span class="citation" data-cites="redd2025sensiatrpackageconducting">(<a href="#ref-redd2025sensiatrpackageconducting" role="doc-biblioref">Redd et al. 2025</a>)</span>: <span style="color: blue;">kernel</span>, kernel smoothing, choices of Gaussian and Epanechnikov kernel; <span style="color: blue;">single_index_method</span>, types of constraints in estimation, choices of setting first coefficient to 1, norm of coefficients to 1, and bandwidth to 1; <span style="color: blue;">method</span>, optimization methods, default to <code>optim</code>; <span style="color: blue;">use_mave</span>, whether to apply MAVE <span class="citation" data-cites="mave_xia_2002 mave_wang_2008">(<a href="#ref-mave_xia_2002" role="doc-biblioref">Xia et al. 2002</a>; <a href="#ref-mave_wang_2008" role="doc-biblioref">Wang and Xia 2008</a>)</span> or cumulative sliced inverse regression method <span class="citation" data-cites="slice_zhu_2010">(<a href="#ref-slice_zhu_2010" role="doc-biblioref">Zhu et al. 2010</a>)</span> to estimate initial value of the coeffficients, default to TRUE.</li>
+<li>Truncation methods: <span style="color: blue;">simple_trunc</span>=TRUE to apply quantile truncation of <span class="math inline">\(\frac{1}{\pi_{t, r}(X)}\)</span> and <span class="math inline">\(\frac{1}{\eta_m(X, r, t)}\)</span>, <span style="color: blue;">simple_trunc</span>=FALSE to apply tuning-free Huberization procedure <span class="citation" data-cites="tuning_wang_2021">(<a href="#ref-tuning_wang_2021" role="doc-biblioref">Wang et al. 2021</a>)</span> to influence functions. If <span style="color: blue;">simple_trunc</span>=TRUE, specify quantile truncation by setting <span style="color: blue;">quant</span> from 0 to 1.</li>
+<li>K-fold sample splitting: <span style="color: blue;">fold</span>=K, a integer. <span style="color: blue;">seed</span>, set.seed(seed).</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="do">## data adaptive truncation</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>out <span class="ot">&lt;-</span> <span class="fu">with</span>(ccohort, {</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">est_psi</span>(Y, M, R, <span class="at">X =</span> <span class="fu">data.frame</span>(age, womac_bq, expectationb, ChronicPainb), </span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>          t, <span class="at">trt =</span> <span class="dv">1</span>, <span class="at">gamma =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.5</span>), <span class="at">fold =</span> <span class="dv">5</span>, <span class="at">seed =</span> <span class="dv">1</span>, <span class="at">IF_output =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">simple_trunc =</span> <span class="cn">FALSE</span>, <span class="at">quant =</span> <span class="cn">NULL</span>, <span class="at">kernel=</span><span class="st">"dnorm"</span>, </span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>          <span class="at">single_index_method=</span><span class="st">"norm1coef"</span>, <span class="at">method=</span><span class="st">"optim"</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
 </section>
 <section id="results" class="level2">
 <h2 class="anchored" data-anchor-id="results">Results</h2>
@@ -269,11 +288,23 @@ Chiang, Chin-Tsang, and Ming-Yueh Huang. 2012. <span>“New Estimation and Infer
 <div id="ref-hastie1990tibshirani" class="csl-entry" role="listitem">
 <span class="nocase">Hastie, Trevor et al.</span> 1990. <span>“Tibshirani: Generalized Additive Models.”</span> <em>London: Chapman and Hall</em> 1931 (11): 683–741.
 </div>
+<div id="ref-redd2025sensiatrpackageconducting" class="csl-entry" role="listitem">
+Redd, Andrew, Yujing Gao, Bonnie B. Smith, Ravi Varadhan, Andrea J. Apter, and Daniel O. Scharfstein. 2025. <em>SensIAT: An r Package for Conducting Sensitivity Analysis of Randomized Trials with Irregular Assessment Times</em>. <a href="https://arxiv.org/abs/2509.22389">https://arxiv.org/abs/2509.22389</a>.
+</div>
 <div id="ref-underwood2008topical" class="csl-entry" role="listitem">
 <span class="nocase">Underwood, Martin, Deborah Ashby, Dawn Carnes, et al.</span> 2008. <span>“Topical or Oral Ibuprofen for Chronic Knee Pain in Older People. The TOIB Study.”</span> <em>Health Technology Assessment</em>.
 </div>
+<div id="ref-mave_wang_2008" class="csl-entry" role="listitem">
+Wang, Hansheng, and Yingcun Xia. 2008. <span>“Sliced Regression for Dimension Reduction.”</span> <em>Journal of the American Statistical Association</em> 103 (482): 811–21.
+</div>
 <div id="ref-tuning_wang_2021" class="csl-entry" role="listitem">
 Wang, Lili, Chao Zheng, Wen Zhou, and Wen-Xin Zhou. 2021. <span>“A New Principle for Tuning-Free Huber Regression.”</span> <em>Statistica Sinica</em> 31 (4): 2153–77.
+</div>
+<div id="ref-mave_xia_2002" class="csl-entry" role="listitem">
+Xia, Yingcun, Howell Tong, W. K. Li, and Li-Xing Zhu. 2002. <span>“An Adaptive Estimation of Dimension Reduction Space.”</span> <em>Journal of the Royal Statistical Society: Series B (Statistical Methodology)</em> 64 (3): 363–410. <a href="https://rss.onlinelibrary.wiley.com/doi/abs/10.1111/1467-9868.03411">https://rss.onlinelibrary.wiley.com/doi/abs/10.1111/1467-9868.03411</a>.
+</div>
+<div id="ref-slice_zhu_2010" class="csl-entry" role="listitem">
+Zhu, Li-Ping, Li-Xing Zhu, and Zheng-Hui Feng. 2010. <span>“Dimension Reduction in Regressions Through Cumulative Slicing Estimation.”</span> <em>Journal of the American Statistical Association</em> 105 (492): 1455–66.
 </div>
 </div></section></div></main>
 <!-- /main column -->

@@ -1,10 +1,10 @@
 ---
-title: "Introduction to main functions"
+title: "Introduction: methodologies and implementation"
 date: today
 bibliography: references.bib
 link-citations: true
 vignette: >
-  %\VignetteIndexEntry{Introduction to main functions}
+  %\VignetteIndexEntry{Introduction: methodologies and implementation}
   %\VignetteEngine{quarto::html}
   %\VignetteEncoding{UTF-8}
 ---
@@ -87,7 +87,7 @@ The $95\%$ Wald confidence interval for $\psi_t(\widetilde{P}; \gamma_t)$ is $\w
 
 # Implementation
 
-We will demonstrate how to use the R functions in `comprehensivecohort` to estimating CCCE, using an example data included in the package. First, install package directly from git: 
+We will demonstrate how to use the R functions in `comprehensivecohort` to estimate CCCE, using an example data included in the package. First, install package directly from git: 
 
 ```{r message=FALSE}
 remotes::install_github("UofUEpiBio/Comprehensive_cohort")
@@ -107,7 +107,7 @@ str(ccohort)
 
 The dataset has 563 observations and 8 variables, which include:
 
-* Y: WOMAC pain score at 12 months, continuous variable ranging from 0 to 100. $NA$ indicate missing outcome. 
+* Y: WOMAC pain score at 12 months, continuous variable ranging from 0 to 100. NA indicate missing outcome. 
 * M: outcome missingness indicator, binary variable. $1$ if $Y$ is observed, $0$ if $Y$ is missing. 
 * R: randomization consent indicator, binary variable. $1$ for RCT, $0$ for OBS. 
 * t: treatment indicator, binary variable. $1$ for topical NSAIDs treatment group, $0$ for oral NSAIDs treatment group. 
@@ -117,6 +117,27 @@ The dataset has 563 observations and 8 variables, which include:
 * ChronicPainb: chronic pain grade, categorical variable. Two levels: 1-2, 3-4. 
 
 ## Application 
+
+The main function is `est_psi()`, which outputs point estimates, variance and $95\%$ Walds confidence interval for $\psi_t(\widetilde{P}; \gamma_t)$, $\psi_{t, 0}(\widetilde{P}; \gamma_t)$ and $\psi_{t, 1}(\widetilde{P})$ under one or more pre-specified $\gamma_t$. 
+
+Users need to input data and specify several parameters: 
+
+* Data: <span style="color: blue;">Y</span>, <span style="color: blue;">M</span>, <span style="color: blue;">R</span>, <span style="color: blue;">t</span>, <span style="color: blue;">M</span> (baseline covariates in the form of data frame)
+* Estimand of interest: <span style="color: blue;">trt</span>=1 if estimating $E[Y(1)]$, $E[Y(1)|R=0]$ and $E[Y(1)|R=1]$; <span style="color: blue;">trt</span>=0 if estimating $E[Y(0)]$, $E[Y(0)|R=0]$ and $E[Y(0)|R=1]$
+* Sensitivity parameters: <span style="color: blue;">gamma</span>, a vector of $\gamma_t$ value. 
+* Single index model settings [@redd2025sensiatrpackageconducting]: <span style="color: blue;">kernel</span>, kernel smoothing, choices of Gaussian and Epanechnikov kernel; <span style="color: blue;">single_index_method</span>, types of constraints in estimation, choices of setting first coefficient to 1, norm of coefficients to 1, and bandwidth to 1; <span style="color: blue;">method</span>, optimization methods, default to `optim`; <span style="color: blue;">use_mave</span>, whether to apply MAVE [@mave_xia_2002; @mave_wang_2008] or cumulative sliced inverse regression method [@slice_zhu_2010] to estimate initial value of the coeffficients, default to TRUE. 
+* Truncation methods: <span style="color: blue;">simple_trunc</span>=TRUE to apply quantile truncation of $\frac{1}{\pi_{t, r}(X)}$ and $\frac{1}{\eta_m(X, r, t)}$, <span style="color: blue;">simple_trunc</span>=FALSE to apply tuning-free Huberization procedure [@tuning_wang_2021] to influence functions. If <span style="color: blue;">simple_trunc</span>=TRUE, specify quantile truncation by setting <span style="color: blue;">quant</span> from 0 to 1. 
+* K-fold sample splitting: <span style="color: blue;">fold</span>=K, a integer. <span style="color: blue;">seed</span>, set.seed(seed). 
+
+```{r}
+## data adaptive truncation
+out <- with(ccohort, {
+  est_psi(Y, M, R, X = data.frame(age, womac_bq, expectationb, ChronicPainb), 
+          t, trt = 1, gamma = c(0, 0.5), fold = 5, seed = 1, IF_output = FALSE,
+          simple_trunc = FALSE, quant = NULL, kernel="dnorm", 
+          single_index_method="norm1coef", method="optim")
+})
+```
 
 ## Results
 
