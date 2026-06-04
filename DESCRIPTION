@@ -43,3 +43,6 @@ Imports:
 Suggests:
     tinytest
 LazyData: true
+VignetteBuilder:  
+     knitr, 
+     quarto
