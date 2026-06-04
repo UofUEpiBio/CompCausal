@@ -7,6 +7,7 @@ data-raw/
 
 # Other things to ignore
 README.qmd
+vignettes/
 
 # Development
 .devcontainer/
