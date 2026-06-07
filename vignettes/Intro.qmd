@@ -13,7 +13,7 @@ vignette: >
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-The `comprehensivecohort` package provides tools for analyzing data from comprehensive cohort studies in the presence of unmeasured confounding and missing outcome (either continuous or binary). The goal is to estimate the comprehensive cohort causal effects (CCCE), the average causal effect for the entire cohort. This vignette has two parts: 1). Methodologies. This part will cover details on what is Comprehensive Cohort Study design, the causal estimands, assumptions, and brief descriptions of the estimation process. 2). Implementation. This part will focus on how to use the R functions to implement the estimation of CCCE under pre-specified sensitivity parameters. We will also provide codes for presenting results. 
+The `comprehensivecohort` package provides tools for analyzing data from comprehensive cohort studies in the presence of unmeasured confounding and missing outcome (either continuous or binary). The goal is to estimate the comprehensive cohort causal effects (CCCE), the average causal effect for the entire cohort. This vignette has two parts: 1). Methodologies. This part will cover details on what is Comprehensive Cohort Study design, the causal estimands, assumptions, and brief descriptions of the estimation process. 2). Implementation. This part will focus on how to use the R functions to implement the estimation of CCCE under pre-specified sensitivity parameters. 
 
 # Methodologies
 
@@ -87,7 +87,11 @@ The $95\%$ Wald confidence interval for $\psi_t(\widetilde{P}; \gamma_t)$ is $\w
 
 # Implementation
 
-We will demonstrate how to use the R functions in `comprehensivecohort` to estimate CCCE, using an example data included in the package. First, install package directly from git: 
+```{r}
+library(matrixStats)
+```
+
+We will demonstrate how to use the R functions in `comprehensivecohort` to estimate CCCE (and also RTCE, PPCE), using an example data included in the package. First, install package directly from git: 
 
 ```{r message=FALSE}
 remotes::install_github("UofUEpiBio/Comprehensive_cohort")
@@ -129,6 +133,8 @@ Users need to input data and specify several parameters:
 * Truncation methods: <span style="color: blue;">simple_trunc</span>=TRUE to apply quantile truncation of $\frac{1}{\pi_{t, r}(X)}$ and $\frac{1}{\eta_m(X, r, t)}$, <span style="color: blue;">simple_trunc</span>=FALSE to apply tuning-free Huberization procedure [@tuning_wang_2021] to influence functions. If <span style="color: blue;">simple_trunc</span>=TRUE, specify quantile truncation by setting <span style="color: blue;">quant</span> from 0 to 1. 
 * K-fold sample splitting: <span style="color: blue;">fold</span>=K, a integer. <span style="color: blue;">seed</span>, set.seed(seed). 
 
+Here is an example of inferences for $\psi_1(\widetilde{P}; \gamma_1)$, $\psi_{1, 0}(\widetilde{P}; \gamma_1)$ and $\psi_{1, 1}(\widetilde{P})$ under $\gamma_t=0, 0.5$, using 5-fold sample splitting, influence function truncation procedure and specific single index model settings. 
+
 ```{r}
 ## data adaptive truncation
 out <- with(ccohort, {
@@ -139,7 +145,93 @@ out <- with(ccohort, {
 })
 ```
 
-## Results
+Results are organized into a table: 
+```{r}
+## organize result into data frame
+res_out <- data.frame(est=c(out$est_trunc, out$est_trunc_R1[1], out$est_trunc_R0), 
+                      var=c(out$var_trunc, out$var_trunc_R1[1], out$var_trunc_R0), 
+                      lowerCI=c(out$lowerCI_trunc, out$lowerCI_trunc_R1[1], out$lowerCI_trunc_R0), 
+                      upperCI=c(out$upperCI_trunc, out$upperCI_trunc_R1[1], out$upperCI_trunc_R0), 
+                      gamma=c(0, 0.5, NA, 0, 0.5), type=c("CCCE", "CCCE", "RTCE", "PPCE", "PPCE"))
+res_out2 <- as.matrix(round(res_out[, 1:4], 2))
+rownames(res_out2) <- c("$\\psi_1(\\widetilde{P}; 0)$", "$\\psi_1(\\widetilde{P}; 0.5)$", "$\\psi_{1,1}(\\widetilde{P})$",
+                        "$\\psi_{1,0}(\\widetilde{P}; 0)$", "$\\psi_{1,0}(\\widetilde{P}; 0.5)$")
+## present result
+knitr::kable(res_out2, col.names=c("Estimates", "Var", "Lower CI", "Upper CI"))
+```
+
+To get estimations for the treatment effects (such as $\psi_1(\widetilde{P}; \gamma_1)-\psi_0(\widetilde{P}; \gamma_0)$), we need to output the influence functions to correctly compute the variances. Note that to make sure the influence functions align for each individuals under $t=1$ and $t=0$, it is advised that <span style="color: blue;">seed</span> is set to the same value under $t=1$ and $t=0$. 
+
+```{r}
+## t=1
+out_t1 <- with(ccohort, {
+  est_psi(Y, M, R, X = data.frame(age, womac_bq, expectationb, ChronicPainb), 
+          t, trt = 1, gamma = c(0, 0.5), fold = 5, seed = 1, IF_output = TRUE,
+          simple_trunc = FALSE, quant = NULL, kernel="dnorm", 
+          single_index_method="norm1coef", method="optim")
+})
+## t=0
+out_t0 <- with(ccohort, {
+  est_psi(Y, M, R, X = data.frame(age, womac_bq, expectationb, ChronicPainb), 
+          t, trt = 0, gamma = c(0, 0.5), fold = 5, seed = 1, IF_output = TRUE,
+          simple_trunc = FALSE, quant = NULL, kernel="dnorm", 
+          single_index_method="norm1coef", method="optim")
+})
+```
+
+Results are organized into a table: 
+```{r}
+## data frame for results
+res_out_diff <- expand.grid(gamma1=c(0, 0.5), gamma0=c(0, 0.5), type=c("CCCE", "PPCE"))
+res_out_diff <- rbind(res_out_diff, data.frame(gamma1=NA, gamma0=NA, type="RTCE"))
+res_out_diff$est <- 0
+res_out_diff$var <- 0
+
+## compute variance
+scale_n <- 1 / dim(ccohort)[1]
+
+fold_idx <- split(seq_along(out_t1$fold_index_l), out_t1$fold_index_l)
+
+t1_IF_mat <- t(do.call(rbind, out_t1$IF_trunc))
+t1_IF_R0_mat <- t(do.call(rbind, out_t1$IF_trunc_R0))
+t1_IF_R1_mat <- t(do.call(rbind, out_t1$IF_trunc_R1))
+
+res_out_diff$est[which(res_out_diff$type=="RTCE")] <- out_t1$est_trunc_R1[1]-out_t0$est_trunc_R1[1]
+
+IF_R1_diff <- t1_IF_R1_mat - out_t0$IF_trunc_R1[[1]]
+var_R1_temp <- vapply(fold_idx, function(id) colVars(IF_R1_diff[id, ]), numeric(2))
+res_out_diff$var[which(res_out_diff$type=="RTCE")] <- rowMeans(var_R1_temp)[1]*scale_n
+
+for (g_0 in seq_along(c(0, 0.5))) {
+  
+  IF_diff    <- t1_IF_mat - out_t0$IF_trunc[[g_0]]
+  IF_R0_diff <- t1_IF_R0_mat - out_t0$IF_trunc_R0[[g_0]]
+
+  var_temp    <- vapply(fold_idx, function(id) colVars(IF_diff[id, ]),    numeric(2))
+  var_R0_temp <- vapply(fold_idx, function(id) colVars(IF_R0_diff[id, ]), numeric(2))
+
+  indx_CCCE <- which(res_out_diff$gamma0==c(0, 0.5)[g_0]&res_out_diff$type=="CCCE")
+  res_out_diff$est[indx_CCCE] <- out_t1$est_trunc-out_t0$est_trunc
+  res_out_diff$var[indx_CCCE] <- rowMeans(var_temp)*scale_n
+  
+  indx_PPCE <- which(res_out_diff$gamma0==c(0, 0.5)[g_0]&res_out_diff$type=="PPCE")
+  res_out_diff$est[indx_PPCE] <- out_t1$est_trunc_R0-out_t0$est_trunc_R0
+  res_out_diff$var[indx_PPCE] <- rowMeans(var_R0_temp)*scale_n
+
+}
+## 95% CI
+res_out_diff$lowerCI <- res_out_diff$est-qnorm(0.975)*sqrt(res_out_diff$var)
+res_out_diff$upperCI <- res_out_diff$est+qnorm(0.975)*sqrt(res_out_diff$var)
+
+## present result
+res_out_diff2 <- as.matrix(round(res_out_diff[, 4:7], 2))
+rownames(res_out_diff2) <- c("$\\psi_1(\\widetilde{P}; 0)-\\psi_0(\\widetilde{P}; 0)$", "$\\psi_1(\\widetilde{P}; 0.5)-\\psi_0(\\widetilde{P}; 0)$", 
+                             "$\\psi_1(\\widetilde{P}; 0)-\\psi_0(\\widetilde{P}; 0.5)$", "$\\psi_1(\\widetilde{P}; 0.5)-\\psi_0(\\widetilde{P}; 0.5)$",
+                             "$\\psi_{1,0}(\\widetilde{P}; 0)-\\psi_{0,0}(\\widetilde{P}; 0)$", "$\\psi_{1,0}(\\widetilde{P}; 0.5)-\\psi_{0,0}(\\widetilde{P}; 0)$",
+                             "$\\psi_{1,0}(\\widetilde{P}; 0)-\\psi_{0,0}(\\widetilde{P}; 0.5)$", "$\\psi_{1,0}(\\widetilde{P}; 0.5)-\\psi_{0,0}(\\widetilde{P}; 0.5)$", 
+                             "$\\psi_{1,1}(\\widetilde{P})-\\psi_{0,1}(\\widetilde{P})$")
+knitr::kable(res_out_diff2, col.names=c("Estimates", "Var", "Lower CI", "Upper CI"))
+```
 
 
 # References

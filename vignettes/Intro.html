@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2026-06-04">
+<meta name="dcterms.date" content="2026-06-07">
 
 <title>Introduction: methodologies and implementation</title>
 <style>
@@ -144,7 +144,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">June 4, 2026</p>
+      <p class="date">June 7, 2026</p>
     </div>
   </div>
   
@@ -156,7 +156,7 @@ window.Quarto = {
 </header>
 
 
-<p>The <code>comprehensivecohort</code> package provides tools for analyzing data from comprehensive cohort studies in the presence of unmeasured confounding and missing outcome (either continuous or binary). The goal is to estimate the comprehensive cohort causal effects (CCCE), the average causal effect for the entire cohort. This vignette has two parts: 1). Methodologies. This part will cover details on what is Comprehensive Cohort Study design, the causal estimands, assumptions, and brief descriptions of the estimation process. 2). Implementation. This part will focus on how to use the R functions to implement the estimation of CCCE under pre-specified sensitivity parameters. We will also provide codes for presenting results.</p>
+<p>The <code>comprehensivecohort</code> package provides tools for analyzing data from comprehensive cohort studies in the presence of unmeasured confounding and missing outcome (either continuous or binary). The goal is to estimate the comprehensive cohort causal effects (CCCE), the average causal effect for the entire cohort. This vignette has two parts: 1). Methodologies. This part will cover details on what is Comprehensive Cohort Study design, the causal estimands, assumptions, and brief descriptions of the estimation process. 2). Implementation. This part will focus on how to use the R functions to implement the estimation of CCCE under pre-specified sensitivity parameters.</p>
 <section id="methodologies" class="level1">
 <h1>Methodologies</h1>
 <section id="comprehensive-cohort-study-design" class="level2">
@@ -213,19 +213,22 @@ window.Quarto = {
 </section>
 <section id="implementation" class="level1">
 <h1>Implementation</h1>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(matrixStats)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
 <p>We will demonstrate how to use the R functions in <code>comprehensivecohort</code> to estimate CCCE, using an example data included in the package. First, install package directly from git:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"UofUEpiBio/Comprehensive_cohort"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"UofUEpiBio/Comprehensive_cohort"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <section id="data" class="level2">
 <h2 class="anchored" data-anchor-id="data">Data</h2>
 <p>The dataset included in the package is a simulated data based on the TOIB study <span class="citation" data-cites="underwood2008topical">(<a href="#ref-underwood2008topical" role="doc-biblioref"><span class="nocase">Underwood et al.</span> 2008</a>)</span>. The TOIB study is a comprehensive cohort study on the effect of topical versus oral non-steroidal anti-inflammatory drugs (NSAIDs) in managing knee pain among older adults with chronic knee pain. In the analysis, the outcome of interest is Western Ontario and McMaster Universities Osteoarthritis Index (WOMAC) pain score (<span class="math inline">\(0-100\)</span>) at 12 months. We include age, baseline WOMAC pain score, expected pain a year from now and chronic pain grade as baseline covariates.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(comprehensivecohort)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="do">## load data</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(ccohort)</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="do">## data structure</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(ccohort)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(comprehensivecohort)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="do">## load data</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(ccohort)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="do">## data structure</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(ccohort)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>'data.frame':   563 obs. of  8 variables:
  $ Y           : num  NA 43.7 32.5 37.3 NA ...
@@ -262,18 +265,235 @@ window.Quarto = {
 <li>Truncation methods: <span style="color: blue;">simple_trunc</span>=TRUE to apply quantile truncation of <span class="math inline">\(\frac{1}{\pi_{t, r}(X)}\)</span> and <span class="math inline">\(\frac{1}{\eta_m(X, r, t)}\)</span>, <span style="color: blue;">simple_trunc</span>=FALSE to apply tuning-free Huberization procedure <span class="citation" data-cites="tuning_wang_2021">(<a href="#ref-tuning_wang_2021" role="doc-biblioref">Wang et al. 2021</a>)</span> to influence functions. If <span style="color: blue;">simple_trunc</span>=TRUE, specify quantile truncation by setting <span style="color: blue;">quant</span> from 0 to 1.</li>
 <li>K-fold sample splitting: <span style="color: blue;">fold</span>=K, a integer. <span style="color: blue;">seed</span>, set.seed(seed).</li>
 </ul>
+<p>Here is an example of inferences for <span class="math inline">\(\psi_1(\widetilde{P}; \gamma_1)\)</span>, <span class="math inline">\(\psi_{1, 0}(\widetilde{P}; \gamma_1)\)</span> and <span class="math inline">\(\psi_{1, 1}(\widetilde{P})\)</span> under <span class="math inline">\(\gamma_t=0, 0.5\)</span>, using 5-fold sample splitting, influence function truncation procedure and specific single index model settings.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="do">## data adaptive truncation</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>out <span class="ot">&lt;-</span> <span class="fu">with</span>(ccohort, {</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">est_psi</span>(Y, M, R, <span class="at">X =</span> <span class="fu">data.frame</span>(age, womac_bq, expectationb, ChronicPainb), </span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>          t, <span class="at">trt =</span> <span class="dv">1</span>, <span class="at">gamma =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.5</span>), <span class="at">fold =</span> <span class="dv">5</span>, <span class="at">seed =</span> <span class="dv">1</span>, <span class="at">IF_output =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">simple_trunc =</span> <span class="cn">FALSE</span>, <span class="at">quant =</span> <span class="cn">NULL</span>, <span class="at">kernel=</span><span class="st">"dnorm"</span>, </span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>          <span class="at">single_index_method=</span><span class="st">"norm1coef"</span>, <span class="at">method=</span><span class="st">"optim"</span>)</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="do">## data adaptive truncation</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>out <span class="ot">&lt;-</span> <span class="fu">with</span>(ccohort, {</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">est_psi</span>(Y, M, R, <span class="at">X =</span> <span class="fu">data.frame</span>(age, womac_bq, expectationb, ChronicPainb), </span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>          t, <span class="at">trt =</span> <span class="dv">1</span>, <span class="at">gamma =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.5</span>), <span class="at">fold =</span> <span class="dv">5</span>, <span class="at">seed =</span> <span class="dv">1</span>, <span class="at">IF_output =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">simple_trunc =</span> <span class="cn">FALSE</span>, <span class="at">quant =</span> <span class="cn">NULL</span>, <span class="at">kernel=</span><span class="st">"dnorm"</span>, </span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>          <span class="at">single_index_method=</span><span class="st">"norm1coef"</span>, <span class="at">method=</span><span class="st">"optim"</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="results" class="level2">
-<h2 class="anchored" data-anchor-id="results">Results</h2>
+<p>Results are organized into a table:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="do">## organize result into data frame</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>res_out <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">est=</span><span class="fu">c</span>(out<span class="sc">$</span>est_trunc, out<span class="sc">$</span>est_trunc_R1[<span class="dv">1</span>], out<span class="sc">$</span>est_trunc_R0), </span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>                      <span class="at">var=</span><span class="fu">c</span>(out<span class="sc">$</span>var_trunc, out<span class="sc">$</span>var_trunc_R1[<span class="dv">1</span>], out<span class="sc">$</span>var_trunc_R0), </span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>                      <span class="at">lowerCI=</span><span class="fu">c</span>(out<span class="sc">$</span>lowerCI_trunc, out<span class="sc">$</span>lowerCI_trunc_R1[<span class="dv">1</span>], out<span class="sc">$</span>lowerCI_trunc_R0), </span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>                      <span class="at">upperCI=</span><span class="fu">c</span>(out<span class="sc">$</span>upperCI_trunc, out<span class="sc">$</span>upperCI_trunc_R1[<span class="dv">1</span>], out<span class="sc">$</span>upperCI_trunc_R0), </span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>                      <span class="at">gamma=</span><span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.5</span>, <span class="cn">NA</span>, <span class="dv">0</span>, <span class="fl">0.5</span>), <span class="at">type=</span><span class="fu">c</span>(<span class="st">"CCCE"</span>, <span class="st">"CCCE"</span>, <span class="st">"RTCE"</span>, <span class="st">"PPCE"</span>, <span class="st">"PPCE"</span>))</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>res_out2 <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(<span class="fu">round</span>(res_out[, <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>], <span class="dv">2</span>))</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(res_out2) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"$</span><span class="sc">\\</span><span class="st">psi_1(</span><span class="sc">\\</span><span class="st">widetilde{P}; 0)$"</span>, <span class="st">"$</span><span class="sc">\\</span><span class="st">psi_1(</span><span class="sc">\\</span><span class="st">widetilde{P}; 0.5)$"</span>, <span class="st">"$</span><span class="sc">\\</span><span class="st">psi_{1,1}(</span><span class="sc">\\</span><span class="st">widetilde{P})$"</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>                        <span class="st">"$</span><span class="sc">\\</span><span class="st">psi_{1,0}(</span><span class="sc">\\</span><span class="st">widetilde{P}; 0)$"</span>, <span class="st">"$</span><span class="sc">\\</span><span class="st">psi_{1,0}(</span><span class="sc">\\</span><span class="st">widetilde{P}; 0.5)$"</span>)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="do">## present result</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(res_out2, <span class="at">col.names=</span><span class="fu">c</span>(<span class="st">"Estimates"</span>, <span class="st">"Var"</span>, <span class="st">"Lower CI"</span>, <span class="st">"Upper CI"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: right;">Estimates</th>
+<th style="text-align: right;">Var</th>
+<th style="text-align: right;">Lower CI</th>
+<th style="text-align: right;">Upper CI</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\(\psi_1(\widetilde{P}; 0)\)</span></td>
+<td style="text-align: right;">40.22</td>
+<td style="text-align: right;">2.26</td>
+<td style="text-align: right;">37.28</td>
+<td style="text-align: right;">43.17</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\(\psi_1(\widetilde{P}; 0.5)\)</span></td>
+<td style="text-align: right;">40.55</td>
+<td style="text-align: right;">2.31</td>
+<td style="text-align: right;">37.57</td>
+<td style="text-align: right;">43.54</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\(\psi_{1,1}(\widetilde{P})\)</span></td>
+<td style="text-align: right;">39.78</td>
+<td style="text-align: right;">4.99</td>
+<td style="text-align: right;">35.40</td>
+<td style="text-align: right;">44.16</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\(\psi_{1,0}(\widetilde{P}; 0)\)</span></td>
+<td style="text-align: right;">40.40</td>
+<td style="text-align: right;">3.86</td>
+<td style="text-align: right;">36.54</td>
+<td style="text-align: right;">44.25</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\(\psi_{1,0}(\widetilde{P}; 0.5)\)</span></td>
+<td style="text-align: right;">41.04</td>
+<td style="text-align: right;">4.05</td>
+<td style="text-align: right;">37.09</td>
+<td style="text-align: right;">44.98</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>To get estimations for the treatment effects (such as <span class="math inline">\(\psi_1(\widetilde{P}; \gamma_1)-\psi_0(\widetilde{P}; \gamma_0)\)</span>), we need to output the influence functions to correctly compute the variances. Note that to make sure the influence functions align for each individuals under <span class="math inline">\(t=1\)</span> and <span class="math inline">\(t=0\)</span>, it is advised that <span style="color: blue;">seed</span> is set to the same value under <span class="math inline">\(t=1\)</span> and <span class="math inline">\(t=0\)</span>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="do">## t=1</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>out_t1 <span class="ot">&lt;-</span> <span class="fu">with</span>(ccohort, {</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">est_psi</span>(Y, M, R, <span class="at">X =</span> <span class="fu">data.frame</span>(age, womac_bq, expectationb, ChronicPainb), </span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>          t, <span class="at">trt =</span> <span class="dv">1</span>, <span class="at">gamma =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.5</span>), <span class="at">fold =</span> <span class="dv">5</span>, <span class="at">seed =</span> <span class="dv">1</span>, <span class="at">IF_output =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">simple_trunc =</span> <span class="cn">FALSE</span>, <span class="at">quant =</span> <span class="cn">NULL</span>, <span class="at">kernel=</span><span class="st">"dnorm"</span>, </span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>          <span class="at">single_index_method=</span><span class="st">"norm1coef"</span>, <span class="at">method=</span><span class="st">"optim"</span>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="do">## t=0</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>out_t0 <span class="ot">&lt;-</span> <span class="fu">with</span>(ccohort, {</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">est_psi</span>(Y, M, R, <span class="at">X =</span> <span class="fu">data.frame</span>(age, womac_bq, expectationb, ChronicPainb), </span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>          t, <span class="at">trt =</span> <span class="dv">0</span>, <span class="at">gamma =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.5</span>), <span class="at">fold =</span> <span class="dv">5</span>, <span class="at">seed =</span> <span class="dv">1</span>, <span class="at">IF_output =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>          <span class="at">simple_trunc =</span> <span class="cn">FALSE</span>, <span class="at">quant =</span> <span class="cn">NULL</span>, <span class="at">kernel=</span><span class="st">"dnorm"</span>, </span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>          <span class="at">single_index_method=</span><span class="st">"norm1coef"</span>, <span class="at">method=</span><span class="st">"optim"</span>)</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Results are organized into a table:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="do">## data frame for results</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>res_out_diff <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(<span class="at">gamma1=</span><span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.5</span>), <span class="at">gamma0=</span><span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.5</span>), <span class="at">type=</span><span class="fu">c</span>(<span class="st">"CCCE"</span>, <span class="st">"PPCE"</span>))</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>res_out_diff <span class="ot">&lt;-</span> <span class="fu">rbind</span>(res_out_diff, <span class="fu">data.frame</span>(<span class="at">gamma1=</span><span class="cn">NA</span>, <span class="at">gamma0=</span><span class="cn">NA</span>, <span class="at">type=</span><span class="st">"RTCE"</span>))</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>res_out_diff<span class="sc">$</span>est <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>res_out_diff<span class="sc">$</span>var <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="do">## compute variance</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>scale_n <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">/</span> <span class="fu">dim</span>(ccohort)[<span class="dv">1</span>]</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>fold_idx <span class="ot">&lt;-</span> <span class="fu">split</span>(<span class="fu">seq_along</span>(out_t1<span class="sc">$</span>fold_index_l), out_t1<span class="sc">$</span>fold_index_l)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>t1_IF_mat <span class="ot">&lt;-</span> <span class="fu">t</span>(<span class="fu">do.call</span>(rbind, out_t1<span class="sc">$</span>IF_trunc))</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>t1_IF_R0_mat <span class="ot">&lt;-</span> <span class="fu">t</span>(<span class="fu">do.call</span>(rbind, out_t1<span class="sc">$</span>IF_trunc_R0))</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>t1_IF_R1_mat <span class="ot">&lt;-</span> <span class="fu">t</span>(<span class="fu">do.call</span>(rbind, out_t1<span class="sc">$</span>IF_trunc_R1))</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>res_out_diff<span class="sc">$</span>est[<span class="fu">which</span>(res_out_diff<span class="sc">$</span>type<span class="sc">==</span><span class="st">"RTCE"</span>)] <span class="ot">&lt;-</span> out_t1<span class="sc">$</span>est_trunc_R1[<span class="dv">1</span>]<span class="sc">-</span>out_t0<span class="sc">$</span>est_trunc_R1[<span class="dv">1</span>]</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>IF_R1_diff <span class="ot">&lt;-</span> t1_IF_R1_mat <span class="sc">-</span> out_t0<span class="sc">$</span>IF_trunc_R1[[<span class="dv">1</span>]]</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>var_R1_temp <span class="ot">&lt;-</span> <span class="fu">vapply</span>(fold_idx, <span class="cf">function</span>(id) <span class="fu">colVars</span>(IF_R1_diff[id, ]), <span class="fu">numeric</span>(<span class="dv">2</span>))</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>res_out_diff<span class="sc">$</span>var[<span class="fu">which</span>(res_out_diff<span class="sc">$</span>type<span class="sc">==</span><span class="st">"RTCE"</span>)] <span class="ot">&lt;-</span> <span class="fu">rowMeans</span>(var_R1_temp)[<span class="dv">1</span>]<span class="sc">*</span>scale_n</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (g_0 <span class="cf">in</span> <span class="fu">seq_along</span>(<span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.5</span>))) {</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>  IF_diff    <span class="ot">&lt;-</span> t1_IF_mat <span class="sc">-</span> out_t0<span class="sc">$</span>IF_trunc[[g_0]]</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>  IF_R0_diff <span class="ot">&lt;-</span> t1_IF_R0_mat <span class="sc">-</span> out_t0<span class="sc">$</span>IF_trunc_R0[[g_0]]</span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>  var_temp    <span class="ot">&lt;-</span> <span class="fu">vapply</span>(fold_idx, <span class="cf">function</span>(id) <span class="fu">colVars</span>(IF_diff[id, ]),    <span class="fu">numeric</span>(<span class="dv">2</span>))</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  var_R0_temp <span class="ot">&lt;-</span> <span class="fu">vapply</span>(fold_idx, <span class="cf">function</span>(id) <span class="fu">colVars</span>(IF_R0_diff[id, ]), <span class="fu">numeric</span>(<span class="dv">2</span>))</span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>  indx_CCCE <span class="ot">&lt;-</span> <span class="fu">which</span>(res_out_diff<span class="sc">$</span>gamma0<span class="sc">==</span><span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.5</span>)[g_0]<span class="sc">&amp;</span>res_out_diff<span class="sc">$</span>type<span class="sc">==</span><span class="st">"CCCE"</span>)</span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>  res_out_diff<span class="sc">$</span>est[indx_CCCE] <span class="ot">&lt;-</span> out_t1<span class="sc">$</span>est_trunc<span class="sc">-</span>out_t0<span class="sc">$</span>est_trunc</span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>  res_out_diff<span class="sc">$</span>var[indx_CCCE] <span class="ot">&lt;-</span> <span class="fu">rowMeans</span>(var_temp)<span class="sc">*</span>scale_n</span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>  indx_PPCE <span class="ot">&lt;-</span> <span class="fu">which</span>(res_out_diff<span class="sc">$</span>gamma0<span class="sc">==</span><span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.5</span>)[g_0]<span class="sc">&amp;</span>res_out_diff<span class="sc">$</span>type<span class="sc">==</span><span class="st">"PPCE"</span>)</span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>  res_out_diff<span class="sc">$</span>est[indx_PPCE] <span class="ot">&lt;-</span> out_t1<span class="sc">$</span>est_trunc_R0<span class="sc">-</span>out_t0<span class="sc">$</span>est_trunc_R0</span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>  res_out_diff<span class="sc">$</span>var[indx_PPCE] <span class="ot">&lt;-</span> <span class="fu">rowMeans</span>(var_R0_temp)<span class="sc">*</span>scale_n</span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a><span class="do">## 95% CI</span></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>res_out_diff<span class="sc">$</span>lowerCI <span class="ot">&lt;-</span> res_out_diff<span class="sc">$</span>est<span class="sc">-</span><span class="fu">qnorm</span>(<span class="fl">0.975</span>)<span class="sc">*</span><span class="fu">sqrt</span>(res_out_diff<span class="sc">$</span>var)</span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>res_out_diff<span class="sc">$</span>upperCI <span class="ot">&lt;-</span> res_out_diff<span class="sc">$</span>est<span class="sc">+</span><span class="fu">qnorm</span>(<span class="fl">0.975</span>)<span class="sc">*</span><span class="fu">sqrt</span>(res_out_diff<span class="sc">$</span>var)</span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a><span class="do">## present result</span></span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>res_out_diff2 <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(<span class="fu">round</span>(res_out_diff[, <span class="dv">4</span><span class="sc">:</span><span class="dv">7</span>], <span class="dv">2</span>))</span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(res_out_diff2) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"$</span><span class="sc">\\</span><span class="st">psi_1(</span><span class="sc">\\</span><span class="st">widetilde{P}; 0)-</span><span class="sc">\\</span><span class="st">psi_0(</span><span class="sc">\\</span><span class="st">widetilde{P}; 0)$"</span>, <span class="st">"$</span><span class="sc">\\</span><span class="st">psi_1(</span><span class="sc">\\</span><span class="st">widetilde{P}; 0.5)-</span><span class="sc">\\</span><span class="st">psi_0(</span><span class="sc">\\</span><span class="st">widetilde{P}; 0)$"</span>, </span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"$</span><span class="sc">\\</span><span class="st">psi_1(</span><span class="sc">\\</span><span class="st">widetilde{P}; 0)-</span><span class="sc">\\</span><span class="st">psi_0(</span><span class="sc">\\</span><span class="st">widetilde{P}; 0.5)$"</span>, <span class="st">"$</span><span class="sc">\\</span><span class="st">psi_1(</span><span class="sc">\\</span><span class="st">widetilde{P}; 0.5)-</span><span class="sc">\\</span><span class="st">psi_0(</span><span class="sc">\\</span><span class="st">widetilde{P}; 0.5)$"</span>,</span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"$</span><span class="sc">\\</span><span class="st">psi_{1,0}(</span><span class="sc">\\</span><span class="st">widetilde{P}; 0)-</span><span class="sc">\\</span><span class="st">psi_{0,0}(</span><span class="sc">\\</span><span class="st">widetilde{P}; 0)$"</span>, <span class="st">"$</span><span class="sc">\\</span><span class="st">psi_{1,0}(</span><span class="sc">\\</span><span class="st">widetilde{P}; 0.5)-</span><span class="sc">\\</span><span class="st">psi_{0,0}(</span><span class="sc">\\</span><span class="st">widetilde{P}; 0)$"</span>,</span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"$</span><span class="sc">\\</span><span class="st">psi_{1,0}(</span><span class="sc">\\</span><span class="st">widetilde{P}; 0)-</span><span class="sc">\\</span><span class="st">psi_{0,0}(</span><span class="sc">\\</span><span class="st">widetilde{P}; 0.5)$"</span>, <span class="st">"$</span><span class="sc">\\</span><span class="st">psi_{1,0}(</span><span class="sc">\\</span><span class="st">widetilde{P}; 0.5)-</span><span class="sc">\\</span><span class="st">psi_{0,0}(</span><span class="sc">\\</span><span class="st">widetilde{P}; 0.5)$"</span>, </span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"$</span><span class="sc">\\</span><span class="st">psi_{1,1}(</span><span class="sc">\\</span><span class="st">widetilde{P})-</span><span class="sc">\\</span><span class="st">psi_{0,1}(</span><span class="sc">\\</span><span class="st">widetilde{P})$"</span>)</span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(res_out_diff2, <span class="at">col.names=</span><span class="fu">c</span>(<span class="st">"Estimates"</span>, <span class="st">"Var"</span>, <span class="st">"Lower CI"</span>, <span class="st">"Upper CI"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 65%">
+<col style="width: 10%">
+<col style="width: 6%">
+<col style="width: 9%">
+<col style="width: 9%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: right;">Estimates</th>
+<th style="text-align: right;">Var</th>
+<th style="text-align: right;">Lower CI</th>
+<th style="text-align: right;">Upper CI</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\(\psi_1(\widetilde{P}; 0)-\psi_0(\widetilde{P}; 0)\)</span></td>
+<td style="text-align: right;">1.55</td>
+<td style="text-align: right;">4.39</td>
+<td style="text-align: right;">-2.55</td>
+<td style="text-align: right;">5.66</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\(\psi_1(\widetilde{P}; 0.5)-\psi_0(\widetilde{P}; 0)\)</span></td>
+<td style="text-align: right;">1.32</td>
+<td style="text-align: right;">4.43</td>
+<td style="text-align: right;">-2.81</td>
+<td style="text-align: right;">5.44</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\(\psi_1(\widetilde{P}; 0)-\psi_0(\widetilde{P}; 0.5)\)</span></td>
+<td style="text-align: right;">1.55</td>
+<td style="text-align: right;">4.42</td>
+<td style="text-align: right;">-2.57</td>
+<td style="text-align: right;">5.67</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\(\psi_1(\widetilde{P}; 0.5)-\psi_0(\widetilde{P}; 0.5)\)</span></td>
+<td style="text-align: right;">1.32</td>
+<td style="text-align: right;">4.47</td>
+<td style="text-align: right;">-2.83</td>
+<td style="text-align: right;">5.46</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\(\psi_{1,0}(\widetilde{P}; 0)-\psi_{0,0}(\widetilde{P}; 0)\)</span></td>
+<td style="text-align: right;">-2.25</td>
+<td style="text-align: right;">9.74</td>
+<td style="text-align: right;">-8.37</td>
+<td style="text-align: right;">3.87</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\(\psi_{1,0}(\widetilde{P}; 0.5)-\psi_{0,0}(\widetilde{P}; 0)\)</span></td>
+<td style="text-align: right;">-2.76</td>
+<td style="text-align: right;">9.93</td>
+<td style="text-align: right;">-8.93</td>
+<td style="text-align: right;">3.42</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\(\psi_{1,0}(\widetilde{P}; 0)-\psi_{0,0}(\widetilde{P}; 0.5)\)</span></td>
+<td style="text-align: right;">-2.25</td>
+<td style="text-align: right;">9.87</td>
+<td style="text-align: right;">-8.41</td>
+<td style="text-align: right;">3.91</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\(\psi_{1,0}(\widetilde{P}; 0.5)-\psi_{0,0}(\widetilde{P}; 0.5)\)</span></td>
+<td style="text-align: right;">-2.76</td>
+<td style="text-align: right;">10.07</td>
+<td style="text-align: right;">-8.98</td>
+<td style="text-align: right;">3.46</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\(\psi_{1,1}(\widetilde{P})-\psi_{0,1}(\widetilde{P})\)</span></td>
+<td style="text-align: right;">5.59</td>
+<td style="text-align: right;">7.49</td>
+<td style="text-align: right;">0.23</td>
+<td style="text-align: right;">10.96</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </section>
 </section>
 <section id="references" class="level1 unnumbered">
