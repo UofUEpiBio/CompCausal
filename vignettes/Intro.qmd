@@ -13,13 +13,20 @@ vignette: >
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-The `comprehensivecohort` package provides tools for analyzing data from comprehensive cohort studies in the presence of unmeasured confounding and missing outcome (either continuous or binary). The goal is to estimate the comprehensive cohort causal effects (CCCE), the average causal effect for the entire cohort. This vignette has two parts: 1). Methodologies. This part will cover details on what is Comprehensive Cohort Study design, the causal estimands, assumptions, and brief descriptions of the estimation process. 2). Implementation. This part will focus on how to use the R functions to implement the estimation of CCCE under pre-specified sensitivity parameters. 
+The `comprehensivecohort` package provides tools for estimating causal effects in comprehensive cohort studies in the presence of unmeasured confounding and missing outcomes. The primary target of inference is the **comprehensive cohort causal effect** (CCCE), defined as the average causal effect in the entire study cohort.
 
-# Methodologies
+This vignette is organized into two sections:
+
+1. **Methodology**: an overview of the comprehensive cohort study design, causal estimands, identification assumptions, and estimation procedures.
+
+2. **Implementation**: practical guidance on using the package functions to estimate the CCCE under user-specified sensitivity parameters.
+
+
+# Methodology
 
 ## Comprehensive Cohort Study design
 
-The Comprehensive Cohort Study (CCS) design is a nested study design where individuals can opt to participate in an randomized control trial (RCT) or the parallel observational study (OBS). In RCT, individuals are randomized to treatments. However, in OBS, individuals can choose the treatment options provided in RCT. All individuals are followed-up. Thus, baseline covariates, treatment and outcome information are collected for the entire cohort. 
+The Comprehensive Cohort Study (CCS) design is a nested study design in which eligible individuals may choose to participate either in a randomized controlled trial (RCT) or in a parallel observational study (OBS). Participants in the RCT are randomly assigned to treatment, whereas participants in the OBS select their preferred treatment from the same treatment options available in the RCT. All participants are followed over time, and baseline covariates, treatment assignments, and outcomes are collected for the entire cohort.
 
 ## Causal estimands
 
@@ -33,18 +40,18 @@ We further introduce the following notations:
 * $g_r(x)=P(R = r \mid X=x)$
 * $\eta_m(x, r, t)=P(M =m \mid X=x, R=r, T=t)$
 
-Our causal estimand of interest is the **comprehensive cohort causal effect** (CCCE): $E[Y(1)]-E[Y(0)]$. We will draw inference about $E[Y(t)]$. 
+Our causal estimand of interest is the **comprehensive cohort causal effect** (CCCE), $E[Y(1)]-E[Y(0)]$, which represents the average causal effect in the entire study population. Estimation of the CCCE is based on inference for the marginal potential outcome mean $E[Y(t)]$, for $t\in\{0, 1\}$. 
 
 ## Assumptions
 
 * Consistency: $Y(t) = Y$ if $T=t$, for $t=0,1$. 
 * Positivity: $0 < P(T=1 \mid R=1) < 1$ and $0 < P(T=1 \mid R=0, X=x) < 1$ for all $x$ in the support of $X$. 
 * Randomization in RCT: $T \perp \{ Y(t), X \} \mid R=1$, for $t = 0, 1$. 
-* Confounding Controlled by $\gamma_t$ in OBS: 
+* Sensitivity Model for Unmeasured Confounding in the OBS: 
 $$dF(y(t) \mid T=1-t,R=0,X)  =  dF(y(t) \mid  T=t,R=0,X) \times  \frac{ \exp\{  \gamma_t s_t(y(t)) \} }{ \mu_{t, 0} (\exp\{  \gamma_t s_t(Y(t)) \}; X)}$$
 * Missing-At-Random Assumption for Outcome: $M \perp Y \mid  T, X, R$. 
 
-Under the assumptions, we can identify $E[Y(t)]$ as
+Under the preceding assumptions, the marginal potential outcome mean $E[Y(t)]$ is identified by
 
 \begin{aligned}
 \psi_t(\widetilde{P}; \gamma_t) =& \underbrace{E[ \widetilde{\mu}_{t,1}(Y;X) \big| R=1]}_{\psi_{t,1}(\widetilde{P})} P(R=1)\\
@@ -55,7 +62,12 @@ $\psi_{t, 1}(\widetilde{P})$ and $\psi_{t, 0}(\widetilde{P}; \gamma_t)$ are the 
 
 ## Methods
 
-We will describe the main estimation steps for $\psi_{t}(\widetilde{P}; \gamma_t)$: (1) Derive the efficient influence function. (2) Estimate $\widetilde{P}$. (3) Compute the one-step, truncated, split sample estimator. (4) Compute the variance and $95\%$ confidence interval.
+Estimation of $\psi_{t}(\widetilde{P}; \gamma_t)$ proceeds in four steps:
+
+1. Derive the efficient influence function. 
+2. Estimate the nuisance functions that characterize $\widetilde{P}$. 
+3. Construct a one-step estimator using sample splitting and truncation.
+4. Estimate the asymptotic variance and construct $95\%$ confidence intervals.
 
 (1). Derive the efficient influence function for $\psi_t(\widetilde{P}; \gamma_t)$, denoted $\phi_t(\widetilde{P}; \gamma_t)(\widetilde{O})$
 
@@ -67,11 +79,11 @@ where the exact form of $\upsilon_{t, 1}(\widetilde{P})(\widetilde{O})$ and $\up
 
 (2). Estimate $\widetilde{P}$
 
-To construct a estimator for $E[Y(t)]$, we need to estimate $\pi_{t, r}(X)$, $\eta_1(X, r, t)$ and $\widetilde{F}_{t, r}(y|X)$ for $r=0, 1$. The estimation methods we apply have fast enough convergence rate so that our resulting estimators converge to a normal distribution at $\sqrt{n}$-rates. Specifically, we apply the generalized additive model (GAM) with a logistic link function [@hastie1990tibshirani] for $\pi_{t, r}(X)$ and $\eta_1(X, r, t)$ for $r=0, 1$. We apply the single index model [@chiang2012new] for $\widetilde{F}_{t, r}(y|X)$ for $r=0, 1$. We then estimate  $\widetilde{\mu}_{t, 0}\big(Y\exp(\gamma_t s_t( Y)); X\big)$, $\widetilde{\mu}_{t, 0}\big(\exp(\gamma_t s_t(Y)); X\big)$ and $\widetilde{\mu}_{t, r}\big(Y; X\big)$ by numeric integration. 
+To construct a estimator for $E[Y(t)]$, we need to estimate $\pi_{t, r}(X)$, $\eta_1(X, r, t)$ and $\widetilde{F}_{t, r}(y|X)$ for $r=0, 1$. The nuisance functions are estimated using methods that achieve sufficiently fast convergence rates to ensure asymptotic normality of the resulting estimator at the $\sqrt{n}$ rates. Specifically, we apply the generalized additive model (GAM) with a logistic link function [@hastie1990tibshirani] for $\pi_{t, r}(X)$ and $\eta_1(X, r, t)$ for $r=0, 1$. We apply the single index model [@chiang2012new] for $\widetilde{F}_{t, r}(y|X)$ for $r=0, 1$. The conditional expectations $\widetilde{\mu}_{t, 0}\big(Y\exp(\gamma_t s_t( Y)); X\big)$, $\widetilde{\mu}_{t, 0}\big(\exp(\gamma_t s_t(Y)); X\big)$ and $\widetilde{\mu}_{t, r}\big(Y; X\big)$ are subsequently computed via numerical integration.
 
 (3). Compute the one-step, truncated, split sample estimator 
 
-We apply K-fold sample splitting and tuning-free Huberization procedure [@tuning_wang_2021] to truncate the k-th split $\upsilon_{t, 1} \left(\widehat{\widetilde{P}}^{(-k)}\right) (\widetilde{O}_i)$ and $\upsilon_{t, 0}\left(\widehat{\widetilde{P}}^{(-k)} ; \gamma_t\right) (\widetilde{O}_i)$: 
+We employ K-fold sample splitting together with tuning-free Huberization procedure [@tuning_wang_2021] to truncate the estimated influence-function components: $\upsilon_{t, 1} \left(\widehat{\widetilde{P}}^{(-k)}\right) (\widetilde{O}_i)$ and $\upsilon_{t, 0}\left(\widehat{\widetilde{P}}^{(-k)} ; \gamma_t\right) (\widetilde{O}_i)$.  
 
 \begin{equation*}
     	\widehat{\psi}^\dagger_t(\gamma_t) = \frac{1}{K} \sum_{k=1}^K \underbrace{\left\{\frac{1}{n_k} \sum_{i: S_i=k}\Bigg[ \underbrace{\upsilon_{t, 1}^\dagger \left(\widehat{\widetilde{P}}^{(-k)}\right) (\widetilde{O}_i)\times P_{n/n_k}^{(-k)}(R=1) +\upsilon_{t, 0}^\dagger \left(\widehat{\widetilde{P}}^{(-k)} ; \gamma_t\right) (\widetilde{O}_i)\times P_{n/n_k}^{(-k)}(R=0)}_{\upsilon_t^\dagger\left(\widehat{\widetilde{P}}^{(-k)} ; \gamma_t\right)(\widetilde{O}_i)}\Bigg]\right\}}_{\widehat{\psi}_t^{(k)\dagger}(\gamma_t)}
@@ -80,10 +92,9 @@ where $S_i$ is the split membership of the $i$th observation (i.e, $S_i \in \{1,
 
 (4). Compute variance and $95\%$ confidence interval
 
-We estimate the variance of $\widehat{\psi}_t^\dagger(\gamma_t)$ by
+The asymptotic variance of $\widehat{\psi}_t^\dagger(\gamma_t)$ is estimated by
 $$\sigma_t^{\dagger 2}=\frac{1}{nK}\sum_{k=1}^K\left\{\frac{1}{n_k-1}\sum_{i: S_i=k}\left\{\upsilon_t^\dagger\left(\widehat{\widetilde{P}}^{(-k)} ; \gamma_t\right)(\widetilde{O}_i)-\widehat{\psi}_t^{(k)\dagger}(\gamma_t)\right\}^2\right\}$$
-
-The $95\%$ Wald confidence interval for $\psi_t(\widetilde{P}; \gamma_t)$ is $\widehat{\psi}^\dagger_t(\gamma_t)\pm z_{0.975}\frac{\sigma_t^\dagger}{\sqrt{n}}$. 
+A two-sided $95\%$ Wald confidence interval for $\psi_t(\widetilde{P}; \gamma_t)$ is given by $\widehat{\psi}^\dagger_t(\gamma_t)\pm z_{0.975}\frac{\sigma_t^\dagger}{\sqrt{n}}$. 
 
 # Implementation
 
@@ -91,7 +102,7 @@ The $95\%$ Wald confidence interval for $\psi_t(\widetilde{P}; \gamma_t)$ is $\w
 library(matrixStats)
 ```
 
-We will demonstrate how to use the R functions in `comprehensivecohort` to estimate CCCE (and also RTCE, PPCE), using an example data included in the package. First, install package directly from git: 
+We now illustrate the use of `comprehensivecohort` for estimating the CCCE, RTCE, and PPCE using a simulated dataset included with the package. First, install package directly from git: 
 
 ```{r message=FALSE}
 remotes::install_github("UofUEpiBio/Comprehensive_cohort")
@@ -99,7 +110,7 @@ remotes::install_github("UofUEpiBio/Comprehensive_cohort")
 
 ## Data
 
-The dataset included in the package is a simulated data based on the TOIB study [@underwood2008topical]. The TOIB study is a comprehensive cohort study on the effect of topical versus oral non-steroidal anti-inflammatory drugs (NSAIDs) in managing knee pain among older adults with chronic knee pain. In the analysis, the outcome of interest is Western Ontario and McMaster Universities Osteoarthritis Index (WOMAC) pain score ($0-100$) at 12 months. We include age, baseline WOMAC pain score, expected pain a year from now and chronic pain grade as baseline covariates. 
+The package includes a simulated dataset based on the TOIB study [@underwood2008topical]. The TOIB study is a comprehensive cohort study on the effect of topical versus oral non-steroidal anti-inflammatory drugs (NSAIDs) in managing knee pain among older adults with chronic knee pain. In the analysis, the outcome of interest is Western Ontario and McMaster Universities Osteoarthritis Index (WOMAC) pain score ($0-100$) at 12 months. Baseline covariates include age, baseline WOMAC pain score, expected pain one year later, and chronic pain grade.
 
 ```{r}
 library(comprehensivecohort)
@@ -122,7 +133,7 @@ The dataset has 563 observations and 8 variables, which include:
 
 ## Application 
 
-The main function is `est_psi()`, which outputs point estimates, variance and $95\%$ Walds confidence interval for $\psi_t(\widetilde{P}; \gamma_t)$, $\psi_{t, 0}(\widetilde{P}; \gamma_t)$ and $\psi_{t, 1}(\widetilde{P})$ under one or more pre-specified $\gamma_t$. 
+The primary function is `est_psi()`, which returns point estimates, estimated variance and $95\%$ Walds confidence interval for $\psi_t(\widetilde{P}; \gamma_t)$, $\psi_{t, 0}(\widetilde{P}; \gamma_t)$ and $\psi_{t, 1}(\widetilde{P})$ under one or more pre-specified $\gamma_t$. 
 
 Users need to input data and specify several parameters: 
 
@@ -160,7 +171,7 @@ rownames(res_out2) <- c("$\\psi_1(\\widetilde{P}; 0)$", "$\\psi_1(\\widetilde{P}
 knitr::kable(res_out2, col.names=c("Estimates", "Var", "Lower CI", "Upper CI"))
 ```
 
-To get estimations for the treatment effects (such as $\psi_1(\widetilde{P}; \gamma_1)-\psi_0(\widetilde{P}; \gamma_0)$), we need to output the influence functions to correctly compute the variances. Note that to make sure the influence functions align for each individuals under $t=1$ and $t=0$, it is advised that <span style="color: blue;">seed</span> is set to the same value under $t=1$ and $t=0$. 
+To estimate treatment effects such as $\psi_1(\widetilde{P}; \gamma_1)-\psi_0(\widetilde{P}; \gamma_0)$, the estimated influence functions must be retained so that the covariance between the two estimators can be properly accounted for when computing standard errors. Note that to make sure the influence functions align for each individuals under $t=1$ and $t=0$, it is advised that <span style="color: blue;">seed</span> is set to the same value under $t=1$ and $t=0$. 
 
 ```{r}
 ## t=1
