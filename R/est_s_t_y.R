@@ -622,7 +622,8 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
              var=r_var, var_R1=r_var_R1, var_R0=r_var_R0, 
              lowerCI=r_lowerCI, lowerCI_R1=r_lowerCI_R1, lowerCI_R0=r_lowerCI_R0, 
              upperCI=r_upperCI, upperCI_R1=r_upperCI_R1, upperCI_R0=r_upperCI_R0, 
-             id_list=containers$id_list, fold_index_l=fold_index_l), 
+             id_list=containers$id_list, fold_index_l=fold_index_l, trt=trt, gamma=gamma, 
+             simple_trunc=simple_trunc), 
         class = c("est_psi"))
     }else{
       result <- structure(
@@ -634,7 +635,8 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
              upperCI=r_upperCI, upperCI_R1=r_upperCI_R1, upperCI_R0=r_upperCI_R0,
              lowerCI_trunc=r_lowerCI_trunc, lowerCI_trunc_R1=r_lowerCI_trunc_R1, lowerCI_trunc_R0=r_lowerCI_trunc_R0,
              upperCI_trunc=r_upperCI_trunc, upperCI_trunc_R1=r_upperCI_trunc_R1, upperCI_trunc_R0=r_upperCI_trunc_R0,
-             id_list=containers$id_list, fold_index_l=fold_index_l), 
+             id_list=containers$id_list, fold_index_l=fold_index_l, trt=trt, gamma=gamma, 
+             simple_trunc=simple_trunc), 
         class = c("est_psi"))
     }
   }
