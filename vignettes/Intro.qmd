@@ -1,10 +1,10 @@
 ---
-title: "Introduction: methodologies and implementation"
+title: "Introduction: methodology and implementation"
 date: today
 bibliography: references.bib
 link-citations: true
 vignette: >
-  %\VignetteIndexEntry{Introduction: methodologies and implementation}
+  %\VignetteIndexEntry{Introduction: methodology and implementation}
   %\VignetteEngine{quarto::html}
   %\VignetteEncoding{UTF-8}
 ---
