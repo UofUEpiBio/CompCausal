@@ -49,3 +49,10 @@ print.est_psi <- function(object, ...){
 
 
 
+
+
+
+
+
+
+
