@@ -21,22 +21,18 @@ Or install from CRAN:
 
 ## Examples
 
-The package includes a simulated dataset based on the TOIB study, a comprehensive cohort study aiming to determine whether to advice older adults with chronic knee pain to apply either topical or oral non-steroidal anti-inflammatory drugs (NSAIDs) for knee pain management. The dataset include 563 observations with outcome $Y$ as Western Ontario and McMaster Universities Osteoarthritis Index (WOMAC) pain score ($0-100$) at 12 months. Some outcome observations might be missing (denoted as NA in $Y$). Column $M$ is a outcome missingness indicator: $1$ if $Y$ is observed, $0$ if $Y$ is missing. Other 
+The package includes a simulated dataset based on the TOIB study, a comprehensive cohort study aiming to determine whether to advice older adults with chronic knee pain to apply either topical or oral non-steroidal anti-inflammatory drugs (NSAIDs) for knee pain management. The dataset include 563 observations with outcome $Y$ as Western Ontario and McMaster Universities Osteoarthritis Index (WOMAC) pain score ($0-100$) at 12 months. Some outcome observations might be missing (denoted as NA in $Y$). Column $M$ is a outcome missingness indicator: $1$ if $Y$ is observed, $0$ if $Y$ is missing. Other variables in the dataset include $t$ the treatment indicator ($1$ for topical NSAIDs, $0$ for oral NSAIDs), $R$ the randomization consent indicator ($1$ for RCT, $0$ for OBS). Rest of the columns are baseline covariates. 
 
-
-
-We will demonstrate how to use the main functions in `comprehensivecohort` by 
-
-Here is an example of how to use the main function `est_psi` with quantile truncation of weights. 
+The main function `est_psi` works to estimate $E[Y(t)]$, $E[Y(t)|R=0]$ and $E[Y(t)|R=1]$ under different $\gamma_t$ values. We will use the following examples to demonstrate how to apply the function and present results. Here is an example of how to estimate $E[Y(1)]$, $E[Y(t)|R=0]$ and $E[Y(t)|R=1]$ under $\gamma_1=0, 0.5$, using 5-fold sample splitting and 99th quantile truncation of weights. 
 
 ```{r}
 #| error: true
 library(comprehensivecohort)
-
+## load in data
 data(ccohort)
 
 ## simple truncation
-out <- with(ccohort, {
+out_t1_simpleTrunc <- with(ccohort, {
   est_psi(Y, M, R, X = data.frame(age, womac_bq, expectationb, ChronicPainb), 
           t, trt = 1, gamma = c(0, 0.5), fold = 5, seed = 1, IF_output = FALSE,
           simple_trunc = TRUE, quant = 0.99, kernel="dnorm", 
@@ -44,7 +40,7 @@ out <- with(ccohort, {
 })
 ```
 
-We can also apply data adaptive truncation for the entire influence function:
+We can also apply data adaptive truncation to the influence functions. 
 
 ```{r}
 ## data adaptive truncation
