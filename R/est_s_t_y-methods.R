@@ -29,17 +29,17 @@ print.est_psi <- function(object, rounding=3, ...){
   }
 
   cat(sprintf("Estimation of E[Y(%s)]\n", object$trt))
-  cat("================\n")
+  cat("=========================\n")
   print.data.frame(df, row.names = FALSE)
   cat("\n")
   
   cat(sprintf("Estimation of E[Y(%s)|R=1]\n", object$trt))
-  cat("================\n")
+  cat("=========================\n")
   print.data.frame(df_R1, row.names = FALSE)
   cat("\n")
   
   cat(sprintf("Estimation of E[Y(%s)|R=0]\n", object$trt))
-  cat("================\n")
+  cat("=========================\n")
   print.data.frame(df_R0, row.names = FALSE)
   cat("\n")
   
@@ -140,8 +140,8 @@ print_effects.est_psi <- function(object_t1, object_t0, rounding=3, ...){
   res_out_diff$upperCI <- round(res_out_diff$Estimates+qnorm(0.975)*sqrt(res_out_diff$Var), rounding)
   
   ## output table
-  cat("Estimation of CCCE, PPCE, RTCE. \n")
-  cat("======================\n")
+  cat("Estimation of CCCE, PPCE, RTCE\n")
+  cat("=========================\n")
   print.data.frame(res_out_diff, row.names = FALSE)
   cat("\n")
   
