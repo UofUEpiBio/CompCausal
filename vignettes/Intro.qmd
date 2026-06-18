@@ -144,7 +144,7 @@ Users need to input data and specify several parameters:
 * Truncation methods: <span style="color: blue;">simple_trunc</span>=TRUE to apply quantile truncation of $\frac{1}{\pi_{t, r}(X)}$ and $\frac{1}{\eta_m(X, r, t)}$, <span style="color: blue;">simple_trunc</span>=FALSE to apply tuning-free Huberization procedure [@tuning_wang_2021] to influence functions. If <span style="color: blue;">simple_trunc</span>=TRUE, specify quantile truncation by setting <span style="color: blue;">quant</span> from 0 to 1. 
 * K-fold sample splitting: <span style="color: blue;">fold</span>=K, a integer. <span style="color: blue;">seed</span>, set.seed(seed). 
 
-Here is an example of inferences for $\psi_1(\widetilde{P}; \gamma_1)$, $\psi_{1, 0}(\widetilde{P}; \gamma_1)$ and $\psi_{1, 1}(\widetilde{P})$ under $\gamma_t=0, 0.5$, using 5-fold sample splitting, influence function truncation procedure and specific single index model settings. 
+Here is an example of inferences for $\psi_1(\widetilde{P}; \gamma_1)$, $\psi_{1, 0}(\widetilde{P}; \gamma_1)$ and $\psi_{1, 1}(\widetilde{P})$ under $\gamma_1=0, 0.5$, using 5-fold sample splitting, influence function truncation procedure and specific single index model settings. 
 
 ```{r}
 ## data adaptive truncation
