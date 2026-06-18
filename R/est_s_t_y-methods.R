@@ -52,20 +52,20 @@ print.est_psi <- function(object, rounding=3, ...){
 
 #' @rdname est_psi
 #' @export
-print_effects <- function(object_t1, object_t0, rounding=3, ...){
+print_effects.est_psi <- function(object_t1, object_t0, rounding=3, ...){
   
   n_gamma1 <- length(object_t1$gamma)
   n_gamma0 <- length(object_t0$gamma)
   
   ## data frame for results
   res_out_diff <- expand.grid(gamma1=object_t1$gamma, gamma0=object_t0$gamma, Type=c("CCCE", "PPCE"))
-  res_out_diff <- rbind(res_out_diff, data.frame(gamma1=NA, gamma0=NA, type="RTCE"))
+  res_out_diff <- rbind(res_out_diff, data.frame(gamma1=NA, gamma0=NA, Type="RTCE"))
   res_out_diff$Estimates <- 0
   res_out_diff$Var <- 0
   
   ## compute variance
   if((!is.null(object_t1$IF))&(!is.null(object_t0$IF))){
-    scale_n <- 1 / length(object_t1$IF)
+    scale_n <- 1 / length(object_t1$IF[[1]])
   }else{
     stop("Cannot estimate the variance of the treatment effect without influence functions for both treatment groups.")
   }
