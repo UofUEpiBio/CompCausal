@@ -596,14 +596,18 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
   ## output final results
   if(IF_output){
     if(simple_trunc){
-      result <- list(est=r_est, est_R1=r_est_R1, est_R0=r_est_R0, 
+      result <- structure(
+        list(est=r_est, est_R1=r_est_R1, est_R0=r_est_R0, 
                      var=r_var, var_R1=r_var_R1, var_R0=r_var_R0, 
                      lowerCI=r_lowerCI, lowerCI_R1=r_lowerCI_R1, lowerCI_R0=r_lowerCI_R0, 
                      upperCI=r_upperCI, upperCI_R1=r_upperCI_R1, upperCI_R0=r_upperCI_R0, 
                      IF=containers$IF, IF_R1=containers$IF_R1, IF_R0=containers$IF_R0, 
-                     id_list=containers$id_list, fold_index_l=fold_index_l)
+                     id_list=containers$id_list, fold_index_l=fold_index_l, trt=trt, gamma=gamma, 
+                     simple_trunc=simple_trunc), 
+        class = c("est_psi"))
     }else{
-      result <- list(est=r_est, est_R1=r_est_R1, est_R0=r_est_R0, 
+      result <- structure(
+        list(est=r_est, est_R1=r_est_R1, est_R0=r_est_R0, 
                      est_trunc=r_est_trunc, est_trunc_R1=r_est_trunc_R1, est_trunc_R0=r_est_trunc_R0,
                      var=r_var, var_R1=r_var_R1, var_R0=r_var_R0,
                      var_trunc=r_var_trunc, var_trunc_R1=r_var_trunc_R1, var_trunc_R0=r_var_trunc_R0,
@@ -613,7 +617,9 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
                      upperCI_trunc=r_upperCI_trunc, upperCI_trunc_R1=r_upperCI_trunc_R1, upperCI_trunc_R0=r_upperCI_trunc_R0,
                      IF=containers$IF, IF_R1=containers$IF_R1, IF_R0=containers$IF_R0,
                      IF_trunc=containers_trunc$IF, IF_trunc_R1=containers_trunc$IF_R1, IF_trunc_R0=containers_trunc$IF_R0,
-                     id_list=containers$id_list, fold_index_l=fold_index_l)
+                     id_list=containers$id_list, fold_index_l=fold_index_l, trt=trt, gamma=gamma, 
+                     simple_trunc=simple_trunc), 
+        class = c("est_psi"))
     }
   }else{
     if(simple_trunc){

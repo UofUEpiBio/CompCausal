@@ -52,7 +52,7 @@ print.est_psi <- function(object, rounding=3, ...){
 
 #' @rdname est_psi
 #' @export
-print_effects.est_psi <- function(object_t1, object_t0, rounding=3, ...){
+print_effects <- function(object_t1, object_t0, rounding=3, ...){
   
   n_gamma1 <- length(object_t1$gamma)
   n_gamma0 <- length(object_t0$gamma)
@@ -72,7 +72,7 @@ print_effects.est_psi <- function(object_t1, object_t0, rounding=3, ...){
   
   fold_idx <- split(seq_along(object_t1$fold_index_l), object_t1$fold_index_l)
   
-  if(!object$simple_trunc){
+  if((!object_t1$simple_trunc)&(!object_t0$simple_trunc)){
     
     t1_IF_mat <- t(do.call(rbind, object_t1$IF_trunc))
     t1_IF_R0_mat <- t(do.call(rbind, object_t1$IF_trunc_R0))
@@ -89,7 +89,7 @@ print_effects.est_psi <- function(object_t1, object_t0, rounding=3, ...){
       IF_diff    <- t1_IF_mat - object_t0$IF_trunc[[g_0]]
       IF_R0_diff <- t1_IF_R0_mat - object_t0$IF_trunc_R0[[g_0]]
       
-      var_temp    <- vapply(fold_idx, function(id) colVars(IF_diff[id, ]),    numeric(n_gamma1))
+      var_temp    <- vapply(fold_idx, function(id) colVars(IF_diff[id, ]), numeric(n_gamma1))
       var_R0_temp <- vapply(fold_idx, function(id) colVars(IF_R0_diff[id, ]), numeric(n_gamma1))
       
       indx_CCCE <- which(res_out_diff$gamma0==object_t0$gamma[g_0]&res_out_diff$Type=="CCCE")
