@@ -40,16 +40,55 @@ out_t1_simpleTrunc <- with(ccohort, {
 })
 ```
 
-We can also apply data adaptive truncation to the influence functions. 
+We can also apply data adaptive truncation to the influence functions by setting `simple_trunc = FALSE` and `quant = NULL`. 
 
 ```{r}
 ## data adaptive truncation
-out <- with(ccohort, {
+out_t1_ifTrunc <- with(ccohort, {
   est_psi(Y, M, R, X = data.frame(age, womac_bq, expectationb, ChronicPainb), 
           t, trt = 1, gamma = c(0, 0.5), fold = 5, seed = 1, IF_output = FALSE,
           simple_trunc = FALSE, quant = NULL, kernel="dnorm", 
           single_index_method="norm1coef", method="optim")
 })
 ```
+
+```{r}
+print(out_t1_ifTrunc, rounding=2)
+```
+
+```{r}
+## data adaptive truncation
+out_t0_ifTrunc <- with(ccohort, {
+  est_psi(Y, M, R, X = data.frame(age, womac_bq, expectationb, ChronicPainb), 
+          t, trt = 0, gamma = c(0, 0.5), fold = 5, seed = 1, IF_output = FALSE,
+          simple_trunc = FALSE, quant = NULL, kernel="dnorm", 
+          single_index_method="norm1coef", method="optim")
+})
+print(out_t0_ifTrunc, rounding=2)
+```
+
+
+```{r}
+out_t1_ifTrunc_IF <- with(ccohort, {
+  est_psi(Y, M, R, X = data.frame(age, womac_bq, expectationb, ChronicPainb), 
+          t, trt = 1, gamma = c(0, 0.5), fold = 5, seed = 1, IF_output = TRUE,
+          simple_trunc = FALSE, quant = NULL, kernel="dnorm", 
+          single_index_method="norm1coef", method="optim")
+})
+
+out_t0_ifTrunc_IF <- with(ccohort, {
+  est_psi(Y, M, R, X = data.frame(age, womac_bq, expectationb, ChronicPainb), 
+          t, trt = 0, gamma = c(0, 0.5), fold = 5, seed = 1, IF_output = TRUE,
+          simple_trunc = FALSE, quant = NULL, kernel="dnorm", 
+          single_index_method="norm1coef", method="optim")
+})
+
+print_effects.est_psi(out_t1_ifTrunc_IF, out_t0_ifTrunc_IF, rounding=2)
+```
+
+
+
+
+
 
 
