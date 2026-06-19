@@ -52,7 +52,7 @@ out_t1_ifTrunc <- with(ccohort, {
 })
 ```
 
-Users can utilize the `print()` function to output the estimation results in three separate tables, each containing $\gamma_t$ (not for $E[Y(t)|R=1]$), estimates, variance, and $95\%$ confidence intervals. 
+Users can utilize the `print()` function to output the estimation results in three separate tables, each containing $\gamma_t$ (not for $E[Y(t)|R=1]$), estimates, variance, and 95\% confidence intervals. 
 
 ```{r}
 print(out_t1_ifTrunc, rounding=2)

@@ -20,6 +20,19 @@ target="_blank"><code>remotes</code></a> R package:
 remotes::install_github("UofUEpiBio/Comprehensive_cohort", ref="cran")
 ```
 
+
+    ── R CMD build ─────────────────────────────────────────────────────────────────
+    * checking for file ‘/private/var/folders/kc/516dnvf974g17y535_20gss80000gn/T/RtmpTzreUf/remotesb8a042439d87/UofUEpiBio-Comprehensive_cohort-2e4ab69/DESCRIPTION’ ... OK
+    * preparing ‘comprehensivecohort’:
+    * checking DESCRIPTION meta-information ... OK
+    * checking for LF line-endings in source and make files and shell scripts
+    * checking for empty or unneeded directories
+    Removed empty directory ‘comprehensivecohort/.devcontainer’
+    Removed empty directory ‘comprehensivecohort/.github’
+    Removed empty directory ‘comprehensivecohort/data-raw’
+    Removed empty directory ‘comprehensivecohort/vignettes’
+    * building ‘comprehensivecohort_0.0.9000.tar.gz’
+
 Or install from CRAN:
 
 ## Examples
@@ -73,7 +86,7 @@ out_t1_ifTrunc <- with(ccohort, {
 
 Users can utilize the `print()` function to output the estimation
 results in three separate tables, each containing $\gamma_t$ (not for
-$E[Y(t)|R=1]$), estimates, variance, and $95\%$ confidence intervals.
+$E[Y(t)|R=1]$), estimates, variance, and 95% confidence intervals.
 
 ``` r
 print(out_t1_ifTrunc, rounding=2)
