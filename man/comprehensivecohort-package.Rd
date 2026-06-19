@@ -25,6 +25,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Jennifer Xu \email{jennifer.xu@hsc.utah.edu}
   \item Daniel Scharfstein \email{daniel.scharfstein@hsc.utah.edu} (\href{https://orcid.org/0000-0001-7482-9653}{ORCID}) [project director]
 }
 
