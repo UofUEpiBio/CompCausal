@@ -52,7 +52,7 @@ print.est_psi <- function(object, rounding=3, ...){
 
 #' @rdname est_psi
 #' @export
-print_effects.est_psi <- function(object_t1, object_t0, rounding=3, ...){
+print_effects <- function(object_t1, object_t0, rounding=3, ...){
   
   n_gamma1 <- length(object_t1$gamma)
   n_gamma0 <- length(object_t0$gamma)
