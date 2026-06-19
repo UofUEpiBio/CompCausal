@@ -38,7 +38,8 @@ Imports:
     mgcv,
     purrr,
     Rcpp,
-    rlang
+    rlang, 
+    matrixStats
 Suggests:
     tinytest
 LazyData: true
