@@ -11,8 +11,8 @@ The `comprehensivecohort` package provides functions for estimating the comprehe
 
 Users can install `comprehensivecohort` using the [`remotes`](https://cran.r-project.org/package=remotes){target="_blank"} R package: 
 
-```{r message=FALSE}
-remotes::install_github("UofUEpiBio/Comprehensive_cohort")
+```{r message=FALSE, warning=FALSE}
+remotes::install_github("UofUEpiBio/Comprehensive_cohort", ref="cran")
 ```
 
 Or install from CRAN: 
@@ -23,7 +23,7 @@ Or install from CRAN:
 
 The package includes a simulated dataset based on the TOIB study, a comprehensive cohort study aiming to determine whether to advice older adults with chronic knee pain to apply either topical or oral non-steroidal anti-inflammatory drugs (NSAIDs) for knee pain management. The dataset include 563 observations with outcome $Y$ as Western Ontario and McMaster Universities Osteoarthritis Index (WOMAC) pain score ($0-100$) at 12 months. Some outcome observations might be missing (denoted as NA in $Y$). Column $M$ is a outcome missingness indicator: $1$ if $Y$ is observed, $0$ if $Y$ is missing. Other variables in the dataset include $t$ the treatment indicator ($1$ for topical NSAIDs, $0$ for oral NSAIDs), $R$ the randomization consent indicator ($1$ for RCT, $0$ for OBS). Rest of the columns are baseline covariates. 
 
-The main function `est_psi` works to estimate $E[Y(t)]$, $E[Y(t)|R=0]$ and $E[Y(t)|R=1]$ under different $\gamma_t$ values. We will use the following examples to demonstrate how to apply the function and present results. Here is an example of how to estimate $E[Y(1)]$, $E[Y(t)|R=0]$ and $E[Y(t)|R=1]$ under $\gamma_1=0, 0.5$, using 5-fold sample splitting and 99th quantile truncation of weights. 
+The main function `est_psi` works to estimate $E[Y(t)]$, $E[Y(t)|R=0]$ and $E[Y(t)|R=1]$ under different $\gamma_t$ values. We will use the following examples to demonstrate how to apply the function and present results. Here is an example of how to estimate $E[Y(1)]$, $E[Y(1)|R=0]$ and $E[Y(1)|R=1]$ under $\gamma_1=0, 0.5$, using 5-fold sample splitting and 99th quantile truncation of weights. 
 
 ```{r}
 #| error: true
@@ -52,9 +52,13 @@ out_t1_ifTrunc <- with(ccohort, {
 })
 ```
 
+Users can utilize the `print()` function to output the estimation results in three separate tables, each containing $\gamma_t$ (not for $E[Y(t)|R=1]$), estimates, variance, and $95\%$ confidence intervals. 
+
 ```{r}
 print(out_t1_ifTrunc, rounding=2)
 ```
+
+We can also estimate $E[Y(0)]$, $E[Y(0)|R=0]$ and $E[Y(0)|R=1]$ under $\gamma_1=0, 0.5$ by setting `trt = 0`, and present the results. 
 
 ```{r}
 ## data adaptive truncation
@@ -66,6 +70,8 @@ out_t0_ifTrunc <- with(ccohort, {
 })
 print(out_t0_ifTrunc, rounding=2)
 ```
+
+To estimate the treatment effects, which includes:
 
 
 ```{r}
@@ -82,8 +88,10 @@ out_t0_ifTrunc_IF <- with(ccohort, {
           simple_trunc = FALSE, quant = NULL, kernel="dnorm", 
           single_index_method="norm1coef", method="optim")
 })
+```
 
-print_effects.est_psi(out_t1_ifTrunc_IF, out_t0_ifTrunc_IF, rounding=2)
+```{r}
+print_effects(out_t1_ifTrunc_IF, out_t0_ifTrunc_IF, rounding=2)
 ```
 
 

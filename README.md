@@ -17,7 +17,7 @@ Users can install `comprehensivecohort` using the
 target="_blank"><code>remotes</code></a> R package:
 
 ``` r
-remotes::install_github("UofUEpiBio/Comprehensive_cohort")
+remotes::install_github("UofUEpiBio/Comprehensive_cohort", ref="cran")
 ```
 
 Or install from CRAN:
@@ -40,8 +40,8 @@ $0$ for OBS). Rest of the columns are baseline covariates.
 The main function `est_psi` works to estimate $E[Y(t)]$, $E[Y(t)|R=0]$
 and $E[Y(t)|R=1]$ under different $\gamma_t$ values. We will use the
 following examples to demonstrate how to apply the function and present
-results. Here is an example of how to estimate $E[Y(1)]$, $E[Y(t)|R=0]$
-and $E[Y(t)|R=1]$ under $\gamma_1=0, 0.5$, using 5-fold sample splitting
+results. Here is an example of how to estimate $E[Y(1)]$, $E[Y(1)|R=0]$
+and $E[Y(1)|R=1]$ under $\gamma_1=0, 0.5$, using 5-fold sample splitting
 and 99th quantile truncation of weights.
 
 ``` r
@@ -58,14 +58,106 @@ out_t1_simpleTrunc <- with(ccohort, {
 })
 ```
 
-We can also apply data adaptive truncation to the influence functions.
+We can also apply data adaptive truncation to the influence functions by
+setting `simple_trunc = FALSE` and `quant = NULL`.
 
 ``` r
 ## data adaptive truncation
-out <- with(ccohort, {
+out_t1_ifTrunc <- with(ccohort, {
   est_psi(Y, M, R, X = data.frame(age, womac_bq, expectationb, ChronicPainb), 
           t, trt = 1, gamma = c(0, 0.5), fold = 5, seed = 1, IF_output = FALSE,
           simple_trunc = FALSE, quant = NULL, kernel="dnorm", 
           single_index_method="norm1coef", method="optim")
 })
 ```
+
+Users can utilize the `print()` function to output the estimation
+results in three separate tables, each containing $\gamma_t$ (not for
+$E[Y(t)|R=1]$), estimates, variance, and $95\%$ confidence intervals.
+
+``` r
+print(out_t1_ifTrunc, rounding=2)
+```
+
+    Estimation of E[Y(1)]
+    =========================
+     gamma Estimates  Var Lower_95CI Upper_95CI
+       0.0     40.12 2.16      37.24      43.00
+       0.5     40.44 2.19      37.54      43.34
+
+    Estimation of E[Y(1)|R=1]
+    =========================
+     Estimates  Var Lower_95CI Upper_95CI
+          38.5 4.72      34.24      42.76
+
+    Estimation of E[Y(1)|R=0]
+    =========================
+     gamma Estimates  Var Lower_95CI Upper_95CI
+       0.0     41.70 3.95      37.80      45.60
+       0.5     42.33 4.04      38.39      46.26
+
+We can also estimate $E[Y(0)]$, $E[Y(0)|R=0]$ and $E[Y(0)|R=1]$ under
+$\gamma_1=0, 0.5$ by setting `trt = 0`, and present the results.
+
+``` r
+## data adaptive truncation
+out_t0_ifTrunc <- with(ccohort, {
+  est_psi(Y, M, R, X = data.frame(age, womac_bq, expectationb, ChronicPainb), 
+          t, trt = 0, gamma = c(0, 0.5), fold = 5, seed = 1, IF_output = FALSE,
+          simple_trunc = FALSE, quant = NULL, kernel="dnorm", 
+          single_index_method="norm1coef", method="optim")
+})
+print(out_t0_ifTrunc, rounding=2)
+```
+
+    Estimation of E[Y(0)]
+    =========================
+     gamma Estimates  Var Lower_95CI Upper_95CI
+       0.0     40.81 2.67      37.61      44.02
+       0.5     41.32 2.68      38.11      44.53
+
+    Estimation of E[Y(0)|R=1]
+    =========================
+     Estimates  Var Lower_95CI Upper_95CI
+         38.28 4.41      34.16       42.4
+
+    Estimation of E[Y(0)|R=0]
+    =========================
+     gamma Estimates  Var Lower_95CI Upper_95CI
+       0.0     43.15 6.14      38.29      48.01
+       0.5     44.15 6.16      39.28      49.01
+
+To estimate the treatment effects, which includes:
+
+``` r
+out_t1_ifTrunc_IF <- with(ccohort, {
+  est_psi(Y, M, R, X = data.frame(age, womac_bq, expectationb, ChronicPainb), 
+          t, trt = 1, gamma = c(0, 0.5), fold = 5, seed = 1, IF_output = TRUE,
+          simple_trunc = FALSE, quant = NULL, kernel="dnorm", 
+          single_index_method="norm1coef", method="optim")
+})
+
+out_t0_ifTrunc_IF <- with(ccohort, {
+  est_psi(Y, M, R, X = data.frame(age, womac_bq, expectationb, ChronicPainb), 
+          t, trt = 0, gamma = c(0, 0.5), fold = 5, seed = 1, IF_output = TRUE,
+          simple_trunc = FALSE, quant = NULL, kernel="dnorm", 
+          single_index_method="norm1coef", method="optim")
+})
+```
+
+``` r
+print_effects(out_t1_ifTrunc_IF, out_t0_ifTrunc_IF, rounding=2)
+```
+
+    Estimation of CCCE, PPCE, RTCE
+    =========================
+     gamma1 gamma0 Type Estimates  Var lowerCI upperCI
+        0.0    0.0 CCCE     -0.69 4.14   -4.68    3.30
+        0.5    0.0 CCCE     -0.88 4.16   -4.88    3.12
+        0.0    0.5 CCCE     -0.69 4.15   -4.68    3.30
+        0.5    0.5 CCCE     -0.88 4.17   -4.88    3.12
+        0.0    0.0 PPCE     -1.45 8.40   -7.13    4.23
+        0.5    0.0 PPCE     -1.82 8.45   -7.52    3.88
+        0.0    0.5 PPCE     -1.45 8.43   -7.14    4.24
+        0.5    0.5 PPCE     -1.82 8.49   -7.53    3.89
+         NA     NA RTCE      0.00 8.13   -5.59    5.59
