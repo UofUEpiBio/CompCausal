@@ -81,7 +81,7 @@ print_effects <- function(object_t1, object_t0, rounding=3, ...){
     res_out_diff$Estimates[which(res_out_diff$type=="RTCE")] <- round(object_t1$est_trunc_R1[1]-object_t0$est_trunc_R1[1], rounding)
     
     IF_R1_diff <- t1_IF_R1_mat - object_t0$IF_trunc_R1[[1]]
-    var_R1_temp <- vapply(fold_idx, function(id) colVars(IF_R1_diff[id, ]), numeric(n_gamma1))
+    var_R1_temp <- vapply(fold_idx, function(id) matrixStats::colVars(IF_R1_diff[id, ]), numeric(n_gamma1))
     res_out_diff$Var[which(res_out_diff$Type=="RTCE")] <- round(rowMeans(var_R1_temp)[1]*scale_n, rounding)
     
     for (g_0 in seq_along(object_t0$gamma)) {
@@ -89,8 +89,8 @@ print_effects <- function(object_t1, object_t0, rounding=3, ...){
       IF_diff    <- t1_IF_mat - object_t0$IF_trunc[[g_0]]
       IF_R0_diff <- t1_IF_R0_mat - object_t0$IF_trunc_R0[[g_0]]
       
-      var_temp    <- vapply(fold_idx, function(id) colVars(IF_diff[id, ]), numeric(n_gamma1))
-      var_R0_temp <- vapply(fold_idx, function(id) colVars(IF_R0_diff[id, ]), numeric(n_gamma1))
+      var_temp    <- vapply(fold_idx, function(id) matrixStats::colVars(IF_diff[id, ]), numeric(n_gamma1))
+      var_R0_temp <- vapply(fold_idx, function(id) matrixStats::colVars(IF_R0_diff[id, ]), numeric(n_gamma1))
       
       indx_CCCE <- which(res_out_diff$gamma0==object_t0$gamma[g_0]&res_out_diff$Type=="CCCE")
       res_out_diff$Estimates[indx_CCCE] <- round(object_t1$est_trunc-object_t0$est_trunc, rounding)
@@ -112,7 +112,7 @@ print_effects <- function(object_t1, object_t0, rounding=3, ...){
     res_out_diff$Estimates[which(res_out_diff$Type=="RTCE")] <- round(object_t1$est_R1[1]-object_t0$est_R1[1], rounding)
     
     IF_R1_diff <- t1_IF_R1_mat - object_t0$IF_R1[[1]]
-    var_R1_temp <- vapply(fold_idx, function(id) colVars(IF_R1_diff[id, ]), numeric(n_gamma1))
+    var_R1_temp <- vapply(fold_idx, function(id) matrixStats::colVars(IF_R1_diff[id, ]), numeric(n_gamma1))
     res_out_diff$Var[which(res_out_diff$Type=="RTCE")] <- round(rowMeans(var_R1_temp)[1]*scale_n, rounding)
     
     for (g_0 in seq_along(object_t0$gamma)) {
@@ -120,8 +120,8 @@ print_effects <- function(object_t1, object_t0, rounding=3, ...){
       IF_diff    <- t1_IF_mat - object_t0$IF[[g_0]]
       IF_R0_diff <- t1_IF_R0_mat - object_t0$IF_R0[[g_0]]
       
-      var_temp    <- vapply(fold_idx, function(id) colVars(IF_diff[id, ]),    numeric(n_gamma1))
-      var_R0_temp <- vapply(fold_idx, function(id) colVars(IF_R0_diff[id, ]), numeric(n_gamma1))
+      var_temp    <- vapply(fold_idx, function(id) matrixStats::colVars(IF_diff[id, ]),    numeric(n_gamma1))
+      var_R0_temp <- vapply(fold_idx, function(id) matrixStats::colVars(IF_R0_diff[id, ]), numeric(n_gamma1))
       
       indx_CCCE <- which(res_out_diff$gamma0==object_t0$gamma[g_0]&res_out_diff$Type=="CCCE")
       res_out_diff$Estimates[indx_CCCE] <- round(object_t1$est-object_t0$est, rounding)
