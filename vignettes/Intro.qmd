@@ -102,11 +102,7 @@ A two-sided $95\%$ Wald confidence interval for $\psi_t(\widetilde{P}; \gamma_t)
 library(matrixStats)
 ```
 
-We now illustrate the use of `comprehensivecohort` for estimating the CCCE, RTCE, and PPCE using a simulated dataset included with the package. First, install package directly from git: 
-
-```{r message=FALSE}
-remotes::install_github("UofUEpiBio/Comprehensive_cohort")
-```
+We now illustrate the use of `comprehensivecohort` for estimating the CCCE, RTCE, and PPCE using a simulated dataset included with the package. 
 
 ## Data
 

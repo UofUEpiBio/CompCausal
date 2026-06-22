@@ -9,7 +9,7 @@ RUN wget https://github.com/quarto-dev/quarto-cli/releases/download/v1.9.35/quar
     rm quarto-1.9.35-linux-${TARGETARCH}.deb
 
 # Adding R packages
-RUN install2.r --error tinytest data.table quarto rhub betareg
+RUN install2.r --error tinytest data.table quarto rhub betareg tidyverse MAVE dfoptim ManifoldOptim matrixStats assertthat
 
 
 CMD ["bash"]

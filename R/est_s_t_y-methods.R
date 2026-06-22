@@ -1,8 +1,13 @@
 # Methods ----------------------------------------------------------------------
 
 #' @rdname est_psi
+#' @param x An object of class \code{est_psi}, as returned by \code{\link{est_psi}}.
+#' @param rounding Integer; number of decimal places to round estimates and variances in the printed output. Default is \code{3}.
+#' @param ... Additional arguments (not currently used).
 #' @export
-print.est_psi <- function(object, rounding=3, ...){
+print.est_psi <- function(x, rounding=3, ...){
+
+  object <- x
   
   if(object$simple_trunc){
     
@@ -51,6 +56,10 @@ print.est_psi <- function(object, rounding=3, ...){
 
 
 #' @rdname est_psi
+#' @param object_t1 An object of class \code{est_psi} for the treatment group
+#'   (e.g., \code{trt = 1}), as returned by \code{\link{est_psi}}.
+#' @param object_t0 An object of class \code{est_psi} for the control group
+#'   (e.g., \code{trt = 0}), as returned by \code{\link{est_psi}}.
 #' @export
 print_effects <- function(object_t1, object_t0, rounding=3, ...){
   

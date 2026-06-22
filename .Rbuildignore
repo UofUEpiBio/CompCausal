@@ -7,7 +7,6 @@ data-raw/
 
 # Other things to ignore
 README.qmd
-vignettes/
 
 # Development
 .devcontainer/
@@ -17,3 +16,4 @@ vignettes/
 ^\.Rproj\.user$
 ^\.positai$
 ^\.claude$
+instructions.md
