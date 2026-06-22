@@ -4,7 +4,7 @@ format: gfm
 
 #  comprehensivecohort: Inferring Comprehensive Cohort Causal Effects in the Presence of Unmeasured Confounding and Missing Outcomes
 
-The `comprehensivecohort` package provides functions for estimating the comprehensive cohort causal effects (CCCE) in comprehensive cohort studies. We develop a semiparametric sensitivity analysis framework for assessing the impact of unmeasured confounding in the observational arm, and could also handle outcomes missing at random. Details about the study design, assumptions, methodology and implementation can be found in the vignettes and paper. 
+The `comprehensivecohort` package provides functions for estimating the comprehensive cohort causal effects (CCCE) in comprehensive cohort studies. We develop a semiparametric sensitivity analysis framework for assessing the impact of unmeasured confounding in the observational arm. Our methods can also handle outcomes missing at random. Details about the study design, assumptions, methodology and implementation can be found in the vignettes and paper. 
 
 
 ## Installment
@@ -21,16 +21,21 @@ Or install from CRAN:
 
 ## Examples
 
-The package includes a simulated dataset based on the TOIB study, a comprehensive cohort study aiming to determine whether to advice older adults with chronic knee pain to apply either topical or oral non-steroidal anti-inflammatory drugs (NSAIDs) for knee pain management. The dataset include 563 observations with outcome $Y$ as Western Ontario and McMaster Universities Osteoarthritis Index (WOMAC) pain score ($0-100$) at 12 months. Some outcome observations might be missing (denoted as NA in $Y$). Column $M$ is a outcome missingness indicator: $1$ if $Y$ is observed, $0$ if $Y$ is missing. Other variables in the dataset include $t$ the treatment indicator ($1$ for topical NSAIDs, $0$ for oral NSAIDs), $R$ the randomization consent indicator ($1$ for RCT, $0$ for OBS). Rest of the columns are baseline covariates. 
-
-The main function `est_psi` works to estimate $E[Y(t)]$, $E[Y(t)|R=0]$ and $E[Y(t)|R=1]$ under different $\gamma_t$ values. We will use the following examples to demonstrate how to apply the function and present results. Here is an example of how to estimate $E[Y(1)]$, $E[Y(1)|R=0]$ and $E[Y(1)|R=1]$ under $\gamma_1=0, 0.5$, using 5-fold sample splitting and 99th quantile truncation of weights. 
+The package includes a simulated dataset based on the TOIB study, a comprehensive cohort study aiming to determine whether to advice older adults with chronic knee pain to apply either topical or oral non-steroidal anti-inflammatory drugs (NSAIDs) for knee pain management. The dataset include 563 observations with outcome $Y$ as Western Ontario and McMaster Universities Osteoarthritis Index (WOMAC) pain score ($0-100$) at 12 months. Some outcome observations might be missing (denoted as NA in $Y$). Column $M$ is a outcome missingness indicator: $1$ if $Y$ is observed, $0$ if $Y$ is missing. Other variables in the dataset include $t$ the treatment indicator ($1$ for topical NSAIDs, $0$ for oral NSAIDs), and $R$ the randomization consent indicator ($1$ for RCT, $0$ for OBS). Rest of the columns are baseline covariates (age, baseline WOMAC pain score, expected pain one year later, chronic pain grade). 
 
 ```{r}
 #| error: true
 library(comprehensivecohort)
 ## load in data
 data(ccohort)
+## data structure
+str(ccohort)
+```
 
+The main function `est_psi` works to estimate $E[Y(t)]$, $E[Y(t)|R=0]$ and $E[Y(t)|R=1]$ under different $\gamma_t$ values. We will use the following examples to demonstrate how to apply the function and present results. Here is an example of how to estimate $E[Y(1)]$, $E[Y(1)|R=0]$ and $E[Y(1)|R=1]$ under $\gamma_1=0, 0.5$, using 5-fold sample splitting and 99th quantile truncation of weights. 
+
+```{r}
+#| error: true
 ## simple truncation
 out_t1_simpleTrunc <- with(ccohort, {
   est_psi(Y, M, R, X = data.frame(age, womac_bq, expectationb, ChronicPainb), 
@@ -52,7 +57,7 @@ out_t1_ifTrunc <- with(ccohort, {
 })
 ```
 
-Users can utilize the `print()` function to output the estimation results in three separate tables, each containing $\gamma_t$ (not for $E[Y(t)|R=1]$), estimates, variance, and 95\% confidence intervals. 
+Users can utilize the `print()` function to output the estimation results in three separate tables, each containing $\gamma_t$ (except for $E[Y(t)|R=1]$), estimates, variance, and 95\% confidence intervals. 
 
 ```{r}
 print(out_t1_ifTrunc, rounding=2)
@@ -71,8 +76,12 @@ out_t0_ifTrunc <- with(ccohort, {
 print(out_t0_ifTrunc, rounding=2)
 ```
 
-To estimate the treatment effects, which includes:
+Three types of causal treatment effects can be computed by inputting the estimating results under `trt=1` and `trt=0` into the `print_effects()` function. When the goal is to compute treatment effects, users need to specify the parameters in the following ways:
 
+1. We need to run `est_psi()` twice (under `trt=1` and `trt=0`) and store the results separately. 
+2. `seed` should be set to the same number to align observations. 
+3. Set `IF_output = TRUE`. 
+4. Other parameter specifications should be set to the same values when running `est_psi()` under `trt=1` and `trt=0`. 
 
 ```{r}
 out_t1_ifTrunc_IF <- with(ccohort, {
@@ -88,11 +97,9 @@ out_t0_ifTrunc_IF <- with(ccohort, {
           simple_trunc = FALSE, quant = NULL, kernel="dnorm", 
           single_index_method="norm1coef", method="optim")
 })
-```
-
-```{r}
 print_effects(out_t1_ifTrunc_IF, out_t0_ifTrunc_IF, rounding=2)
 ```
+
 
 
 
