@@ -10,7 +10,7 @@ Our methods can also handle outcomes missing at random. Details about
 the study design, assumptions, methodology and implementation can be
 found in the vignettes and paper.
 
-## Installment
+## Installation
 
 Users can install `comprehensivecohort` using the
 <a href="https://cran.r-project.org/package=remotes"
@@ -25,7 +25,7 @@ Or install from CRAN:
 ## Example
 
 The package includes a simulated dataset based on the TOIB study, a
-comprehensive cohort study aiming to determine whether to advice older
+comprehensive cohort study aiming to determine whether to advise older
 adults with chronic knee pain to apply either topical or oral
 non-steroidal anti-inflammatory drugs (NSAIDs) for knee pain management.
 The dataset include 563 observations with outcome $Y$ as Western Ontario

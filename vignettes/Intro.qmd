@@ -129,16 +129,16 @@ The dataset has 563 observations and 8 variables, which include:
 
 ## Application 
 
-The primary function is `est_psi()`, which returns point estimates, estimated variance and $95\%$ Walds confidence interval for $\psi_t(\widetilde{P}; \gamma_t)$, $\psi_{t, 0}(\widetilde{P}; \gamma_t)$ and $\psi_{t, 1}(\widetilde{P})$ under one or more pre-specified $\gamma_t$. 
+The primary function is `est_psi()`, which returns point estimates, estimated variance and $95\%$ Wald confidence interval for $\psi_t(\widetilde{P}; \gamma_t)$, $\psi_{t, 0}(\widetilde{P}; \gamma_t)$ and $\psi_{t, 1}(\widetilde{P})$ under one or more pre-specified $\gamma_t$.
 
 Users need to input data and specify several parameters: 
 
-* Data: <span style="color: blue;">Y</span>, <span style="color: blue;">M</span>, <span style="color: blue;">R</span>, <span style="color: blue;">t</span>, <span style="color: blue;">M</span> (baseline covariates in the form of data frame)
+* Data: <span style="color: blue;">Y</span>, <span style="color: blue;">M</span>, <span style="color: blue;">R</span>, <span style="color: blue;">t</span>, <span style="color: blue;">X</span> (baseline covariates as a data frame)
 * Estimand of interest: <span style="color: blue;">trt</span>=1 if estimating $E[Y(1)]$, $E[Y(1)|R=0]$ and $E[Y(1)|R=1]$; <span style="color: blue;">trt</span>=0 if estimating $E[Y(0)]$, $E[Y(0)|R=0]$ and $E[Y(0)|R=1]$
 * Sensitivity parameters: <span style="color: blue;">gamma</span>, a vector of $\gamma_t$ value. 
-* Single index model settings [@redd2025sensiatrpackageconducting]: <span style="color: blue;">kernel</span>, kernel smoothing, choices of Gaussian and Epanechnikov kernel; <span style="color: blue;">single_index_method</span>, types of constraints in estimation, choices of setting first coefficient to 1, norm of coefficients to 1, and bandwidth to 1; <span style="color: blue;">method</span>, optimization methods, default to `optim`; <span style="color: blue;">use_mave</span>, whether to apply MAVE [@mave_xia_2002; @mave_wang_2008] or cumulative sliced inverse regression method [@slice_zhu_2010] to estimate initial value of the coeffficients, default to TRUE. 
+* Single index model settings [@redd2025sensiatrpackageconducting]: <span style="color: blue;">kernel</span>, kernel smoothing, choices of Gaussian and Epanechnikov kernel; <span style="color: blue;">single_index_method</span>, types of constraints in estimation, choices of setting first coefficient to 1, norm of coefficients to 1, and bandwidth to 1; <span style="color: blue;">method</span>, optimization methods, default to `optim`; <span style="color: blue;">use_mave</span>, whether to apply MAVE [@mave_xia_2002; @mave_wang_2008] or cumulative sliced inverse regression method [@slice_zhu_2010] to estimate initial value of the coefficients, default to TRUE. 
 * Truncation methods: <span style="color: blue;">simple_trunc</span>=TRUE to apply quantile truncation of $\frac{1}{\pi_{t, r}(X)}$ and $\frac{1}{\eta_m(X, r, t)}$, <span style="color: blue;">simple_trunc</span>=FALSE to apply tuning-free Huberization procedure [@tuning_wang_2021] to influence functions. If <span style="color: blue;">simple_trunc</span>=TRUE, specify quantile truncation by setting <span style="color: blue;">quant</span> from 0 to 1. 
-* K-fold sample splitting: <span style="color: blue;">fold</span>=K, a integer. <span style="color: blue;">seed</span>, set.seed(seed). 
+* K-fold sample splitting: <span style="color: blue;">fold</span>=K, an integer. <span style="color: blue;">seed</span>, set.seed(seed).
 
 Here is an example of inferences for $\psi_1(\widetilde{P}; \gamma_1)$, $\psi_{1, 0}(\widetilde{P}; \gamma_1)$ and $\psi_{1, 1}(\widetilde{P})$ under $\gamma_1=0, 0.5$, using 5-fold sample splitting, influence function truncation procedure and specific single index model settings. 
 
