@@ -6,7 +6,7 @@
 \alias{est_psi}
 \title{One-step, split sample estimator for E[Y(t)], E[Y(t)|R=1], E[Y(t)|R=0],}
 \usage{
-\method{print}{est_psi}(object, rounding = 3, ...)
+\method{print}{est_psi}(x, rounding = 3, ...)
 
 print_effects(object_t1, object_t0, rounding = 3, ...)
 
@@ -36,6 +36,18 @@ est_psi(
 )
 }
 \arguments{
+\item{x}{An object of class \code{est_psi}, as returned by \code{\link{est_psi}}.}
+
+\item{rounding}{Integer; number of decimal places to round estimates and variances in the printed output. Default is \code{3}.}
+
+\item{...}{Additional arguments (not currently used).}
+
+\item{object_t1}{An object of class \code{est_psi} for the treatment group
+(e.g., \code{trt = 1}), as returned by \code{\link{est_psi}}.}
+
+\item{object_t0}{An object of class \code{est_psi} for the control group
+(e.g., \code{trt = 0}), as returned by \code{\link{est_psi}}.}
+
 \item{Y}{Numeric outcome vector. Missing values are internally replaced with
 \code{0} prior to model fitting.}
 

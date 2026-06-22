@@ -24,26 +24,28 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Imports:
-    utils,
-    splines,
-    stats,
-    betareg,
-    methods, 
-    dplyr,
-    ggplot2,
-    MAVE,
-    assertthat,
-    dfoptim,
-    ManifoldOptim,
-    mgcv,
-    purrr,
-    Rcpp,
-    rlang, 
-    matrixStats
+  utils,
+  splines,
+  stats,
+  betareg,
+  methods, 
+  dplyr,
+  ggplot2,
+  MAVE,
+  assertthat,
+  dfoptim,
+  ManifoldOptim,
+  mgcv,
+  purrr,
+  Rcpp,
+  rlang, 
+  matrixStats
 Suggests:
-    tinytest
+  tinytest,
+  quarto,
+  knitr
 LazyData: true
 VignetteBuilder: 
-     knitr, 
-     quarto
+  quarto
 Config/roxygen2/version: 8.0.0
+RoxygenNote: 7.3.3
