@@ -11,7 +11,7 @@ The `comprehensivecohort` package provides functions for estimating the comprehe
 
 Users can install `comprehensivecohort` using the [`remotes`](https://cran.r-project.org/package=remotes){target="_blank"} R package: 
 
-```{r message=FALSE, warning=FALSE}
+```r
 remotes::install_github("UofUEpiBio/Comprehensive_cohort", ref="cran")
 ```
 
