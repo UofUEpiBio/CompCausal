@@ -13,7 +13,7 @@ missing at random.
 
 Detailed descriptions of the study design, identification assumptions,
 estimation procedures and implementation are available in the package
-vignettes and accompanying manuscript.
+vignettes and manuscript.
 
 ## Installation
 
@@ -30,19 +30,24 @@ Or install from CRAN:
 ## Example
 
 The package includes a simulated dataset based on the TOIB study, a
-comprehensive cohort study aiming to determine whether to advise older
-adults with chronic knee pain to apply either topical or oral
-non-steroidal anti-inflammatory drugs (NSAIDs) for knee pain management.
-The dataset include 563 observations with outcome $Y$ as Western Ontario
-and McMaster Universities Osteoarthritis Index (WOMAC) pain score
-($0-100$) at 12 months. Some outcome observations might be missing
-(denoted as NA in $Y$). Column $M$ is a outcome missingness indicator:
-$1$ if $Y$ is observed, $0$ if $Y$ is missing. Other variables in the
-dataset include $t$ the treatment indicator ($1$ for topical NSAIDs, $0$
-for oral NSAIDs), and $R$ the randomization consent indicator ($1$ for
-RCT, $0$ for OBS). Rest of the columns are baseline covariates (age,
-baseline WOMAC pain score, expected pain one year later, chronic pain
-grade).
+comprehensive cohort study that investigated whether older adults with
+chronic knee pain should be advised to use topical or oral non-steroidal
+anti-inflammatory drugs (NSAIDs) for pain management.
+
+The dataset contains 563 observations. The primary outcome, $Y$, is the
+Western Ontario and McMaster Universities Osteoarthritis Index (WOMAC)
+pain score at 12 months, measured on a scale from 0 to 100. Some outcome
+observations may be missing and are recorded as NA in $Y$. The variable
+$M$ is the outcome missingness indicator, where $M=1$ indicates $Y$ is
+observed and $M=0$ indicates $Y$ is missing.
+
+Additional variables include the treatment indicator $t$, where $t=1$
+corresponds to topical NSAIDs and $t=0$ corresponds to oral NSAIDs, and
+the randomization consent indicator $R$, where $R=1$ denotes
+participation in the randomized controlled trial (RCT) and $R=0$ denotes
+participation in the parallel observational study (OBS). The remaining
+variables are baseline covariates, including age, baseline WOMAC pain
+score, expected pain level one year later, and chronic pain grade.
 
 ``` r
 library(comprehensivecohort)
@@ -62,12 +67,14 @@ str(ccohort)
      $ expectationb: Factor w/ 3 levels "Much/A little worse",..: 3 2 1 2 3 1 1 3 1 1 ...
      $ ChronicPainb: Factor w/ 2 levels "1-2","3-4": 1 2 1 2 1 1 1 1 2 1 ...
 
-The main function `est_psi()` works to estimate $E[Y(t)]$, $E[Y(t)|R=0]$
-and $E[Y(t)|R=1]$ under different $\gamma_t$ values. We will use the
-following examples to demonstrate how to apply the function and present
-results. Here is an example of how to estimate $E[Y(1)]$, $E[Y(1)|R=0]$
-and $E[Y(1)|R=1]$ under $\gamma_1=0, 0.5$, using 5-fold sample splitting
-and 99th quantile truncation of weights.
+The primary function, `est_psi()`, estimates $E[Y(t)]$, $E[Y(t)|R=0]$
+and $E[Y(t)|R=1]$ for one or more user-specified values of $\gamma_t$.
+In the following examples, we demonstrate how to use `est_psi()` and
+summarize the resulting estimates.
+
+The example below estimates $E[Y(1)]$, $E[Y(1)|R=0]$ and $E[Y(1)|R=1]$
+under $\gamma_1=0$ and $\gamma_1=0.5$, using 5-fold sample splitting and
+99th-percentile truncation of the estimated inverse probability weights.
 
 ``` r
 ## simple truncation
@@ -79,8 +86,9 @@ out_t1_simpleTrunc <- with(ccohort, {
 })
 ```
 
-We can also apply data adaptive truncation to the influence functions by
-setting `simple_trunc = FALSE` and `quant = NULL`.
+As an alternative to quantile-based weight truncation, users can apply
+the data-adaptive influence-function truncation procedure by setting
+`simple_trunc = FALSE` and `quant = NULL`.
 
 ``` r
 ## data adaptive truncation
@@ -92,9 +100,12 @@ out_t1_ifTrunc <- with(ccohort, {
 })
 ```
 
-Users can utilize the `print()` function to output the estimation
-results in three separate tables, each containing $\gamma_t$ (except for
-$E[Y(t)|R=1]$), estimates, variance, and 95% confidence intervals.
+The `print()` method provides a concise summary of the estimation
+results in three separate tables corresponding to $E[Y(t)]$,
+$E[Y(t)|R=1]$ and $E[Y(t)|R=0]$. Each table includes the point
+estimates, estimated variances, and 95% confidence intervals. For
+$E[Y(t)]$ and $E[Y(t)|R=0]$, the associated values of $\gamma_t$ are
+also reported.
 
 ``` r
 print(out_t1_ifTrunc, rounding=2)
@@ -117,8 +128,9 @@ print(out_t1_ifTrunc, rounding=2)
        0.0     41.70 3.95      37.80      45.60
        0.5     42.33 4.04      38.39      46.26
 
-We can also estimate $E[Y(0)]$, $E[Y(0)|R=0]$ and $E[Y(0)|R=1]$ under
-$\gamma_1=0, 0.5$ by setting `trt = 0`, and present the results.
+To estimate $E[Y(0)]$, $E[Y(0)|R=0]$ and $E[Y(0)|R=1]$, we repeat the
+analysis with `trt = 0`. The example below considers $\gamma_0=0$ and
+$\gamma_0=0.5$ and summarizes the resulting estimates.
 
 ``` r
 ## data adaptive truncation
@@ -148,17 +160,26 @@ print(out_t0_ifTrunc, rounding=2)
        0.0     43.15 6.14      38.29      48.01
        0.5     44.15 6.16      39.28      49.01
 
-Three types of causal treatment effects can be computed by inputting the
-estimating results under `trt=1` and `trt=0` into the `print_effects()`
-function. When the goal is to compute treatment effects, users need to
-specify the parameters in the following ways:
+Three causal treatment effects can be estimated using the `est_psi()`
+and `print_effects()` functions. First, obtain estimation results under
+`trt=1` and `trt=0` using `est_psi()`. These results can then be passed
+to `print_effects()` to compute treatment effects estimates, standard
+errors, and confidence intervals. To ensure valid inference, users
+should proceed as follows:
 
-1.  We need to run `est_psi()` twice (under `trt=1` and `trt=0`) and
-    store the results separately.
-2.  `seed` should be set to the same number to align observations.
-3.  Set `IF_output = TRUE`.
-4.  Other parameter specifications should be set to the same values when
-    running `est_psi()` under `trt=1` and `trt=0`.
+1.  Run `est_psi()` twice, once with `trt=1` and once with `trt=0`.
+    Store the resulting objects separately.
+2.  Use the same value of `seed` in both calls to ensure that
+    sample-splitting assignments are aligned across treatment groups.
+3.  Set `IF_output = TRUE` in both calls so that the estimated influence
+    functions are returned.
+4.  Use identical values for all other function arguments when fitting
+    the models under `trt=1` and `trt=0`.
+
+Aligning the sample splits and retaining the influence functions allows
+`print_effects()` to properly account for the covariance between the two
+estimators when computing standard errors and confidence intervals for
+treatment effects.
 
 ``` r
 out_t1_ifTrunc_IF <- with(ccohort, {
