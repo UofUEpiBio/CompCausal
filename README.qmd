@@ -2,14 +2,14 @@
 format: gfm
 ---
 
-#  COMPASS: Inferring Comprehensive Cohort Causal Effects in the Presence of Unmeasured Confounding and Missing Outcomes
+#  CompCausal: Inferring Comprehensive Cohort Causal Effects in the Presence of Unmeasured Confounding and Missing Outcomes <img src="man/figures/symbol4.png" align="right" width="260" alt="CompCausal logo" />
 
-`COMPASS`, short for **Comp**rehensive Cohort Causal Inference with Sensitivity **A**nalysis and Outcome Missingne**ss**, is a R package that provides functions for estimating the comprehensive cohort causal effects (CCCE) in comprehensive cohort studies. We develop a semi-parametric sensitivity analysis framework for assessing the impact of unmeasured confounding in the observational arm. Our methods can also handle outcomes missing at random. Details about the study design, assumptions, methodology and implementation can be found in the vignettes and paper. 
+`CompCausal`, which stands for **Comp**rehensive Cohort **Causal** Effects, is a R package that provides functions for estimating the comprehensive cohort causal effects (CCCE) in comprehensive cohort studies. We develop a semi-parametric sensitivity analysis framework for assessing the impact of unmeasured confounding in the observational arm. Our methods can also handle outcomes missing at random. Details about the study design, assumptions, methodology and implementation can be found in the vignettes and paper. 
 
 
 ## Installation
 
-Users can install `COMPASS` using the [`remotes`](https://cran.r-project.org/package=remotes){target="_blank"} R package: 
+Users can install `CompCausal` using the [`remotes`](https://cran.r-project.org/package=remotes){target="_blank"} R package: 
 
 ```r
 remotes::install_github("UofUEpiBio/Comprehensive_cohort")
