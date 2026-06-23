@@ -2,17 +2,17 @@
 format: gfm
 ---
 
-#  comprehensivecohort: Inferring Comprehensive Cohort Causal Effects in the Presence of Unmeasured Confounding and Missing Outcomes
+#  COMPASS: Inferring Comprehensive Cohort Causal Effects in the Presence of Unmeasured Confounding and Missing Outcomes
 
-The `comprehensivecohort` package provides functions for estimating the comprehensive cohort causal effects (CCCE) in comprehensive cohort studies. We develop a semiparametric sensitivity analysis framework for assessing the impact of unmeasured confounding in the observational arm. Our methods can also handle outcomes missing at random. Details about the study design, assumptions, methodology and implementation can be found in the vignettes and paper. 
+`COMPASS`, short for **Comp**rehensive Cohort Causal Inference with Sensitivity **A**nalysis and Outcome Missingne**ss**, is a R package that provides functions for estimating the comprehensive cohort causal effects (CCCE) in comprehensive cohort studies. We develop a semi-parametric sensitivity analysis framework for assessing the impact of unmeasured confounding in the observational arm. Our methods can also handle outcomes missing at random. Details about the study design, assumptions, methodology and implementation can be found in the vignettes and paper. 
 
 
 ## Installation
 
-Users can install `comprehensivecohort` using the [`remotes`](https://cran.r-project.org/package=remotes){target="_blank"} R package: 
+Users can install `COMPASS` using the [`remotes`](https://cran.r-project.org/package=remotes){target="_blank"} R package: 
 
 ```r
-remotes::install_github("UofUEpiBio/Comprehensive_cohort", ref="cran")
+remotes::install_github("UofUEpiBio/Comprehensive_cohort")
 ```
 
 Or install from CRAN: 
