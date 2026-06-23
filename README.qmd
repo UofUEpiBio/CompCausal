@@ -8,7 +8,7 @@ format: gfm
 
 `CompCausal` (**Comp**rehensive Cohort **Causal** Effects) is an R package for estimating comprehensive cohort causal effects (CCCEs) in comprehensive cohort studies. The package implements a semi-parametric sensitivity analysis framework for assessing the impact of unmeasured confounding in the observational arm and accommodates outcomes that are missing at random. 
 
-Detailed descriptions of the study design, identification assumptions, estimation procedures and implementation are available in the package vignettes and accompanying manuscript.
+Detailed descriptions of the study design, identification assumptions, estimation procedures and implementation are available in the package vignettes and manuscript.
 
 
 ## Installation
