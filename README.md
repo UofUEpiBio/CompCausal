@@ -59,7 +59,7 @@ str(ccohort)
      $ expectationb: Factor w/ 3 levels "Much/A little worse",..: 3 2 1 2 3 1 1 3 1 1 ...
      $ ChronicPainb: Factor w/ 2 levels "1-2","3-4": 1 2 1 2 1 1 1 1 2 1 ...
 
-The main function `est_psi` works to estimate $E[Y(t)]$, $E[Y(t)|R=0]$
+The main function `est_psi()` works to estimate $E[Y(t)]$, $E[Y(t)|R=0]$
 and $E[Y(t)|R=1]$ under different $\gamma_t$ values. We will use the
 following examples to demonstrate how to apply the function and present
 results. Here is an example of how to estimate $E[Y(1)]$, $E[Y(1)|R=0]$

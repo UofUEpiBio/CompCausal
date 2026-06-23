@@ -32,7 +32,7 @@ data(ccohort)
 str(ccohort)
 ```
 
-The main function `est_psi` works to estimate $E[Y(t)]$, $E[Y(t)|R=0]$ and $E[Y(t)|R=1]$ under different $\gamma_t$ values. We will use the following examples to demonstrate how to apply the function and present results. Here is an example of how to estimate $E[Y(1)]$, $E[Y(1)|R=0]$ and $E[Y(1)|R=1]$ under $\gamma_1=0, 0.5$, using 5-fold sample splitting and 99th quantile truncation of weights. 
+The main function `est_psi()` works to estimate $E[Y(t)]$, $E[Y(t)|R=0]$ and $E[Y(t)|R=1]$ under different $\gamma_t$ values. We will use the following examples to demonstrate how to apply the function and present results. Here is an example of how to estimate $E[Y(1)]$, $E[Y(1)|R=0]$ and $E[Y(1)|R=1]$ under $\gamma_1=0, 0.5$, using 5-fold sample splitting and 99th quantile truncation of weights. 
 
 ```{r}
 #| error: true
