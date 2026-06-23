@@ -2,10 +2,10 @@
 
 <img src="man/figures/symbol4.png" align="right" width="220" alt="CompCausal logo" />
 
-# CompCausal:<br>Inferring Comprehensive Cohort Causal Effects in the Presence of Unmeasured Confounding and Missing Outcomes
+# CompCausal: <br> Inferring Comprehensive Cohort Causal Effects in the Presence of Unmeasured Confounding and Missing Outcomes
 
 `CompCausal` (**Comp**rehensive Cohort **Causal** Effects) is an R
-package for estimating comprehensive cohort causal effects (CCCE) in
+package for estimating comprehensive cohort causal effects (CCCEs) in
 comprehensive cohort studies. The package implements a semi-parametric
 sensitivity analysis framework for assessing the impact of unmeasured
 confounding in the observational arm and accommodates outcomes that are
