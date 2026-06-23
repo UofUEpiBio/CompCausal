@@ -1,6 +1,6 @@
 
 
-# CompCausal: Inferring Comprehensive Cohort Causal Effects in the Presence of Unmeasured Confounding and Missing Outcomes <img src="man/figures/symbol4.png" align="right" width="260" alt="CompCausal logo" />
+# CompCausal: Inferring Comprehensive Cohort Causal Effects in the Presence of Unmeasured Confounding and Missing Outcomes <br><br><br><img src="man/figures/symbol4.png" align="right" width="260" alt="CompCausal logo" />
 
 `CompCausal`, which stands for **Comp**rehensive Cohort **Causal**
 Effects, is a R package that provides functions for estimating the
