@@ -87,7 +87,7 @@ print_effects <- function(object_t1, object_t0, rounding=3, ...){
     t1_IF_R0_mat <- t(do.call(rbind, object_t1$IF_trunc_R0))
     t1_IF_R1_mat <- t(do.call(rbind, object_t1$IF_trunc_R1))
     
-    res_out_diff$Estimates[which(res_out_diff$type=="RTCE")] <- round(object_t1$est_trunc_R1[1]-object_t0$est_trunc_R1[1], rounding)
+    res_out_diff$Estimates[which(res_out_diff$Type=="RTCE")] <- round(object_t1$est_trunc_R1[1]-object_t0$est_trunc_R1[1], rounding)
     
     IF_R1_diff <- t1_IF_R1_mat - object_t0$IF_trunc_R1[[1]]
     var_R1_temp <- vapply(fold_idx, function(id) matrixStats::colVars(IF_R1_diff[id, ]), numeric(n_gamma1))
