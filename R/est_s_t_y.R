@@ -75,7 +75,7 @@ SIM <- function(X, Y, kernel, method, single_index_method, use_mave){
 
 #' One-step, split sample estimator for E\[Y(t)\], E\[Y(t)|R=1\], E\[Y(t)|R=0\], 
 #'   
-#' Estimates study-specific and overall outcome means (and difference from baseline)
+#' @description Estimates study-specific and overall outcome means (and difference from baseline)
 #' using cross-fitting with single index models (SIMs) and
 #' nuisance models for treatment and outcome missingness (`mgcv::gam`). The function
 #' also computes influence-function-based variances, confidence intervals, and
@@ -120,7 +120,7 @@ SIM <- function(X, Y, kernel, method, single_index_method, use_mave){
 #' @param coef_M_R1.fit Optional starting coefficients for missingness model fit
 #'   in `R = 1` stratum.
 #'
-#' @return A named list of estimates and uncertainty summaries for each value in
+#' @return A named list of class `est_psi` that contains estimates and uncertainty summaries for each value in
 #'   `gamma`. Core elements include point estimates (`est`, `est_R1`, `est_R0`), variance
 #'   estimates (`var`, `var_R1`, `var_R0`), and confidence interval bounds (`lowerCI*`, `upperCI*`). 
 #'   Additional components depend on `simple_trunc` and `IF_output`:
@@ -144,6 +144,7 @@ SIM <- function(X, Y, kernel, method, single_index_method, use_mave){
 #' #                simple_trunc = TRUE, quant = 0.99, kernel="dnorm", 
 #' #                single_index_method="norm1coef", method="optim")
 #' @export
+#' @rdname est_psi
 est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output, 
                     simple_trunc, quant, kernel, single_index_method, method="optim", 
                     use_mave=TRUE, s_t_y=NULL, coef_g.fit=NULL, coef_t_R0.fit=NULL, 
@@ -595,14 +596,18 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
   ## output final results
   if(IF_output){
     if(simple_trunc){
-      result <- list(est=r_est, est_R1=r_est_R1, est_R0=r_est_R0, 
+      result <- structure(
+        list(est=r_est, est_R1=r_est_R1, est_R0=r_est_R0, 
                      var=r_var, var_R1=r_var_R1, var_R0=r_var_R0, 
                      lowerCI=r_lowerCI, lowerCI_R1=r_lowerCI_R1, lowerCI_R0=r_lowerCI_R0, 
                      upperCI=r_upperCI, upperCI_R1=r_upperCI_R1, upperCI_R0=r_upperCI_R0, 
                      IF=containers$IF, IF_R1=containers$IF_R1, IF_R0=containers$IF_R0, 
-                     id_list=containers$id_list, fold_index_l=fold_index_l)
+                     id_list=containers$id_list, fold_index_l=fold_index_l, trt=trt, gamma=gamma, 
+                     simple_trunc=simple_trunc), 
+        class = c("est_psi"))
     }else{
-      result <- list(est=r_est, est_R1=r_est_R1, est_R0=r_est_R0, 
+      result <- structure(
+        list(est=r_est, est_R1=r_est_R1, est_R0=r_est_R0, 
                      est_trunc=r_est_trunc, est_trunc_R1=r_est_trunc_R1, est_trunc_R0=r_est_trunc_R0,
                      var=r_var, var_R1=r_var_R1, var_R0=r_var_R0,
                      var_trunc=r_var_trunc, var_trunc_R1=r_var_trunc_R1, var_trunc_R0=r_var_trunc_R0,
@@ -612,25 +617,33 @@ est_psi <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output,
                      upperCI_trunc=r_upperCI_trunc, upperCI_trunc_R1=r_upperCI_trunc_R1, upperCI_trunc_R0=r_upperCI_trunc_R0,
                      IF=containers$IF, IF_R1=containers$IF_R1, IF_R0=containers$IF_R0,
                      IF_trunc=containers_trunc$IF, IF_trunc_R1=containers_trunc$IF_R1, IF_trunc_R0=containers_trunc$IF_R0,
-                     id_list=containers$id_list, fold_index_l=fold_index_l)
+                     id_list=containers$id_list, fold_index_l=fold_index_l, trt=trt, gamma=gamma, 
+                     simple_trunc=simple_trunc), 
+        class = c("est_psi"))
     }
   }else{
     if(simple_trunc){
-      result <- list(est=r_est, est_R1=r_est_R1, est_R0=r_est_R0, 
-                     var=r_var, var_R1=r_var_R1, var_R0=r_var_R0, 
-                     lowerCI=r_lowerCI, lowerCI_R1=r_lowerCI_R1, lowerCI_R0=r_lowerCI_R0, 
-                     upperCI=r_upperCI, upperCI_R1=r_upperCI_R1, upperCI_R0=r_upperCI_R0, 
-                     id_list=containers$id_list, fold_index_l=fold_index_l)
+      result <- structure(
+        list(est=r_est, est_R1=r_est_R1, est_R0=r_est_R0, 
+             var=r_var, var_R1=r_var_R1, var_R0=r_var_R0, 
+             lowerCI=r_lowerCI, lowerCI_R1=r_lowerCI_R1, lowerCI_R0=r_lowerCI_R0, 
+             upperCI=r_upperCI, upperCI_R1=r_upperCI_R1, upperCI_R0=r_upperCI_R0, 
+             id_list=containers$id_list, fold_index_l=fold_index_l, trt=trt, gamma=gamma, 
+             simple_trunc=simple_trunc), 
+        class = c("est_psi"))
     }else{
-      result <- list(est=r_est, est_R1=r_est_R1, est_R0=r_est_R0, 
-                     est_trunc=r_est_trunc, est_trunc_R1=r_est_trunc_R1, est_trunc_R0=r_est_trunc_R0,
-                     var=r_var, var_R1=r_var_R1, var_R0=r_var_R0,
-                     var_trunc=r_var_trunc, var_trunc_R1=r_var_trunc_R1, var_trunc_R0=r_var_trunc_R0,
-                     lowerCI=r_lowerCI, lowerCI_R1=r_lowerCI_R1, lowerCI_R0=r_lowerCI_R0,
-                     upperCI=r_upperCI, upperCI_R1=r_upperCI_R1, upperCI_R0=r_upperCI_R0,
-                     lowerCI_trunc=r_lowerCI_trunc, lowerCI_trunc_R1=r_lowerCI_trunc_R1, lowerCI_trunc_R0=r_lowerCI_trunc_R0,
-                     upperCI_trunc=r_upperCI_trunc, upperCI_trunc_R1=r_upperCI_trunc_R1, upperCI_trunc_R0=r_upperCI_trunc_R0,
-                     id_list=containers$id_list, fold_index_l=fold_index_l)
+      result <- structure(
+        list(est=r_est, est_R1=r_est_R1, est_R0=r_est_R0, 
+             est_trunc=r_est_trunc, est_trunc_R1=r_est_trunc_R1, est_trunc_R0=r_est_trunc_R0,
+             var=r_var, var_R1=r_var_R1, var_R0=r_var_R0,
+             var_trunc=r_var_trunc, var_trunc_R1=r_var_trunc_R1, var_trunc_R0=r_var_trunc_R0,
+             lowerCI=r_lowerCI, lowerCI_R1=r_lowerCI_R1, lowerCI_R0=r_lowerCI_R0,
+             upperCI=r_upperCI, upperCI_R1=r_upperCI_R1, upperCI_R0=r_upperCI_R0,
+             lowerCI_trunc=r_lowerCI_trunc, lowerCI_trunc_R1=r_lowerCI_trunc_R1, lowerCI_trunc_R0=r_lowerCI_trunc_R0,
+             upperCI_trunc=r_upperCI_trunc, upperCI_trunc_R1=r_upperCI_trunc_R1, upperCI_trunc_R0=r_upperCI_trunc_R0,
+             id_list=containers$id_list, fold_index_l=fold_index_l, trt=trt, gamma=gamma, 
+             simple_trunc=simple_trunc), 
+        class = c("est_psi"))
     }
   }
   

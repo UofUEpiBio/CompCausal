@@ -1,4 +1,4 @@
-Package: comprehensivecohort
+Package: CompCausal
 Type: Package
 Title: Inferring causal effects in comprehensive cohort studies
 Version: 0.0.9000
@@ -18,28 +18,34 @@ Description: This package provide R implementations of the estimation methods fo
              in the presence of unmeasured confounding and missing outcomes. The causal 
              effects include comprehensive cohort causal effects, randomized trial causal effects, 
              and patient preference causal effect. 
-URL: https://github.com/UofUEpiBio/Comprehensive_cohort
-BugReports: https://github.com/UofUEpiBio/Comprehensive_cohort/issues
+URL: https://github.com/UofUEpiBio/CompCausal, https://uofuepibio.github.io/CompCausal/
+BugReports: https://github.com/UofUEpiBio/CompCausal/issues
 License: MIT + file LICENSE
-RoxygenNote: 7.3.3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Imports:
-    utils,
-    splines,
-    stats,
-    betareg,
-    methods, 
-    dplyr,
-    ggplot2,
-    MAVE,
-    assertthat,
-    dfoptim,
-    ManifoldOptim,
-    mgcv,
-    purrr,
-    Rcpp,
-    rlang
+  utils,
+  splines,
+  stats,
+  betareg,
+  methods, 
+  dplyr,
+  ggplot2,
+  MAVE,
+  assertthat,
+  dfoptim,
+  ManifoldOptim,
+  mgcv,
+  purrr,
+  Rcpp,
+  rlang, 
+  matrixStats
 Suggests:
-    tinytest
+  tinytest,
+  quarto,
+  knitr
 LazyData: true
+VignetteBuilder: 
+  quarto
+Config/roxygen2/version: 8.0.0
+RoxygenNote: 7.3.3
