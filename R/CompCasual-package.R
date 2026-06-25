@@ -1,4 +1,4 @@
-#' comprehensivecohort: Inferring causal effects in comprehensive cohort studies
+#' CompCausal: Inferring causal effects in comprehensive cohort studies
 #'
 #' This package provide R implementations of the estimation methods for 
 #' inferring causal effects in comprehensive cohort studies, 

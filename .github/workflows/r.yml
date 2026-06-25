@@ -93,7 +93,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: ${{ matrix.config.os == 'ubuntu-latest' && (matrix.config.r == 'release' || matrix.config.r == 'devel') }}
         with:
-          name: comprehensivecohort-built-package-${{ matrix.config.os }}-${{ matrix.config.r }}
+          name: CompCausal-built-package-${{ matrix.config.os }}-${{ matrix.config.r }}
           path: comprehensivecohort_*.tar.gz
           retention-days: 7
 

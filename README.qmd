@@ -33,7 +33,7 @@ Additional variables include the treatment indicator $t$, where $t=1$ correspond
 
 ```{r}
 #| error: true
-library(comprehensivecohort)
+library(CompCausal)
 ## load in data
 data(ccohort)
 ## data structure

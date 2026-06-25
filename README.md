@@ -50,7 +50,7 @@ variables are baseline covariates, including age, baseline WOMAC pain
 score, expected pain level one year later, and chronic pain grade.
 
 ``` r
-library(comprehensivecohort)
+library(CompCausal)
 ## load in data
 data(ccohort)
 ## data structure

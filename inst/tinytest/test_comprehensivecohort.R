@@ -1,4 +1,4 @@
-library(comprehensivecohort)
+library(CompCausal)
 data(ccohort)
 
 ## test estimation with est_psi, simple truncation

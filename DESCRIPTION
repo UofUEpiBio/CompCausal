@@ -1,4 +1,4 @@
-Package: comprehensivecohort
+Package: CompCausal
 Type: Package
 Title: Inferring causal effects in comprehensive cohort studies
 Version: 0.0.9000

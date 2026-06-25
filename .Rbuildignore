@@ -17,3 +17,5 @@ README.qmd
 ^\.positai$
 ^\.claude$
 instructions.md
+
+_pkgdown.yml

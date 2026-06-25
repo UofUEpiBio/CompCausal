@@ -109,7 +109,7 @@ We now illustrate the use of `CompCausal` for estimating the CCCE, RTCE, and PPC
 The package includes a simulated dataset based on the TOIB study [@underwood2008topical]. The TOIB study is a comprehensive cohort study on the effect of topical versus oral non-steroidal anti-inflammatory drugs (NSAIDs) in managing knee pain among older adults with chronic knee pain. In the analysis, the outcome of interest is Western Ontario and McMaster Universities Osteoarthritis Index (WOMAC) pain score ($0-100$) at 12 months. Baseline covariates include age, baseline WOMAC pain score, expected pain one year later, and chronic pain grade.
 
 ```{r}
-library(comprehensivecohort)
+library(CompCausal)
 ## load data
 data(ccohort)
 ## data structure
