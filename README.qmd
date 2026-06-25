@@ -16,11 +16,8 @@ Detailed descriptions of the study design, identification assumptions, estimatio
 Users can install `CompCausal` using the [`remotes`](https://cran.r-project.org/package=remotes){target="_blank"} R package: 
 
 ```r
-remotes::install_github("UofUEpiBio/Comprehensive_cohort")
+remotes::install_github("UofUEpiBio/CompCausal")
 ```
-
-Or install from CRAN: 
-
 
 
 ## Example

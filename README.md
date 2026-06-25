@@ -22,10 +22,8 @@ Users can install `CompCausal` using the
 target="_blank"><code>remotes</code></a> R package:
 
 ``` r
-remotes::install_github("UofUEpiBio/Comprehensive_cohort")
+remotes::install_github("UofUEpiBio/CompCausal")
 ```
-
-Or install from CRAN:
 
 ## Example
 
@@ -209,4 +207,4 @@ print_effects(out_t1_ifTrunc_IF, out_t0_ifTrunc_IF, rounding=2)
         0.5    0.0 PPCE     -1.82 8.45   -7.52    3.88
         0.0    0.5 PPCE     -1.45 8.43   -7.14    4.24
         0.5    0.5 PPCE     -1.82 8.49   -7.53    3.89
-         NA     NA RTCE      0.00 8.13   -5.59    5.59
+         NA     NA RTCE      0.22 8.13   -5.37    5.81
