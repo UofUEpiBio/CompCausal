@@ -15,9 +15,9 @@ and patient preference causal effect.
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/UofUEpiBio/Comprehensive_cohort}
-  \item \url{https://uofuepibio.github.io/Comprehensive_cohort/}
-  \item Report bugs at \url{https://github.com/UofUEpiBio/Comprehensive_cohort/issues}
+  \item \url{https://github.com/UofUEpiBio/CompCausal}
+  \item \url{https://uofuepibio.github.io/CompCausal/}
+  \item Report bugs at \url{https://github.com/UofUEpiBio/CompCausal/issues}
 }
 
 }

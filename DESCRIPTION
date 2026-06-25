@@ -18,8 +18,8 @@ Description: This package provide R implementations of the estimation methods fo
              in the presence of unmeasured confounding and missing outcomes. The causal 
              effects include comprehensive cohort causal effects, randomized trial causal effects, 
              and patient preference causal effect. 
-URL: https://github.com/UofUEpiBio/Comprehensive_cohort, https://uofuepibio.github.io/Comprehensive_cohort/
-BugReports: https://github.com/UofUEpiBio/Comprehensive_cohort/issues
+URL: https://github.com/UofUEpiBio/CompCausal, https://uofuepibio.github.io/CompCausal/
+BugReports: https://github.com/UofUEpiBio/CompCausal/issues
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
