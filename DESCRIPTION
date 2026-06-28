@@ -1,6 +1,6 @@
 Package: CompCausal
 Type: Package
-Title: Inferring causal effects in comprehensive cohort studies
+Title: Inferring Causal Effects in Comprehensive Cohort Studies
 Version: 0.0.9000
 Depends:
     R (>= 4.1.0)
@@ -13,7 +13,7 @@ Authors@R: c(
   person("Daniel", "Scharfstein", , "daniel.scharfstein@hsc.utah.edu", role = c("pdr", "aut"),
            comment = c(ORCID = "0000-0001-7482-9653"))
   )
-Description: This package provide R implementations of the estimation methods for 
+Description: Implementations of the estimation methods for 
              inferring causal effects in comprehensive cohort studies, 
              in the presence of unmeasured confounding and missing outcomes. The causal 
              effects include comprehensive cohort causal effects, randomized trial causal effects, 
