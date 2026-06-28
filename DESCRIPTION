@@ -1,23 +1,23 @@
 Package: CompCausal
 Type: Package
 Title: Inferring Causal Effects in Comprehensive Cohort Studies
-Version: 0.0.9000
+Version: 0.1.0
 Depends:
     R (>= 4.1.0)
 Authors@R: c(
   person(
-    "Jennifer", "Xu", email = "jennifer.xu@hsc.utah.edu", role = c("aut", "cre")
-    ),
+    "Shiyao", "Xu", email = "jennifer.xu@hsc.utah.edu", role = c("aut", "cre"),
+    comment = c(ORCID = "0000-0002-1746-5977")),
   person(given="George", family="Vega Yon", role=c("ctb"),
   email="g.vegayon@gmail.com", comment = c(ORCID = "0000-0002-3171-0844")),
   person("Daniel", "Scharfstein", , "daniel.scharfstein@hsc.utah.edu", role = c("pdr", "aut"),
            comment = c(ORCID = "0000-0001-7482-9653"))
   )
-Description: Implementations of the estimation methods for 
-             inferring causal effects in comprehensive cohort studies, 
-             in the presence of unmeasured confounding and missing outcomes. The causal 
-             effects include comprehensive cohort causal effects, randomized trial causal effects, 
-             and patient preference causal effect. 
+Description: Implements semiparametric methods for estimating comprehensive cohort causal effects 
+             in comprehensive cohort studies with unmeasured confounding in the observational arm 
+             and outcomes that may be missing at random. The package provides tools for estimating 
+             comprehensive cohort causal effects (CCCE), randomized trial causal effects (RTCE), 
+             and patient preference causal effects (PPCE).
 URL: https://github.com/UofUEpiBio/CompCausal, https://uofuepibio.github.io/CompCausal/
 BugReports: https://github.com/UofUEpiBio/CompCausal/issues
 License: MIT + file LICENSE
