@@ -1,7 +1,7 @@
 Package: CompCausal
 Type: Package
 Title: Inferring Causal Effects in Comprehensive Cohort Studies
-Version: 0.1.0
+Version: 0.1.0.2
 Depends:
     R (>= 4.1.0)
 Authors@R: c(
