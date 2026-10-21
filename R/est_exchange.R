@@ -70,10 +70,15 @@ est_exchange_create_containers <- function(gamma, fold) {
 #'   when relevant, truncated IF lists (`IF_trunc*`).
 #'   }
 #' @examples
-#' # out <- est_psi_exchange(Y, M, R, X, t, trt = 1, gamma = c(0, 0.5),
-#' #                         fold = 5, seed = 1, IF_output = FALSE,
-#' #                         simple_trunc = TRUE, quant = 0.99, kernel="dnorm", 
-#' #                         single_index_method="norm1coef", method="optim")
+#' \donttest{
+#' library(CompCausal)
+#' data(ccohort)
+#' out <- with(ccohort, {
+#'             est_psi_exchange(Y, M, R, X = data.frame(age, womac_bq, expectationb, ChronicPainb), 
+#'             t, trt = 1, gamma = c(0, 0.5), fold = 5, seed = 1, IF_output = FALSE,
+#'             simple_trunc = TRUE, quant = 0.99, kernel="dnorm", 
+#'             single_index_method="norm1coef", method="optim")})
+#' }
 #' @export
 est_psi_exchange <- function(Y, M, R, X, t, trt, gamma, fold, seed, IF_output, 
                              simple_trunc, quant, kernel, method="optim", single_index_method, 
