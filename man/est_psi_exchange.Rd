@@ -89,8 +89,13 @@ One-step, split sample estimator for E[Y(t)], E[Y(t)|R=0],
 under sensitivity analysis for exchangability assumption
 }
 \examples{
-# out <- est_psi_exchange(Y, M, R, X, t, trt = 1, gamma = c(0, 0.5),
-#                         fold = 5, seed = 1, IF_output = FALSE,
-#                         simple_trunc = TRUE, quant = 0.99, kernel="dnorm", 
-#                         single_index_method="norm1coef", method="optim")
+\donttest{
+library(CompCausal)
+data(ccohort)
+out <- with(ccohort, {
+            est_psi_exchange(Y, M, R, X = data.frame(age, womac_bq, expectationb, ChronicPainb), 
+            t, trt = 1, gamma = c(0, 0.5), fold = 5, seed = 1, IF_output = FALSE,
+            simple_trunc = TRUE, quant = 0.99, kernel="dnorm", 
+            single_index_method="norm1coef", method="optim")})
+}
 }
