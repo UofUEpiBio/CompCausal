@@ -1,7 +1,7 @@
 Package: CompCausal
 Type: Package
 Title: Inferring Causal Effects in Comprehensive Cohort Studies
-Version: 0.1.0.2
+Version: 0.1.0.3
 Depends:
     R (>= 4.1.0)
 Authors@R: c(
@@ -17,12 +17,11 @@ Description: Implements semiparametric methods for estimating comprehensive coho
              in comprehensive cohort studies with unmeasured confounding in the observational arm 
              and outcomes that may be missing at random. The package provides tools for estimating 
              comprehensive cohort causal effects (CCCE), randomized trial causal effects (RTCE), 
-             and patient preference causal effects (PPCE).
+             and patient preference causal effects (PPCE). For methodological details, see  
+             Xu S, Nabi R, Underwood M, Scharfstein D (2026). "Inferring Comprehensive Cohort 
+             Causal Effects in the Presence of Unmeasured Confounding and Missing Outcomes."
+             <https://arxiv.org/abs/2606.28741>
 URL: https://github.com/UofUEpiBio/CompCausal, https://uofuepibio.github.io/CompCausal/
-References: 
-  Xu S, Nabi R, Underwood M, Scharfstein D (2025). "Inferring Comprehensive Cohort Causal 
-  Effects in the Presence of Unmeasured Confounding and Missing Outcomes." 
-  <https://arxiv.org/abs/2606.28741>
 BugReports: https://github.com/UofUEpiBio/CompCausal/issues
 License: MIT + file LICENSE
 Encoding: UTF-8
