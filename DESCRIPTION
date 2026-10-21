@@ -19,6 +19,10 @@ Description: Implements semiparametric methods for estimating comprehensive coho
              comprehensive cohort causal effects (CCCE), randomized trial causal effects (RTCE), 
              and patient preference causal effects (PPCE).
 URL: https://github.com/UofUEpiBio/CompCausal, https://uofuepibio.github.io/CompCausal/
+References: 
+  Xu S, Nabi R, Underwood M, Scharfstein D (2025). "Inferring Comprehensive Cohort Causal 
+  Effects in the Presence of Unmeasured Confounding and Missing Outcomes." 
+  <https://arxiv.org/abs/2606.28741>
 BugReports: https://github.com/UofUEpiBio/CompCausal/issues
 License: MIT + file LICENSE
 Encoding: UTF-8
