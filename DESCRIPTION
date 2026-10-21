@@ -20,7 +20,7 @@ Description: Implements semiparametric methods for estimating comprehensive coho
              and patient preference causal effects (PPCE). For methodological details, see  
              Xu S, Nabi R, Underwood M, Scharfstein D (2026). "Inferring Comprehensive Cohort 
              Causal Effects in the Presence of Unmeasured Confounding and Missing Outcomes."
-             <https://arxiv.org/abs/2606.28741>
+             <doi:10.48550/arXiv.2606.28741>
 URL: https://github.com/UofUEpiBio/CompCausal, https://uofuepibio.github.io/CompCausal/
 BugReports: https://github.com/UofUEpiBio/CompCausal/issues
 License: MIT + file LICENSE
